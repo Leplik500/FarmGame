@@ -10,15 +10,19 @@ import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.material.Material;
 import com.jme3.math.FastMath;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.RectangleMesh;
+import com.jme3.texture.Texture;
+import com.jme3.texture.TextureCubeMap;
+import com.jme3.util.SkyFactory;
 
 public class Main extends SimpleApplication implements AnalogListener, ActionListener {
 
     private Geometry teaGeom;
-    private ChaseCamera chaseCam;
 
     public static void main(String[] args) {
         Main app = new Main();
@@ -36,17 +40,36 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
 
         // Пол
         Material matGround = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        Texture groundTex = assetManager.loadTexture("Textures/grass7.jpg");
+        groundTex.setWrap(Texture.WrapMode.Repeat);   // критично для тайлинга
+        groundTex.setMagFilter(Texture.MagFilter.Bilinear);
+        groundTex.setMinFilter(Texture.MinFilter.Trilinear);
+        matGround.setTexture("ColorMap", groundTex);
         Geometry ground = new Geometry("ground", new RectangleMesh(
-                new Vector3f(-25, -1, 25),
-                new Vector3f(25, -1, 25),
+                new Vector3f(-25, -1,  25),
+                new Vector3f( 25, -1,  25),
                 new Vector3f(-25, -1, -25)));
+        ground.getMesh().scaleTextureCoordinates(new Vector2f(16f, 16f));
         ground.setMaterial(matGround);
         rootNode.attachChild(ground);
+
+
+        System.out.println("CWD = " + System.getProperty("user.dir"));
+        Texture px = assetManager.loadTexture("SkyBox/px.png");  
+        Texture nx = assetManager.loadTexture("SkyBox/nx.png");  
+        Texture py = assetManager.loadTexture("SkyBox/py.png"); 
+        Texture ny = assetManager.loadTexture("SkyBox/ny.png");  
+        Texture pz = assetManager.loadTexture("SkyBox/pz.png");  
+        Texture nz = assetManager.loadTexture("SkyBox/nz.png");  
+        
+// Создаём небосвод из 6 граней
+        Spatial sky = SkyFactory.createSky(assetManager, px, nx, py, ny, pz, nz);
+        rootNode.attachChild(sky);
 
         // Отключить FlyCam (обязательно)
         flyCam.setEnabled(false);
 
-        chaseCam = new ChaseCamera(cam, teaGeom, inputManager);
+        ChaseCamera chaseCam = new ChaseCamera(cam, teaGeom, inputManager);
 
         // Дистанция и её границы (камера не подлетает слишком близко/далеко)
         chaseCam.setDefaultDistance(14f);
