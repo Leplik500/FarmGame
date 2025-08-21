@@ -16,19 +16,31 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.RectangleMesh;
+import com.jme3.system.AppSettings;
 import com.jme3.texture.Texture;
 import com.jme3.texture.TextureCubeMap;
 import com.jme3.util.SkyFactory;
+
+import java.awt.*;
 
 public class Main extends SimpleApplication implements AnalogListener, ActionListener {
 
     private Geometry teaGeom;
 
     public static void main(String[] args) {
+        AppSettings settings = new AppSettings(true);
+        GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+        DisplayMode[] modes = device.getDisplayModes();
+        int i=0;
+        settings.setResolution(modes[i].getWidth(),modes[i].getHeight());
+        settings.setFrequency(modes[i].getRefreshRate());
+        settings.setBitsPerPixel(modes[i].getBitDepth());
+        settings.setFullscreen(device.isFullScreenSupported());
         Main app = new Main();
+        app.setSettings(settings);
         app.start();
     }
-
+    
     @Override
     public void simpleInitApp() {
         // Куб (игрок)
