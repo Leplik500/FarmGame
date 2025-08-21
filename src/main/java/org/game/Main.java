@@ -172,30 +172,13 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
 
     @Override
     public void simpleUpdate(float tpf) {
-        // 1) Сглаживание позиции цели камеры (быстро догоняет)
-        Vector3f to = player.getWorldTranslation();
+        Vector3f to   = player.getWorldTranslation();
         Vector3f from = camTarget.getLocalTranslation();
-        // скорость догоняния позиции
-        float camFollowPosSpeed = 8f;
-        Vector3f posDelta = to.subtract(from).multLocal(Math.min(1f, camFollowPosSpeed * tpf));
+
+        float camFollowPosSpeed = 7f;
+        Vector3f posDelta = to.subtract(from)
+                .multLocal(Math.min(1f, camFollowPosSpeed * tpf));
         camTarget.move(posDelta);
-
-        // 2) Сглаживание yaw цели камеры (медленно догоняет — именно это «замедляет» автоповорот камеры)
-        float[] targetAngles = player.getWorldRotation().toAngles(null);
-        float[] currentAngles = camTarget.getLocalRotation().toAngles(null);
-
-        float targetYaw = targetAngles[1];
-        float currentYaw = currentAngles[1];
-
-        float diff = targetYaw - currentYaw;
-        diff = (diff + FastMath.PI) % FastMath.TWO_PI - FastMath.PI;
-
-        // Параметры сглаживания камеры
-        // скорость догоняния yaw (меньше — медленнее)
-        float camFollowYawSpeed = 2.5f;
-        float step = diff * Math.min(1f, camFollowYawSpeed * tpf);
-        float newYaw = currentYaw + step;
-
-        camTarget.setLocalRotation(new Quaternion().fromAngles(0f, newYaw, 0f));
     }
+
 }
