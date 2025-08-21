@@ -78,36 +78,28 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
         Spatial sky = SkyFactory.createSky(assetManager, px, nx, py, ny, pz, nz);
         rootNode.attachChild(sky);
 
-        // Отключить FlyCam (обязательно)
+        configureCamera();
+
+        // Ввод
+        registerInput();
+    }
+
+    private void configureCamera() {
         flyCam.setEnabled(false);
-
         ChaseCamera chaseCam = new ChaseCamera(cam, teaGeom, inputManager);
-
-        // Дистанция и её границы (камера не подлетает слишком близко/далеко)
         chaseCam.setDefaultDistance(14f);
         chaseCam.setMinDistance(10f);
         chaseCam.setMaxDistance(18f);
-
-        // Высота камеры (поднимаем камеру над персонажем)
         chaseCam.setDefaultVerticalRotation(FastMath.DEG_TO_RAD * 50f); // наклон вниз ~50°
         chaseCam.setMinVerticalRotation(FastMath.DEG_TO_RAD * 35f);     // не даём опускаться слишком низко
         chaseCam.setMaxVerticalRotation(FastMath.DEG_TO_RAD * 70f);     // и задирать слишком высоко
-
-        // Горизонтальный угол (чуть сбоку от персонажа)
         chaseCam.setDefaultHorizontalRotation(FastMath.DEG_TO_RAD * 35f);
-
-        // Точка прицеливания немного выше центра (голова персонажа)
         chaseCam.setLookAtOffset(new Vector3f(0, 1.2f, 0));
-
-        // Управление: вращение только при средней кнопке (как у вас), зум — колёсиком
         chaseCam.setToggleRotationTrigger(new MouseButtonTrigger(MouseInput.BUTTON_MIDDLE));
         chaseCam.setDragToRotate(true);         // вращение только при удержании MMB
         chaseCam.setRotationSpeed(1.5f);        // помедленнее, «консольное» ощущение
         chaseCam.setZoomSensitivity(0.75f);     // зум не резкий
         chaseCam.setSmoothMotion(true);         // лёгкое сглаживание при движении
-
-        // Ввод
-        registerInput();
     }
 
     public void registerInput() {
