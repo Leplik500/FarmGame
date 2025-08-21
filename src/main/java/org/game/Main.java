@@ -90,16 +90,16 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
         chaseCam.setDefaultDistance(14f);
         chaseCam.setMinDistance(10f);
         chaseCam.setMaxDistance(18f);
-        chaseCam.setDefaultVerticalRotation(FastMath.DEG_TO_RAD * 50f); // наклон вниз ~50°
-        chaseCam.setMinVerticalRotation(FastMath.DEG_TO_RAD * 35f);     // не даём опускаться слишком низко
-        chaseCam.setMaxVerticalRotation(FastMath.DEG_TO_RAD * 70f);     // и задирать слишком высоко
+        chaseCam.setDefaultVerticalRotation(FastMath.DEG_TO_RAD * 50f); 
+        chaseCam.setMinVerticalRotation(FastMath.DEG_TO_RAD * 35f);     
+        chaseCam.setMaxVerticalRotation(FastMath.DEG_TO_RAD * 70f);     
         chaseCam.setDefaultHorizontalRotation(FastMath.DEG_TO_RAD * 35f);
         chaseCam.setLookAtOffset(new Vector3f(0, 1.2f, 0));
         chaseCam.setToggleRotationTrigger(new MouseButtonTrigger(MouseInput.BUTTON_MIDDLE));
-        chaseCam.setDragToRotate(true);         // вращение только при удержании MMB
-        chaseCam.setRotationSpeed(1.5f);        // помедленнее, «консольное» ощущение
-        chaseCam.setZoomSensitivity(0.75f);     // зум не резкий
-        chaseCam.setSmoothMotion(true);         // лёгкое сглаживание при движении
+        chaseCam.setDragToRotate(true);
+        chaseCam.setRotationSpeed(1.5f);
+        chaseCam.setZoomSensitivity(0.75f);
+        chaseCam.setSmoothMotion(true);    
     }
 
     public void registerInput() {
