@@ -17,11 +17,10 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
-import com.jme3.scene.shape.RectangleMesh;
+import com.jme3.scene.shape.Quad;
 import com.jme3.system.AppSettings;
 import com.jme3.texture.Texture;
 import com.jme3.util.SkyFactory;
-
 import java.awt.DisplayMode;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
@@ -32,6 +31,13 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
     private final Node camTarget = new Node("CamTarget"); // сглаженная цель для камеры
 
     public static void main(String[] args) {
+        AppSettings settings = CreateFullscreenSettings();
+        Main app = new Main();
+        app.setSettings(settings);
+        app.start();
+    }
+
+    private static AppSettings CreateFullscreenSettings() {
         AppSettings settings = new AppSettings(true);
         GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
         DisplayMode[] modes = device.getDisplayModes();
@@ -40,10 +46,7 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
         settings.setFrequency(modes[i].getRefreshRate());
         settings.setBitsPerPixel(modes[i].getBitDepth());
         settings.setFullscreen(device.isFullScreenSupported());
-
-        Main app = new Main();
-        app.setSettings(settings);
-        app.start();
+        return settings;
     }
 
     @Override
@@ -63,24 +66,19 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
         groundTex.setMinFilter(Texture.MinFilter.Trilinear);
         matGround.setTexture("ColorMap", groundTex);
 
-        Geometry ground = new Geometry("ground", new RectangleMesh(
-                new Vector3f(-25, -1,  25),
-                new Vector3f( 25, -1,  25),
-                new Vector3f(-25, -1, -25)));
-        ground.getMesh().scaleTextureCoordinates(new Vector2f(16f, 16f));
+        float size = 200f; // edge length
+        Quad quad = new Quad(size, size);
+        Geometry ground = new Geometry("ground", quad);
+        ground.rotate(-FastMath.HALF_PI, 0, 0);       
+        ground.setLocalTranslation(-size/2f, -1f, size/2f); 
+
+        ground.getMesh().scaleTextureCoordinates(new Vector2f(size / 3.125f, size / 3.125f));
+
         ground.setMaterial(matGround);
         rootNode.attachChild(ground);
 
-        Texture px = assetManager.loadTexture("SkyBox/px.png");
-        Texture nx = assetManager.loadTexture("SkyBox/nx.png");
-        Texture py = assetManager.loadTexture("SkyBox/py.png");
-        Texture ny = assetManager.loadTexture("SkyBox/ny.png");
-        Texture pz = assetManager.loadTexture("SkyBox/pz.png");
-        Texture nz = assetManager.loadTexture("SkyBox/nz.png");
-        Spatial sky = SkyFactory.createSky(assetManager, px, nx, py, ny, pz, nz);
-        rootNode.attachChild(sky);
+        addSky();
 
-        // camTarget: стартовая позиция и привязка в сцену
         rootNode.attachChild(camTarget);
         camTarget.setLocalTranslation(player.getLocalTranslation());
         camTarget.setLocalRotation(player.getLocalRotation());
@@ -89,10 +87,20 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
         registerInput();
     }
 
+    private void addSky() {
+        Texture px = assetManager.loadTexture("SkyBox/px.png");
+        Texture nx = assetManager.loadTexture("SkyBox/nx.png");
+        Texture py = assetManager.loadTexture("SkyBox/py.png");
+        Texture ny = assetManager.loadTexture("SkyBox/ny.png");
+        Texture pz = assetManager.loadTexture("SkyBox/pz.png");
+        Texture nz = assetManager.loadTexture("SkyBox/nz.png");
+        Spatial sky = SkyFactory.createSky(assetManager, px, nx, py, ny, pz, nz);
+        rootNode.attachChild(sky);
+    }
+
     private void configureCamera() {
         flyCam.setEnabled(false);
 
-        // Привязываем камеру к camTarget, а не к игроку
         ChaseCamera chaseCam = new ChaseCamera(cam, camTarget, inputManager);
 
         chaseCam.setDefaultDistance(60f);
@@ -110,11 +118,11 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
         chaseCam.setToggleRotationTrigger(new MouseButtonTrigger(MouseInput.BUTTON_MIDDLE));
         chaseCam.setDragToRotate(true);
 
-        chaseCam.setRotationSpeed(1f);     // влияет на орбиту мышью
-        chaseCam.setZoomSensitivity(0.6f); // менее резкий зум
+        chaseCam.setRotationSpeed(1f);
+        chaseCam.setZoomSensitivity(0.6f);
         chaseCam.setSmoothMotion(false);
 
-        float fovDegrees = 40f; // подбери в диапазоне 28–40
+        float fovDegrees = 40f; 
         float aspect = (float) cam.getWidth() / cam.getHeight();
         cam.setFrustumPerspective(fovDegrees, aspect, 0.1f, 1500);
     }
@@ -133,7 +141,6 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
     public void onAnalog(String name, float value, float tpf) {
         float speed = 5f * tpf;
 
-        // Движение относительно направления камеры по плоскости XZ
         Vector3f forward = cam.getDirection().clone();
         forward.y = 0f;
         if (forward.lengthSquared() > 0f) forward.normalizeLocal();
@@ -145,8 +152,8 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
         Vector3f move = new Vector3f();
         if ("moveForward".equals(name))  move.addLocal(forward.mult(speed));
         if ("moveBackward".equals(name)) move.addLocal(forward.mult(-speed));
-        if ("moveRight".equals(name))    move.addLocal(left.mult(-speed)); // вправо = -left
-        if ("moveLeft".equals(name))     move.addLocal(left.mult(speed));  // влево  = +left
+        if ("moveRight".equals(name))    move.addLocal(left.mult(-speed)); 
+        if ("moveLeft".equals(name))     move.addLocal(left.mult(speed));  
 
         if (move.lengthSquared() > 0f) {
             player.move(move);
