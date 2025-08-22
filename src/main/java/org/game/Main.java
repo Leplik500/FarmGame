@@ -1,6 +1,7 @@
 package org.game;
 
 import com.jme3.app.SimpleApplication;
+import com.jme3.cursors.plugins.JmeCursor;
 import com.jme3.input.ChaseCamera;
 import com.jme3.input.KeyInput;
 import com.jme3.input.MouseInput;
@@ -65,6 +66,7 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
         configureCamera();
         createFaceHighlight();
         registerInput();
+        setupCustomCursor();
     }
 
     private void addSky() {
@@ -149,7 +151,8 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
 
     @Override
     public void onAction(String name, boolean isPressed, float tpf) {
-        if (!isPressed) return;
+        if (!isPressed) {
+        }
     }
 
     private void handleBlockEdit(boolean place) {
@@ -191,7 +194,7 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
     public void simpleUpdate(float tpf) {
         Vector3f to   = player.getWorldTranslation();
         Vector3f from = camTarget.getLocalTranslation();
-
+        
         float camFollowPosSpeed = 7f;
         Vector3f posDelta = to.subtract(from)
                 .multLocal(Math.min(1f, camFollowPosSpeed * tpf));
@@ -305,9 +308,13 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
         faceHighlight.setLocalRotation(rotation);
     }
 
-
-
-
+    private void setupCustomCursor() {
+        JmeCursor cursor = (JmeCursor) assetManager.loadAsset("Textures" +
+                "/Cursors/KOFJI/hand.cur");
+        cursor.setHeight(32);
+        cursor.setWidth(32);
+        inputManager.setMouseCursor(cursor);
+    }
 
 
 }
