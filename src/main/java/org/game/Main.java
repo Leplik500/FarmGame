@@ -1,6 +1,8 @@
 package org.game;
 
 import com.jme3.app.SimpleApplication;
+import com.jme3.collision.CollisionResult;
+import com.jme3.collision.CollisionResults;
 import com.jme3.input.ChaseCamera;
 import com.jme3.input.KeyInput;
 import com.jme3.input.MouseInput;
@@ -9,17 +11,14 @@ import com.jme3.input.controls.AnalogListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.material.Material;
-import com.jme3.math.FastMath;
-import com.jme3.math.Quaternion;
-import com.jme3.math.Vector2f;
-import com.jme3.math.Vector3f;
-import com.jme3.scene.Geometry;
-import com.jme3.scene.Node;
-import com.jme3.scene.Spatial;
+import com.jme3.material.RenderState;
+import com.jme3.math.*;
+import com.jme3.renderer.queue.RenderQueue;
+import com.jme3.scene.*;
 import com.jme3.scene.shape.Box;
-import com.jme3.scene.shape.Quad;
 import com.jme3.system.AppSettings;
 import com.jme3.texture.Texture;
+import com.jme3.util.BufferUtils;
 import com.jme3.util.SkyFactory;
 import java.awt.DisplayMode;
 import java.awt.GraphicsDevice;
@@ -29,9 +28,24 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
 
     private Geometry player;          // «персонаж» — синий куб
     private final Node camTarget = new Node("CamTarget"); // сглаженная цель для камеры
+    private SimpleBlockWorld blockWorld;
+    private int selectedBlockType = BlockType.GRASS;
+    private Geometry highlightBlock;
+    private Spatial faceHighlight;
+    private final Vector3f[] faceNormals = {
+            new Vector3f(0, 1, 0),  // TOP
+            new Vector3f(0, -1, 0), // BOTTOM  
+            new Vector3f(1, 0, 0),  // RIGHT
+            new Vector3f(-1, 0, 0), // LEFT
+            new Vector3f(0, 0, 1),  // FRONT
+            new Vector3f(0, 0, -1)  // BACK
+    };
+
 
     public static void main(String[] args) {
-        AppSettings settings = CreateFullscreenSettings();
+//        AppSettings settings = CreateFullscreenSettings();
+        AppSettings settings = new AppSettings(true);
+        settings.setResolution(800, 814);
         Main app = new Main();
         app.setSettings(settings);
         app.start();
@@ -58,24 +72,11 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
         player.setMaterial(matTea);
         rootNode.attachChild(player);
 
-        // Пол с тайлингом
-        Material matGround = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-        Texture groundTex = assetManager.loadTexture("Textures/grass7.jpg");
-        groundTex.setWrap(Texture.WrapMode.Repeat);
-        groundTex.setMagFilter(Texture.MagFilter.Bilinear);
-        groundTex.setMinFilter(Texture.MinFilter.Trilinear);
-        matGround.setTexture("ColorMap", groundTex);
+        // Инициализируем блочный мир
+        blockWorld = new SimpleBlockWorld(rootNode, assetManager);
 
-        float size = 200f; // edge length
-        Quad quad = new Quad(size, size);
-        Geometry ground = new Geometry("ground", quad);
-        ground.rotate(-FastMath.HALF_PI, 0, 0);       
-        ground.setLocalTranslation(-size/2f, -1f, size/2f); 
-
-        ground.getMesh().scaleTextureCoordinates(new Vector2f(size / 3.125f, size / 3.125f));
-
-        ground.setMaterial(matGround);
-        rootNode.attachChild(ground);
+        // Создаём плоскую землю 20x20
+        blockWorld.generateFlatWorld(100, 100);
 
         addSky();
 
@@ -84,6 +85,8 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
         camTarget.setLocalRotation(player.getLocalRotation());
 
         configureCamera();
+//        createHighlight();
+        createFaceHighlight();
         registerInput();
     }
 
@@ -133,8 +136,12 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
         inputManager.addMapping("moveRight",    new KeyTrigger(KeyInput.KEY_D), new KeyTrigger(KeyInput.KEY_RIGHT));
         inputManager.addMapping("moveLeft",     new KeyTrigger(KeyInput.KEY_A), new KeyTrigger(KeyInput.KEY_LEFT));
         inputManager.addMapping("displayPosition", new KeyTrigger(KeyInput.KEY_P));
-
         inputManager.addListener(this, "moveForward", "moveBackward", "moveRight", "moveLeft", "displayPosition");
+
+        inputManager.addMapping("placeBlock", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
+        inputManager.addMapping("removeBlock", new MouseButtonTrigger(MouseInput.BUTTON_RIGHT));
+        inputManager.addMapping("switchBlock", new KeyTrigger(KeyInput.KEY_SPACE));
+        inputManager.addListener(this, "placeBlock", "removeBlock", "switchBlock");
     }
 
     @Override
@@ -158,7 +165,7 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
         if (move.lengthSquared() > 0f) {
             player.move(move);
 
-            // Поворачиваем игрока лицом к движению (опционально)
+            // Поворачиваем игрока лицом к движению
             float targetYaw = (float) Math.atan2(move.x, move.z);
             float[] angles = player.getLocalRotation().toAngles(null);
             float currentYaw = angles[1];
@@ -172,8 +179,57 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
 
     @Override
     public void onAction(String name, boolean isPressed, float tpf) {
-        if ("displayPosition".equals(name) && isPressed) {
+        if (!isPressed) return;
+
+        if ("placeBlock".equals(name) || "removeBlock".equals(name)) {
+            handleBlockEdit("placeBlock".equals(name));
+        }
+
+        if ("switchBlock".equals(name)) {
+            selectedBlockType++;
+            if (selectedBlockType > BlockType.STONE) selectedBlockType = BlockType.GRASS;
+            System.out.println("Selected: " + selectedBlockType);
+        }
+        
+        if ("displayPosition".equals(name)) {
             System.out.println("Pos: " + player.getWorldTranslation());
+        }
+    }
+
+    private void handleBlockEdit(boolean place) {
+        Vector2f cursorPos = inputManager.getCursorPosition();
+        Vector3f origin = cam.getWorldCoordinates(cursorPos, 0f);
+        Vector3f direction = cam.getWorldCoordinates(cursorPos, 1f).subtract(origin).normalizeLocal();
+
+        // Пошагово идём по лучу с шагом 0.1 единицы
+        Vector3f currentPos = origin.clone();
+        Vector3f step = direction.mult(0.1f);
+
+        for (int i = 0; i < 1000; i++) { // максимум 100 единиц дистанции
+            currentPos.addLocal(step);
+
+            // Проверяем блок в этой позиции
+            int bx = (int) Math.floor(currentPos.x);
+            int by = (int) Math.floor(currentPos.y);
+            int bz = (int) Math.floor(currentPos.z);
+
+            int blockId = blockWorld.getBlock(bx, by, bz);
+            if (blockId != BlockType.AIR) {
+                if (place) {
+                    // Берём предыдущую позицию (где был воздух)
+                    Vector3f prevPos = currentPos.subtract(step);
+                    int placeX = (int) Math.floor(prevPos.x);
+                    int placeY = (int) Math.floor(prevPos.y);
+                    int placeZ = (int) Math.floor(prevPos.z);
+
+                    if (blockWorld.getBlock(placeX, placeY, placeZ) == BlockType.AIR) {
+                        blockWorld.setBlock(placeX, placeY, placeZ, selectedBlockType);
+                    }
+                } else {
+                    blockWorld.setBlock(bx, by, bz, BlockType.AIR);
+                }
+                return;
+            }
         }
     }
 
@@ -186,6 +242,172 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
         Vector3f posDelta = to.subtract(from)
                 .multLocal(Math.min(1f, camFollowPosSpeed * tpf));
         camTarget.move(posDelta);
+//        updateHighlight();
+        updateFaceHighlight();
+
     }
+
+    private void createHighlight() {
+        Box highlightMesh = new Box(0.51f, 0.51f, 0.51f); // чуть больше блока
+        highlightBlock = new Geometry("Highlight", highlightMesh);
+        Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        mat.setColor("Color", new ColorRGBA(1f, 1f, 1f, 0.3f));
+        mat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
+        highlightBlock.setMaterial(mat);
+        highlightBlock.setQueueBucket(RenderQueue.Bucket.Transparent);
+        rootNode.attachChild(highlightBlock);
+    }
+
+    private void updateHighlight() {
+        Vector2f cursorPos = inputManager.getCursorPosition();
+        Vector3f origin = cam.getWorldCoordinates(cursorPos, 0f);
+        Vector3f direction = cam.getWorldCoordinates(cursorPos, 1f).subtract(origin).normalizeLocal();
+
+        Vector3f currentPos = origin.clone();
+        Vector3f step = direction.mult(0.1f);
+
+        for (int i = 0; i < 1000; i++) {
+            currentPos.addLocal(step);
+
+            int bx = (int) Math.floor(currentPos.x);
+            int by = (int) Math.floor(currentPos.y);
+            int bz = (int) Math.floor(currentPos.z);
+
+            if (blockWorld.getBlock(bx, by, bz) != BlockType.AIR) {
+                // Показываем где будет размещён блок
+                Vector3f prevPos = currentPos.subtract(step);
+                int placeX = (int) Math.floor(prevPos.x);
+                int placeY = (int) Math.floor(prevPos.y);
+                int placeZ = (int) Math.floor(prevPos.z);
+
+                highlightBlock.setLocalTranslation(placeX, placeY, placeZ);
+                highlightBlock.setCullHint(Spatial.CullHint.Never);
+                return;
+            }
+        }
+
+        highlightBlock.setCullHint(Spatial.CullHint.Always); // скрыть если ничего не найдено
+    }
+
+    private void createFaceHighlight() {
+        Node highlightNode = new Node("ThickHighlight");
+
+        // Создаём 4 тонких прямоугольника для "толстых" линий
+        float thickness = 0.2f; // толщина "линии"
+        float size = 0.52f;
+
+        // Горизонтальные линии (верх и низ)
+        Box topLine = new Box(size, thickness/2, thickness/2);
+        Geometry topGeo = new Geometry("TopLine", topLine);
+        topGeo.setLocalTranslation(0, size, 0);
+
+        Box bottomLine = new Box(size, thickness/2, thickness/2);
+        Geometry bottomGeo = new Geometry("BottomLine", bottomLine);
+        bottomGeo.setLocalTranslation(0, -size, 0);
+
+        // Вертикальные линии (лево и право)
+        Box leftLine = new Box(thickness/2, size, thickness/2);
+        Geometry leftGeo = new Geometry("LeftLine", leftLine);
+        leftGeo.setLocalTranslation(-size, 0, 0);
+
+        Box rightLine = new Box(thickness/2, size, thickness/2);
+        Geometry rightGeo = new Geometry("RightLine", rightLine);
+        rightGeo.setLocalTranslation(size, 0, 0);
+
+        // Общий материал для всех линий
+        Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        mat.setColor("Color", new ColorRGBA(1f, 1f, 0f, 1.0f));
+        mat.getAdditionalRenderState().setDepthTest(false);
+        mat.getAdditionalRenderState().setDepthWrite(false);
+
+        topGeo.setMaterial(mat);
+        bottomGeo.setMaterial(mat);
+        leftGeo.setMaterial(mat);
+        rightGeo.setMaterial(mat);
+
+        highlightNode.attachChild(topGeo);
+        highlightNode.attachChild(bottomGeo);
+        highlightNode.attachChild(leftGeo);
+        highlightNode.attachChild(rightGeo);
+
+        highlightNode.setQueueBucket(RenderQueue.Bucket.Transparent);
+
+        faceHighlight = highlightNode; // используем Node вместо Geometry
+        rootNode.attachChild(faceHighlight);
+        faceHighlight.setCullHint(Spatial.CullHint.Always);
+    }
+
+
+
+
+
+
+
+
+    private void updateFaceHighlight() {
+        Vector2f cursorPos = inputManager.getCursorPosition();
+        Vector3f origin = cam.getWorldCoordinates(cursorPos, 0f);
+        Vector3f direction = cam.getWorldCoordinates(cursorPos, 1f).subtract(origin).normalizeLocal();
+
+        Vector3f currentPos = origin.clone();
+        Vector3f step = direction.mult(0.1f);
+
+        for (int i = 0; i < 1000; i++) {
+            currentPos.addLocal(step);
+
+            int bx = (int) Math.floor(currentPos.x);
+            int by = (int) Math.floor(currentPos.y);
+            int bz = (int) Math.floor(currentPos.z);
+
+            if (blockWorld.getBlock(bx, by, bz) != BlockType.AIR) {
+                // Нашли твёрдый блок - показываем грань куда будет размещён новый блок
+                Vector3f prevPos = currentPos.subtract(step);
+                int placeX = (int) Math.floor(prevPos.x);
+                int placeY = (int) Math.floor(prevPos.y);
+                int placeZ = (int) Math.floor(prevPos.z);
+
+                if (blockWorld.getBlock(placeX, placeY, placeZ) == BlockType.AIR) {
+                    // Определяем какая грань блока будет "прикреплена"
+                    Vector3f attachDirection = new Vector3f(placeX - bx, placeY - by, placeZ - bz);
+
+                    positionFaceHighlight(bx, by, bz, attachDirection);
+                    faceHighlight.setCullHint(Spatial.CullHint.Never);
+                }
+                return;
+            }
+        }
+
+        faceHighlight.setCullHint(Spatial.CullHint.Always);
+    }
+
+    private void positionFaceHighlight(int blockX, int blockY, int blockZ, Vector3f attachDir) {
+        // Позиция центра грани существующего блока
+        Vector3f faceCenter = new Vector3f(
+                blockX + 0.5f * attachDir.x,
+                blockY + 0.5f * attachDir.y,
+                blockZ + 0.5f * attachDir.z
+        );
+
+        faceHighlight.setLocalTranslation(faceCenter);
+
+        // Поворачиваем wireframe чтобы он был параллелен нужной грани
+        Quaternion rotation = new Quaternion();
+
+        if (attachDir.y != 0) {
+            // Горизонтальная грань (верх/низ) - квадрат остаётся в плоскости XZ
+            rotation.fromAngles(FastMath.HALF_PI, 0, 0);
+        } else if (attachDir.x != 0) {
+            // Вертикальная грань по X (лево/право) - поворот в плоскость YZ  
+            rotation.fromAngles(0, 0, FastMath.HALF_PI);
+        } else {
+            // Вертикальная грань по Z (перед/зад) - квадрат в плоскости XY (по умолчанию)
+            rotation.fromAngles(0, 0, 0);
+        }
+
+        faceHighlight.setLocalRotation(rotation);
+    }
+
+
+
 
 }
