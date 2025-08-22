@@ -1,8 +1,6 @@
 package org.game;
 
 import com.jme3.app.SimpleApplication;
-import com.jme3.collision.CollisionResult;
-import com.jme3.collision.CollisionResults;
 import com.jme3.input.ChaseCamera;
 import com.jme3.input.KeyInput;
 import com.jme3.input.MouseInput;
@@ -11,14 +9,12 @@ import com.jme3.input.controls.AnalogListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.material.Material;
-import com.jme3.material.RenderState;
 import com.jme3.math.*;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.*;
 import com.jme3.scene.shape.Box;
 import com.jme3.system.AppSettings;
 import com.jme3.texture.Texture;
-import com.jme3.util.BufferUtils;
 import com.jme3.util.SkyFactory;
 import java.awt.DisplayMode;
 import java.awt.GraphicsDevice;
@@ -29,18 +25,7 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
     private Geometry player;          // «персонаж» — синий куб
     private final Node camTarget = new Node("CamTarget"); // сглаженная цель для камеры
     private SimpleBlockWorld blockWorld;
-    private int selectedBlockType = BlockType.GRASS;
-    private Geometry highlightBlock;
     private Spatial faceHighlight;
-    private final Vector3f[] faceNormals = {
-            new Vector3f(0, 1, 0),  // TOP
-            new Vector3f(0, -1, 0), // BOTTOM  
-            new Vector3f(1, 0, 0),  // RIGHT
-            new Vector3f(-1, 0, 0), // LEFT
-            new Vector3f(0, 0, 1),  // FRONT
-            new Vector3f(0, 0, -1)  // BACK
-    };
-
 
     public static void main(String[] args) {
 //        AppSettings settings = CreateFullscreenSettings();
@@ -71,21 +56,13 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
         Material matTea = new Material(assetManager, "Common/MatDefs/Misc/ShowNormals.j3md");
         player.setMaterial(matTea);
         rootNode.attachChild(player);
-
-        // Инициализируем блочный мир
         blockWorld = new SimpleBlockWorld(rootNode, assetManager);
-
-        // Создаём плоскую землю 20x20
         blockWorld.generateFlatWorld(100, 100);
-
         addSky();
-
         rootNode.attachChild(camTarget);
         camTarget.setLocalTranslation(player.getLocalTranslation());
         camTarget.setLocalRotation(player.getLocalRotation());
-
         configureCamera();
-//        createHighlight();
         createFaceHighlight();
         registerInput();
     }
@@ -117,7 +94,6 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
         chaseCam.setDefaultHorizontalRotation(FastMath.DEG_TO_RAD * 35f);
         chaseCam.setLookAtOffset(new Vector3f(0, 1.2f, 0));
 
-        // Вращение мышью только при MMB — оставляем
         chaseCam.setToggleRotationTrigger(new MouseButtonTrigger(MouseInput.BUTTON_MIDDLE));
         chaseCam.setDragToRotate(true);
 
@@ -135,13 +111,7 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
         inputManager.addMapping("moveBackward", new KeyTrigger(KeyInput.KEY_S), new KeyTrigger(KeyInput.KEY_DOWN));
         inputManager.addMapping("moveRight",    new KeyTrigger(KeyInput.KEY_D), new KeyTrigger(KeyInput.KEY_RIGHT));
         inputManager.addMapping("moveLeft",     new KeyTrigger(KeyInput.KEY_A), new KeyTrigger(KeyInput.KEY_LEFT));
-        inputManager.addMapping("displayPosition", new KeyTrigger(KeyInput.KEY_P));
         inputManager.addListener(this, "moveForward", "moveBackward", "moveRight", "moveLeft", "displayPosition");
-
-        inputManager.addMapping("placeBlock", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
-        inputManager.addMapping("removeBlock", new MouseButtonTrigger(MouseInput.BUTTON_RIGHT));
-        inputManager.addMapping("switchBlock", new KeyTrigger(KeyInput.KEY_SPACE));
-        inputManager.addListener(this, "placeBlock", "removeBlock", "switchBlock");
     }
 
     @Override
@@ -180,20 +150,6 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
     @Override
     public void onAction(String name, boolean isPressed, float tpf) {
         if (!isPressed) return;
-
-        if ("placeBlock".equals(name) || "removeBlock".equals(name)) {
-            handleBlockEdit("placeBlock".equals(name));
-        }
-
-        if ("switchBlock".equals(name)) {
-            selectedBlockType++;
-            if (selectedBlockType > BlockType.STONE) selectedBlockType = BlockType.GRASS;
-            System.out.println("Selected: " + selectedBlockType);
-        }
-        
-        if ("displayPosition".equals(name)) {
-            System.out.println("Pos: " + player.getWorldTranslation());
-        }
     }
 
     private void handleBlockEdit(boolean place) {
@@ -201,14 +157,12 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
         Vector3f origin = cam.getWorldCoordinates(cursorPos, 0f);
         Vector3f direction = cam.getWorldCoordinates(cursorPos, 1f).subtract(origin).normalizeLocal();
 
-        // Пошагово идём по лучу с шагом 0.1 единицы
         Vector3f currentPos = origin.clone();
         Vector3f step = direction.mult(0.1f);
 
         for (int i = 0; i < 1000; i++) { // максимум 100 единиц дистанции
             currentPos.addLocal(step);
 
-            // Проверяем блок в этой позиции
             int bx = (int) Math.floor(currentPos.x);
             int by = (int) Math.floor(currentPos.y);
             int bz = (int) Math.floor(currentPos.z);
@@ -216,13 +170,13 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
             int blockId = blockWorld.getBlock(bx, by, bz);
             if (blockId != BlockType.AIR) {
                 if (place) {
-                    // Берём предыдущую позицию (где был воздух)
                     Vector3f prevPos = currentPos.subtract(step);
                     int placeX = (int) Math.floor(prevPos.x);
                     int placeY = (int) Math.floor(prevPos.y);
                     int placeZ = (int) Math.floor(prevPos.z);
 
                     if (blockWorld.getBlock(placeX, placeY, placeZ) == BlockType.AIR) {
+                        int selectedBlockType = BlockType.GRASS;
                         blockWorld.setBlock(placeX, placeY, placeZ, selectedBlockType);
                     }
                 } else {
@@ -242,61 +196,15 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
         Vector3f posDelta = to.subtract(from)
                 .multLocal(Math.min(1f, camFollowPosSpeed * tpf));
         camTarget.move(posDelta);
-//        updateHighlight();
         updateFaceHighlight();
-
     }
-
-    private void createHighlight() {
-        Box highlightMesh = new Box(0.51f, 0.51f, 0.51f); // чуть больше блока
-        highlightBlock = new Geometry("Highlight", highlightMesh);
-        Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-        mat.setColor("Color", new ColorRGBA(1f, 1f, 1f, 0.3f));
-        mat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
-        highlightBlock.setMaterial(mat);
-        highlightBlock.setQueueBucket(RenderQueue.Bucket.Transparent);
-        rootNode.attachChild(highlightBlock);
-    }
-
-    private void updateHighlight() {
-        Vector2f cursorPos = inputManager.getCursorPosition();
-        Vector3f origin = cam.getWorldCoordinates(cursorPos, 0f);
-        Vector3f direction = cam.getWorldCoordinates(cursorPos, 1f).subtract(origin).normalizeLocal();
-
-        Vector3f currentPos = origin.clone();
-        Vector3f step = direction.mult(0.1f);
-
-        for (int i = 0; i < 1000; i++) {
-            currentPos.addLocal(step);
-
-            int bx = (int) Math.floor(currentPos.x);
-            int by = (int) Math.floor(currentPos.y);
-            int bz = (int) Math.floor(currentPos.z);
-
-            if (blockWorld.getBlock(bx, by, bz) != BlockType.AIR) {
-                // Показываем где будет размещён блок
-                Vector3f prevPos = currentPos.subtract(step);
-                int placeX = (int) Math.floor(prevPos.x);
-                int placeY = (int) Math.floor(prevPos.y);
-                int placeZ = (int) Math.floor(prevPos.z);
-
-                highlightBlock.setLocalTranslation(placeX, placeY, placeZ);
-                highlightBlock.setCullHint(Spatial.CullHint.Never);
-                return;
-            }
-        }
-
-        highlightBlock.setCullHint(Spatial.CullHint.Always); // скрыть если ничего не найдено
-    }
-
+    
     private void createFaceHighlight() {
         Node highlightNode = new Node("ThickHighlight");
 
-        // Создаём 4 тонких прямоугольника для "толстых" линий
-        float thickness = 0.2f; // толщина "линии"
+        float thickness = 0.2f;
         float size = 0.52f;
 
-        // Горизонтальные линии (верх и низ)
         Box topLine = new Box(size, thickness/2, thickness/2);
         Geometry topGeo = new Geometry("TopLine", topLine);
         topGeo.setLocalTranslation(0, size, 0);
@@ -305,7 +213,6 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
         Geometry bottomGeo = new Geometry("BottomLine", bottomLine);
         bottomGeo.setLocalTranslation(0, -size, 0);
 
-        // Вертикальные линии (лево и право)
         Box leftLine = new Box(thickness/2, size, thickness/2);
         Geometry leftGeo = new Geometry("LeftLine", leftLine);
         leftGeo.setLocalTranslation(-size, 0, 0);
@@ -314,7 +221,6 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
         Geometry rightGeo = new Geometry("RightLine", rightLine);
         rightGeo.setLocalTranslation(size, 0, 0);
 
-        // Общий материал для всех линий
         Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
         mat.setColor("Color", new ColorRGBA(1f, 1f, 0f, 1.0f));
         mat.getAdditionalRenderState().setDepthTest(false);
@@ -332,18 +238,11 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
 
         highlightNode.setQueueBucket(RenderQueue.Bucket.Transparent);
 
-        faceHighlight = highlightNode; // используем Node вместо Geometry
+        faceHighlight = highlightNode;
         rootNode.attachChild(faceHighlight);
         faceHighlight.setCullHint(Spatial.CullHint.Always);
     }
-
-
-
-
-
-
-
-
+    
     private void updateFaceHighlight() {
         Vector2f cursorPos = inputManager.getCursorPosition();
         Vector3f origin = cam.getWorldCoordinates(cursorPos, 0f);
@@ -360,14 +259,12 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
             int bz = (int) Math.floor(currentPos.z);
 
             if (blockWorld.getBlock(bx, by, bz) != BlockType.AIR) {
-                // Нашли твёрдый блок - показываем грань куда будет размещён новый блок
                 Vector3f prevPos = currentPos.subtract(step);
                 int placeX = (int) Math.floor(prevPos.x);
                 int placeY = (int) Math.floor(prevPos.y);
                 int placeZ = (int) Math.floor(prevPos.z);
 
                 if (blockWorld.getBlock(placeX, placeY, placeZ) == BlockType.AIR) {
-                    // Определяем какая грань блока будет "прикреплена"
                     Vector3f attachDirection = new Vector3f(placeX - bx, placeY - by, placeZ - bz);
 
                     positionFaceHighlight(bx, by, bz, attachDirection);
@@ -381,31 +278,34 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
     }
 
     private void positionFaceHighlight(int blockX, int blockY, int blockZ, Vector3f attachDir) {
-        // Позиция центра грани существующего блока
-        Vector3f faceCenter = new Vector3f(
-                blockX + 0.5f * attachDir.x,
-                blockY + 0.5f * attachDir.y,
-                blockZ + 0.5f * attachDir.z
-        );
+        Vector3f faceCenter = new Vector3f(blockX, blockY, blockZ);
+
+        if (attachDir.x > 0) faceCenter.x += 0.501f;      // правая грань
+        else if (attachDir.x < 0) faceCenter.x -= 0.501f; // левая грань
+        else if (attachDir.y > 0) faceCenter.y += 0.501f; // верхняя грань  
+        else if (attachDir.y < 0) faceCenter.y -= 0.501f; // нижняя грань
+        else if (attachDir.z > 0) faceCenter.z += 0.501f; // передняя грань
+        else if (attachDir.z < 0) faceCenter.z -= 0.501f; // задняя грань
 
         faceHighlight.setLocalTranslation(faceCenter);
 
-        // Поворачиваем wireframe чтобы он был параллелен нужной грани
         Quaternion rotation = new Quaternion();
 
         if (attachDir.y != 0) {
-            // Горизонтальная грань (верх/низ) - квадрат остаётся в плоскости XZ
+            // Горизонтальные грани - поворот в плоскость XZ
             rotation.fromAngles(FastMath.HALF_PI, 0, 0);
         } else if (attachDir.x != 0) {
-            // Вертикальная грань по X (лево/право) - поворот в плоскость YZ  
-            rotation.fromAngles(0, 0, FastMath.HALF_PI);
+            // Боковые грани по X - поворот в плоскость YZ
+            rotation.fromAngles(0, FastMath.HALF_PI, 0);
         } else {
-            // Вертикальная грань по Z (перед/зад) - квадрат в плоскости XY (по умолчанию)
+            // Грани по Z - остается в плоскости XY
             rotation.fromAngles(0, 0, 0);
         }
 
         faceHighlight.setLocalRotation(rotation);
     }
+
+
 
 
 
