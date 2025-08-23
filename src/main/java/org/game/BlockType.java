@@ -29,6 +29,7 @@ public class BlockType {
                 Texture grassTex = assetManager.loadTexture("Textures/grass7" +
                         ".jpg");
                 grassTex.setWrap(Texture.WrapMode.Repeat); // для тайлинга
+//                mat.setColor("Color", new ColorRGBA(0.8f, 1.0f, 0.8f, 1.0f));
                 mat.setTexture("ColorMap", grassTex);
                 break;
 //            case DIRT:

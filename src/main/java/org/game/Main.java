@@ -85,7 +85,7 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
 
         ChaseCamera chaseCam = new ChaseCamera(cam, camTarget, inputManager);
 
-        chaseCam.setDefaultDistance(60f);
+        chaseCam.setDefaultDistance(40f);
         chaseCam.setMinDistance(24f);
         chaseCam.setMaxDistance(80f);
 
