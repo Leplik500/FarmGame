@@ -22,14 +22,19 @@ import com.jme3.util.SkyFactory;
 import java.awt.DisplayMode;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Main extends SimpleApplication implements AnalogListener, ActionListener {
 
-    private Spatial player;          // «персонаж» — синий куб
+    private Spatial player;
     private final Node camTarget = new Node("CamTarget"); // сглаженная цель для камеры
     private SimpleBlockWorld blockWorld;
     private Spatial faceHighlight;
     private AnimComposer animComposer;
+    private Set<String> pressedKeys = new HashSet<>();
+    private boolean isMoving = false;
+    private String currentAnimation = "";
 
     public static void main(String[] args) {
 //        AppSettings settings = CreateFullscreenSettings();
@@ -121,15 +126,18 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
     }
 
     private void registerInput() {
-        inputManager.addMapping("moveForward",  new KeyTrigger(KeyInput.KEY_W), new KeyTrigger(KeyInput.KEY_UP));
-        inputManager.addMapping("moveBackward", new KeyTrigger(KeyInput.KEY_S), new KeyTrigger(KeyInput.KEY_DOWN));
-        inputManager.addMapping("moveRight",    new KeyTrigger(KeyInput.KEY_D), new KeyTrigger(KeyInput.KEY_RIGHT));
-        inputManager.addMapping("moveLeft",     new KeyTrigger(KeyInput.KEY_A), new KeyTrigger(KeyInput.KEY_LEFT));
-        inputManager.addListener(this, "moveForward", "moveBackward", "moveRight", "moveLeft", "displayPosition");
+        inputManager.addMapping("moveForward", new KeyTrigger(KeyInput.KEY_W));
+        inputManager.addMapping("moveBackward", new KeyTrigger(KeyInput.KEY_S));
+        inputManager.addMapping("moveLeft", new KeyTrigger(KeyInput.KEY_A));
+        inputManager.addMapping("moveRight", new KeyTrigger(KeyInput.KEY_D));
+        
+        inputManager.addListener(this, "moveForward", "moveBackward", 
+                "moveLeft", "moveRight");
     }
 
     @Override
     public void onAnalog(String name, float value, float tpf) {
+        if (!pressedKeys.contains(name)) return;
         float speed = 5f * tpf;
 
         Vector3f forward = cam.getDirection().clone();
@@ -163,9 +171,24 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
 
     @Override
     public void onAction(String name, boolean isPressed, float tpf) {
-        if (!isPressed) {
+        if (isPressed) {
+            pressedKeys.add(name);
+        } else {
+            pressedKeys.remove(name);
+        }
+
+        // Check if any movement key is pressed
+        boolean anyMovementKey = !pressedKeys.isEmpty();
+
+        if (anyMovementKey && !isMoving) {
+            isMoving = true;
+            setAnimation("animation.lael.walk");
+        } else if (!anyMovementKey && isMoving) {
+            isMoving = false;
+            setAnimation("animation.lael.idlemain");
         }
     }
+
 
     private void handleBlockEdit(boolean place) {
         Vector2f cursorPos = inputManager.getCursorPosition();
@@ -326,6 +349,16 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
         cursor.setHeight(32);
         cursor.setWidth(32);
         inputManager.setMouseCursor(cursor);
+    }
+
+    private void setAnimation(String animationName) {
+        if (!animationName.equals(currentAnimation)) {
+            currentAnimation = animationName;
+            if (animComposer != null) {
+                animComposer.setCurrentAction(animationName);
+                System.out.println("Animation changed to: " + animationName);
+            }
+        }
     }
 
 
