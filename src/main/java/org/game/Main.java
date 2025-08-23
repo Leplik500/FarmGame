@@ -1,5 +1,6 @@
 package org.game;
 
+import com.jme3.anim.AnimComposer;
 import com.jme3.app.SimpleApplication;
 import com.jme3.cursors.plugins.JmeCursor;
 import com.jme3.input.ChaseCamera;
@@ -9,6 +10,7 @@ import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.AnalogListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
+import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.*;
 import com.jme3.renderer.queue.RenderQueue;
@@ -23,10 +25,11 @@ import java.awt.GraphicsEnvironment;
 
 public class Main extends SimpleApplication implements AnalogListener, ActionListener {
 
-    private Geometry player;          // «персонаж» — синий куб
+    private Spatial player;          // «персонаж» — синий куб
     private final Node camTarget = new Node("CamTarget"); // сглаженная цель для камеры
     private SimpleBlockWorld blockWorld;
     private Spatial faceHighlight;
+    private AnimComposer animComposer;
 
     public static void main(String[] args) {
 //        AppSettings settings = CreateFullscreenSettings();
@@ -51,12 +54,21 @@ public class Main extends SimpleApplication implements AnalogListener, ActionLis
 
     @Override
     public void simpleInitApp() {
-        // Куб (игрок)
-        Box box = new Box(1f, 1f, 1f);
-        player = new Geometry("PlayerBox", box);
-        Material matTea = new Material(assetManager, "Common/MatDefs/Misc/ShowNormals.j3md");
-        player.setMaterial(matTea);
+        player = assetManager.loadModel("Models/rhea_wilson.glb");
+        player.depthFirstTraversal(spatial -> {
+            if (spatial.getControl(AnimComposer.class) != null) {
+                animComposer = spatial.getControl(AnimComposer.class);
+            }
+        });
+        System.out.println("Available animations: " + animComposer.getAnimClipsNames());
+        animComposer.setCurrentAction("animation.lael.idlemain");
         rootNode.attachChild(player);
+
+        DirectionalLight light = new DirectionalLight();
+        light.setDirection(new Vector3f(-1f, -1f, -1f).normalizeLocal());
+        light.setColor(ColorRGBA.White.mult(2f));
+        rootNode.addLight(light);
+        
         blockWorld = new SimpleBlockWorld(rootNode, assetManager);
         blockWorld.generateFlatWorld(100, 100);
         addSky();
