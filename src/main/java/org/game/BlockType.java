@@ -4,6 +4,7 @@ import com.jme3.asset.AssetManager;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.texture.Texture;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,10 +25,9 @@ public class BlockType {
 
         Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
 
-        switch(blockId) {
+        switch (blockId) {
             case GRASS:
-                Texture grassTex = assetManager.loadTexture("Textures/grass7" +
-                        ".jpg");
+                Texture grassTex = assetManager.loadTexture("Textures/grass7" + ".jpg");
                 grassTex.setWrap(Texture.WrapMode.Repeat); // для тайлинга
 //                mat.setColor("Color", new ColorRGBA(0.8f, 1.0f, 0.8f, 1.0f));
                 mat.setTexture("ColorMap", grassTex);

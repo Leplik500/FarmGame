@@ -13,42 +13,26 @@ import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.*;
 import com.jme3.renderer.queue.RenderQueue;
-import com.jme3.scene.*;
+import com.jme3.scene.Geometry;
+import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 import com.jme3.system.AppSettings;
 import com.jme3.texture.Texture;
 import com.jme3.util.SkyFactory;
 
-import java.util.HashSet;
-import java.util.Set;
-
 public class Main extends SimpleApplication implements ActionListener {
 
-    private Spatial player;
+    private static final float MIN_ANIMATION_DURATION = 0.5f; // Minimum time 
     private final Node camTarget = new Node("CamTarget");
+    private Spatial player;
     private SimpleBlockWorld blockWorld;
     private Spatial faceHighlight;
     private AnimComposer animComposer;
-
-    // Movement state
-    private final Set<String> pressedKeys = new HashSet<>();
-    private boolean isWalking = false;
-    private boolean isRunning = false;
-
-    // Animation state - completely different approach
-    private String targetAnimation = "animation.lael.idlemain";
-    private boolean animationLocked = false;
-    private float animationLockTime = 0f;
-    private static final float MIN_ANIMATION_DURATION = 0.5f; // Minimum time 
     // before allowing animation change
-
-    // Double-tap detection for W
-    private long lastWPressTime = 0L;
-    private static final long DOUBLE_TAP_NS = 600_000_000L; // 300 ms
-
-    // Speeds
-    private float walkSpeed = 5f;
-    private float runSpeed = 10f;
+    private PlayerInputHandler inputHandler;
+    private PlayerMovementController movementController;
+    private PlayerAnimationController animationController;
 
     public static void main(String[] args) {
         AppSettings settings = new AppSettings(true);
@@ -71,6 +55,8 @@ public class Main extends SimpleApplication implements ActionListener {
             System.out.println("Available animations: " + animComposer.getAnimClipsNames());
 
             // Set initial animation and lock it briefly
+            // Animation state - completely different approach
+            String targetAnimation = "animation.lael.idlemain";
             setAndLockAnimation(targetAnimation);
         } else {
             System.err.println("No AnimComposer found!");
@@ -93,13 +79,17 @@ public class Main extends SimpleApplication implements ActionListener {
         createFaceHighlight();
         registerInput();
         setupCustomCursor();
+
+        inputHandler = new PlayerInputHandler();
+        movementController = new PlayerMovementController(player, cam);
+        animationController = new PlayerAnimationController(animComposer);
     }
 
     private void registerInput() {
-        inputManager.addMapping("moveForward",  new KeyTrigger(KeyInput.KEY_W));
+        inputManager.addMapping("moveForward", new KeyTrigger(KeyInput.KEY_W));
         inputManager.addMapping("moveBackward", new KeyTrigger(KeyInput.KEY_S));
-        inputManager.addMapping("moveLeft",     new KeyTrigger(KeyInput.KEY_A));
-        inputManager.addMapping("moveRight",    new KeyTrigger(KeyInput.KEY_D));
+        inputManager.addMapping("moveLeft", new KeyTrigger(KeyInput.KEY_A));
+        inputManager.addMapping("moveRight", new KeyTrigger(KeyInput.KEY_D));
 
         inputManager.addListener(this, "moveForward", "moveBackward", "moveLeft", "moveRight");
     }
@@ -107,59 +97,25 @@ public class Main extends SimpleApplication implements ActionListener {
     @Override
     public void onAction(String name, boolean isPressed, float tpf) {
         if (isPressed) {
-            pressedKeys.add(name);
-
-            if ("moveForward".equals(name)) {
-                long now = System.nanoTime();
-                if (now - lastWPressTime <= DOUBLE_TAP_NS) {
-                    isRunning = true;
-                    System.out.println("Run mode activated");
-                }
-                lastWPressTime = now;
-            }
+            inputHandler.handleKeyPress(name);
         } else {
-            pressedKeys.remove(name);
-
-            if ("moveForward".equals(name)) {
-                if (isRunning) {
-                    isRunning = false;
-                    System.out.println("Run mode deactivated");
-                }
-            }
+            inputHandler.handleKeyRelease(name);
         }
 
-        boolean shouldBeWalking = !pressedKeys.isEmpty();
-        if (shouldBeWalking != isWalking) {
-            isWalking = shouldBeWalking;
-
-            // REFINED: Only unlock if switching from idle to movement AND lock time is almost expired
-            if (isWalking && animationLocked &&
-                    targetAnimation.equals("animation.lael.idlemain") &&
-                    animationLockTime < 0.1f) { // Only unlock if less than 0.1s remaining
-                animationLocked = false;
-                System.out.println("Animation unlocked due to movement start");
-            }
-
-            updateTargetAnimation();
+        if (inputHandler.updateWalkingState()) {
+            animationController.forceUnlockIfMoving(inputHandler.isWalking());
         }
     }
 
 
     @Override
     public void simpleUpdate(float tpf) {
-        // Update animation lock timer
-        if (animationLocked) {
-            animationLockTime -= tpf;
-            if (animationLockTime <= 0) {
-                animationLocked = false;
-            }
+        if (inputHandler.isWalking()) {
+            movementController.handleMovement(inputHandler.getPressedKeys(), inputHandler.isRunning(), tpf);
         }
 
-        // Handle movement
-        if (!pressedKeys.isEmpty()) {
-            handleMovement(tpf);
-            updateTargetAnimation();
-        }
+        // Update animation
+        animationController.update(tpf, inputHandler.isWalking(), inputHandler.isRunning());
 
         // Update camera
         Vector3f to = player.getWorldTranslation();
@@ -171,79 +127,27 @@ public class Main extends SimpleApplication implements ActionListener {
         updateFaceHighlight();
     }
 
-    private void updateTargetAnimation() {
-        String newTarget;
-        if (isWalking) {
-            newTarget = isRunning ? "animation.lael.run" : "animation.lael.walk";
-        } else {
-            newTarget = "animation.lael.idlemain";
-            isRunning = false;
-        }
-
-        if (!newTarget.equals(targetAnimation)) {
-            targetAnimation = newTarget;
-            if (!animationLocked) {
-                setAndLockAnimation(targetAnimation);
-            }
-        }
-    }
-
-
 
     private void setAndLockAnimation(String animationName) {
         if (animComposer != null && animComposer.getAnimClipsNames().contains(animationName)) {
             try {
                 animComposer.setCurrentAction(animationName);
-                animationLocked = true;
 
                 // SHORTER lock time for idle animations
+                float animationLockTime;
                 if (animationName.equals("animation.lael.idlemain")) {
                     animationLockTime = 0.15f; // Shorter for idle
                 } else {
                     animationLockTime = MIN_ANIMATION_DURATION; // Normal for walk/run
                 }
 
-                System.out.println("Animation set and locked: " + animationName +
-                        " for " + animationLockTime + "s");
+                System.out.println("Animation set and locked: " + animationName + " for " + animationLockTime + "s");
             } catch (Exception e) {
                 System.err.println("Error setting animation: " + e.getMessage());
             }
         }
     }
 
-
-    private void handleMovement(float tpf) {
-        Vector3f forward = cam.getDirection().clone();
-        forward.y = 0f;
-        forward.normalizeLocal();
-
-        Vector3f left = cam.getLeft().clone();
-        left.y = 0f;
-        left.normalizeLocal();
-
-        Vector3f movement = new Vector3f();
-
-        if (pressedKeys.contains("moveForward"))  movement.addLocal(forward);
-        if (pressedKeys.contains("moveBackward")) movement.addLocal(forward.negate());
-        if (pressedKeys.contains("moveRight"))    movement.addLocal(left.negate());
-        if (pressedKeys.contains("moveLeft"))     movement.addLocal(left);
-
-        if (movement.lengthSquared() > 0f) {
-            movement.normalizeLocal();
-            float currentSpeed = isRunning ? runSpeed : walkSpeed;
-            Vector3f step = movement.mult(currentSpeed * tpf);
-            player.move(step);
-
-            float targetYaw = (float) Math.atan2(step.x, step.z);
-            float[] angles = player.getLocalRotation().toAngles(null);
-            float currentYaw = angles[1];
-            float diff = targetYaw - currentYaw;
-            diff = (diff + FastMath.PI) % FastMath.TWO_PI - FastMath.PI;
-            float lerp = Math.min(1f, 10f * tpf);
-            float newYaw = currentYaw + diff * lerp;
-            player.setLocalRotation(new Quaternion().fromAngles(0f, newYaw, 0f));
-        }
-    }
 
     // All other methods remain the same...
     private void addSky() {
@@ -283,19 +187,19 @@ public class Main extends SimpleApplication implements ActionListener {
         float thickness = 0.2f;
         float size = 0.52f;
 
-        Box topLine = new Box(size, thickness/2, thickness/2);
+        Box topLine = new Box(size, thickness / 2, thickness / 2);
         Geometry topGeo = new Geometry("TopLine", topLine);
         topGeo.setLocalTranslation(0, size, 0);
 
-        Box bottomLine = new Box(size, thickness/2, thickness/2);
+        Box bottomLine = new Box(size, thickness / 2, thickness / 2);
         Geometry bottomGeo = new Geometry("BottomLine", bottomLine);
         bottomGeo.setLocalTranslation(0, -size, 0);
 
-        Box leftLine = new Box(thickness/2, size, thickness/2);
+        Box leftLine = new Box(thickness / 2, size, thickness / 2);
         Geometry leftGeo = new Geometry("LeftLine", leftLine);
         leftGeo.setLocalTranslation(-size, 0, 0);
 
-        Box rightLine = new Box(thickness/2, size, thickness/2);
+        Box rightLine = new Box(thickness / 2, size, thickness / 2);
         Geometry rightGeo = new Geometry("RightLine", rightLine);
         rightGeo.setLocalTranslation(size, 0, 0);
 
@@ -374,7 +278,7 @@ public class Main extends SimpleApplication implements ActionListener {
     }
 
     private void setupCustomCursor() {
-        JmeCursor cursor = (JmeCursor) assetManager.loadAsset("Textures/Cursors/KOFJI/hand.cur");
+        JmeCursor cursor = (JmeCursor) assetManager.loadAsset("Cursors/hand.cur");
         cursor.setHeight(32);
         cursor.setWidth(32);
         inputManager.setMouseCursor(cursor);

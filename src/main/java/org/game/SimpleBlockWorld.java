@@ -55,8 +55,8 @@ public class SimpleBlockWorld {
     }
 
     public void generateFlatWorld(int sizeX, int sizeZ) {
-        for (int x = -sizeX/2; x < sizeX/2; x++) {
-            for (int z = -sizeZ/2; z < sizeZ/2; z++) {
+        for (int x = -sizeX / 2; x < sizeX / 2; x++) {
+            for (int z = -sizeZ / 2; z < sizeZ / 2; z++) {
                 setBlock(x, -1, z, BlockType.GRASS);
             }
         }
