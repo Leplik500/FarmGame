@@ -1,0 +1,74 @@
+package org.game;
+
+import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
+import com.jme3.math.Vector3f;
+
+public final class GameConfig {
+
+    // ========== DISPLAY SETTINGS ==========
+    public static final int SCREEN_WIDTH = 800;
+    public static final int SCREEN_HEIGHT = 814;
+    public static final boolean FULLSCREEN = true;
+
+    // ========== PLAYER MOVEMENT ==========
+    public static final float WALK_SPEED = 5f;
+    public static final float RUN_SPEED = 10f;
+    public static final float ROTATION_SPEED = 10f;
+
+    // ========== INPUT SETTINGS ==========
+    public static final long DOUBLE_TAP_WINDOW_NS = 600_000_000L; // 600ms
+
+    // ========== ANIMATION SETTINGS ==========
+    public static final float MIN_ANIMATION_DURATION = 0.5f;
+    public static final float IDLE_ANIMATION_DURATION = 0.15f;
+    public static final float ANIMATION_UNLOCK_THRESHOLD = 0.1f;
+
+    // Animation names
+    public static final String ANIM_IDLE = "animation.lael.idlemain";
+    public static final String ANIM_WALK = "animation.lael.walk";
+    public static final String ANIM_RUN = "animation.lael.run";
+
+    // ========== CAMERA SETTINGS ==========
+    public static final float CAM_DEFAULT_DISTANCE = 40f;
+    public static final float CAM_MIN_DISTANCE = 24f;
+    public static final float CAM_MAX_DISTANCE = 80f;
+    public static final float CAM_VERTICAL_ANGLE = FastMath.DEG_TO_RAD * 77f;
+    public static final float CAM_HORIZONTAL_ANGLE = FastMath.DEG_TO_RAD * 35f;
+    public static final Vector3f CAM_LOOK_OFFSET = new Vector3f(0, 1.2f, 0);
+    public static final float CAM_ROTATION_SPEED = 1f;
+    public static final float CAM_ZOOM_SENSITIVITY = 0.6f;
+    public static final float CAM_FOLLOW_SPEED = 7f;
+    public static final float CAM_FOV_DEGREES = 40f;
+
+    // ========== LIGHTING SETTINGS ==========
+    public static final Vector3f LIGHT_DIRECTION = new Vector3f(-1f, -1f, -1f);
+    public static final float LIGHT_INTENSITY = 2f;
+
+    // ========== WORLD SETTINGS ==========
+    public static final int WORLD_SIZE_X = 100;
+    public static final int WORLD_SIZE_Z = 100;
+
+    // ========== UI SETTINGS ==========
+    public static final float HIGHLIGHT_THICKNESS = 0.2f;
+    public static final float HIGHLIGHT_SIZE = 0.52f;
+    public static final float HIGHLIGHT_OFFSET = 0.501f;
+    public static final ColorRGBA HIGHLIGHT_COLOR = new ColorRGBA(1f, 1f, 0f, 1.0f);
+    public static final int CURSOR_SIZE = 32;
+    
+    // ========== ASSET PATHS ==========
+    public static final String MODEL_PLAYER = "Models/rhea_wilson.glb";
+    public static final String CURSOR_PATH = "Cursors/hand.cur";
+
+    // SkyBox textures
+    public static final String SKYBOX_PX = "SkyBox/px.png";
+    public static final String SKYBOX_NX = "SkyBox/nx.png";
+    public static final String SKYBOX_PY = "SkyBox/py.png";
+    public static final String SKYBOX_NY = "SkyBox/ny.png";
+    public static final String SKYBOX_PZ = "SkyBox/pz.png";
+    public static final String SKYBOX_NZ = "SkyBox/nz.png";
+
+    // Prevent instantiation
+    private GameConfig() {}
+}
+

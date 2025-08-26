@@ -21,30 +21,53 @@ import com.jme3.system.AppSettings;
 import com.jme3.texture.Texture;
 import com.jme3.util.SkyFactory;
 
+import java.awt.*;
+
 public class Main extends SimpleApplication implements ActionListener {
 
-    private static final float MIN_ANIMATION_DURATION = 0.5f; // Minimum time 
     private final Node camTarget = new Node("CamTarget");
     private Spatial player;
     private SimpleBlockWorld blockWorld;
     private Spatial faceHighlight;
     private AnimComposer animComposer;
-    // before allowing animation change
     private PlayerInputHandler inputHandler;
     private PlayerMovementController movementController;
     private PlayerAnimationController animationController;
 
     public static void main(String[] args) {
         AppSettings settings = new AppSettings(true);
-        settings.setResolution(800, 814);
+
+        if (GameConfig.FULLSCREEN) {
+            settings = createFullscreenSettings();
+        } else {
+            settings.setResolution(GameConfig.SCREEN_WIDTH, GameConfig.SCREEN_HEIGHT);
+            settings.setFullscreen(false);
+        }
+
         Main app = new Main();
         app.setSettings(settings);
         app.start();
     }
 
+    private static AppSettings createFullscreenSettings() {
+        AppSettings settings = new AppSettings(true);
+        GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+        DisplayMode[] modes = device.getDisplayModes();
+
+        // Use the first (typically highest resolution) display mode
+        DisplayMode mode = modes[0];
+        settings.setResolution(mode.getWidth(), mode.getHeight());
+        settings.setFrequency(mode.getRefreshRate());
+        settings.setBitsPerPixel(mode.getBitDepth());
+        settings.setFullscreen(device.isFullScreenSupported());
+
+        return settings;
+    }
+
+
     @Override
     public void simpleInitApp() {
-        player = assetManager.loadModel("Models/rhea_wilson.glb");
+        player = assetManager.loadModel(GameConfig.MODEL_PLAYER);
         player.depthFirstTraversal(spatial -> {
             if (spatial.getControl(AnimComposer.class) != null) {
                 animComposer = spatial.getControl(AnimComposer.class);
@@ -53,10 +76,7 @@ public class Main extends SimpleApplication implements ActionListener {
 
         if (animComposer != null) {
             System.out.println("Available animations: " + animComposer.getAnimClipsNames());
-
-            // Set initial animation and lock it briefly
-            // Animation state - completely different approach
-            String targetAnimation = "animation.lael.idlemain";
+            String targetAnimation = GameConfig.ANIM_IDLE;
             setAndLockAnimation(targetAnimation);
         } else {
             System.err.println("No AnimComposer found!");
@@ -65,12 +85,12 @@ public class Main extends SimpleApplication implements ActionListener {
         rootNode.attachChild(player);
 
         DirectionalLight light = new DirectionalLight();
-        light.setDirection(new Vector3f(-1f, -1f, -1f).normalizeLocal());
-        light.setColor(ColorRGBA.White.mult(2f));
+        light.setDirection(GameConfig.LIGHT_DIRECTION.normalizeLocal());
+        light.setColor(ColorRGBA.White.mult(GameConfig.LIGHT_INTENSITY));
         rootNode.addLight(light);
 
         blockWorld = new SimpleBlockWorld(rootNode, assetManager);
-        blockWorld.generateFlatWorld(100, 100);
+        blockWorld.generateFlatWorld(GameConfig.WORLD_SIZE_X, GameConfig.WORLD_SIZE_Z);
         addSky();
         rootNode.attachChild(camTarget);
         camTarget.setLocalTranslation(player.getLocalTranslation());
@@ -120,7 +140,7 @@ public class Main extends SimpleApplication implements ActionListener {
         // Update camera
         Vector3f to = player.getWorldTranslation();
         Vector3f from = camTarget.getLocalTranslation();
-        float camFollowPosSpeed = 7f;
+        float camFollowPosSpeed = GameConfig.CAM_FOLLOW_SPEED;
         Vector3f posDelta = to.subtract(from).multLocal(Math.min(1f, camFollowPosSpeed * tpf));
         camTarget.move(posDelta);
 
@@ -133,12 +153,11 @@ public class Main extends SimpleApplication implements ActionListener {
             try {
                 animComposer.setCurrentAction(animationName);
 
-                // SHORTER lock time for idle animations
                 float animationLockTime;
                 if (animationName.equals("animation.lael.idlemain")) {
-                    animationLockTime = 0.15f; // Shorter for idle
+                    animationLockTime = GameConfig.IDLE_ANIMATION_DURATION;
                 } else {
-                    animationLockTime = MIN_ANIMATION_DURATION; // Normal for walk/run
+                    animationLockTime = GameConfig.MIN_ANIMATION_DURATION;
                 }
 
                 System.out.println("Animation set and locked: " + animationName + " for " + animationLockTime + "s");
@@ -148,15 +167,13 @@ public class Main extends SimpleApplication implements ActionListener {
         }
     }
 
-
-    // All other methods remain the same...
     private void addSky() {
-        Texture px = assetManager.loadTexture("SkyBox/px.png");
-        Texture nx = assetManager.loadTexture("SkyBox/nx.png");
-        Texture py = assetManager.loadTexture("SkyBox/py.png");
-        Texture ny = assetManager.loadTexture("SkyBox/ny.png");
-        Texture pz = assetManager.loadTexture("SkyBox/pz.png");
-        Texture nz = assetManager.loadTexture("SkyBox/nz.png");
+        Texture px = assetManager.loadTexture(GameConfig.SKYBOX_PX);
+        Texture nx = assetManager.loadTexture(GameConfig.SKYBOX_NX);
+        Texture py = assetManager.loadTexture(GameConfig.SKYBOX_PY);
+        Texture ny = assetManager.loadTexture(GameConfig.SKYBOX_NY);
+        Texture pz = assetManager.loadTexture(GameConfig.SKYBOX_PZ);
+        Texture nz = assetManager.loadTexture(GameConfig.SKYBOX_NZ);
         Spatial sky = SkyFactory.createSky(assetManager, px, nx, py, ny, pz, nz);
         rootNode.attachChild(sky);
     }
@@ -164,28 +181,28 @@ public class Main extends SimpleApplication implements ActionListener {
     private void configureCamera() {
         flyCam.setEnabled(false);
         ChaseCamera chaseCam = new ChaseCamera(cam, camTarget, inputManager);
-        chaseCam.setDefaultDistance(40f);
-        chaseCam.setMinDistance(24f);
-        chaseCam.setMaxDistance(80f);
-        chaseCam.setDefaultVerticalRotation(FastMath.DEG_TO_RAD * 77f);
-        chaseCam.setMinVerticalRotation(FastMath.DEG_TO_RAD * 77f);
-        chaseCam.setMaxVerticalRotation(FastMath.DEG_TO_RAD * 77f);
-        chaseCam.setDefaultHorizontalRotation(FastMath.DEG_TO_RAD * 35f);
-        chaseCam.setLookAtOffset(new Vector3f(0, 1.2f, 0));
+        chaseCam.setDefaultDistance(GameConfig.CAM_DEFAULT_DISTANCE);
+        chaseCam.setMinDistance(GameConfig.CAM_MIN_DISTANCE);
+        chaseCam.setMaxDistance(GameConfig.CAM_MAX_DISTANCE);
+        chaseCam.setDefaultVerticalRotation(GameConfig.CAM_VERTICAL_ANGLE);
+        chaseCam.setMinVerticalRotation(GameConfig.CAM_VERTICAL_ANGLE);
+        chaseCam.setMaxVerticalRotation(GameConfig.CAM_VERTICAL_ANGLE);
+        chaseCam.setDefaultHorizontalRotation(GameConfig.CAM_HORIZONTAL_ANGLE);
+        chaseCam.setLookAtOffset(GameConfig.CAM_LOOK_OFFSET);
         chaseCam.setToggleRotationTrigger(new MouseButtonTrigger(MouseInput.BUTTON_MIDDLE));
         chaseCam.setDragToRotate(true);
-        chaseCam.setRotationSpeed(1f);
-        chaseCam.setZoomSensitivity(0.6f);
+        chaseCam.setRotationSpeed(GameConfig.CAM_ROTATION_SPEED);
+        chaseCam.setZoomSensitivity(GameConfig.CAM_ZOOM_SENSITIVITY);
         chaseCam.setSmoothMotion(false);
-        float fovDegrees = 40f;
+        float fovDegrees = GameConfig.CAM_FOV_DEGREES;
         float aspect = (float) cam.getWidth() / cam.getHeight();
         cam.setFrustumPerspective(fovDegrees, aspect, 0.1f, 1500);
     }
 
     private void createFaceHighlight() {
         Node highlightNode = new Node("ThickHighlight");
-        float thickness = 0.2f;
-        float size = 0.52f;
+        float thickness = GameConfig.HIGHLIGHT_THICKNESS;
+        float size = GameConfig.HIGHLIGHT_SIZE;
 
         Box topLine = new Box(size, thickness / 2, thickness / 2);
         Geometry topGeo = new Geometry("TopLine", topLine);
@@ -204,7 +221,7 @@ public class Main extends SimpleApplication implements ActionListener {
         rightGeo.setLocalTranslation(size, 0, 0);
 
         Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-        mat.setColor("Color", new ColorRGBA(1f, 1f, 0f, 1.0f));
+        mat.setColor("Color", GameConfig.HIGHLIGHT_COLOR);
         mat.getAdditionalRenderState().setDepthTest(false);
         mat.getAdditionalRenderState().setDepthWrite(false);
 
@@ -257,12 +274,12 @@ public class Main extends SimpleApplication implements ActionListener {
     private void positionFaceHighlight(int blockX, int blockY, int blockZ, Vector3f attachDir) {
         Vector3f faceCenter = new Vector3f(blockX, blockY, blockZ);
 
-        if (attachDir.x > 0) faceCenter.x += 0.501f;
-        else if (attachDir.x < 0) faceCenter.x -= 0.501f;
-        else if (attachDir.y > 0) faceCenter.y += 0.501f;
-        else if (attachDir.y < 0) faceCenter.y -= 0.501f;
-        else if (attachDir.z > 0) faceCenter.z += 0.501f;
-        else if (attachDir.z < 0) faceCenter.z -= 0.501f;
+        if (attachDir.x > 0) faceCenter.x += GameConfig.HIGHLIGHT_OFFSET;
+        else if (attachDir.x < 0) faceCenter.x -= GameConfig.HIGHLIGHT_OFFSET;
+        else if (attachDir.y > 0) faceCenter.y += GameConfig.HIGHLIGHT_OFFSET;
+        else if (attachDir.y < 0) faceCenter.y -= GameConfig.HIGHLIGHT_OFFSET;
+        else if (attachDir.z > 0) faceCenter.z += GameConfig.HIGHLIGHT_OFFSET;
+        else if (attachDir.z < 0) faceCenter.z -= GameConfig.HIGHLIGHT_OFFSET;
 
         faceHighlight.setLocalTranslation(faceCenter);
 
@@ -278,9 +295,10 @@ public class Main extends SimpleApplication implements ActionListener {
     }
 
     private void setupCustomCursor() {
-        JmeCursor cursor = (JmeCursor) assetManager.loadAsset("Cursors/hand.cur");
-        cursor.setHeight(32);
-        cursor.setWidth(32);
+        JmeCursor cursor = (JmeCursor) assetManager.loadAsset(GameConfig.CURSOR_PATH);
+        cursor.setHeight(GameConfig.CURSOR_SIZE);
+        cursor.setWidth(GameConfig.CURSOR_SIZE);
         inputManager.setMouseCursor(cursor);
     }
+
 }

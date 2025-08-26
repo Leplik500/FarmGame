@@ -1,18 +1,11 @@
 package org.game;
 
-import com.jme3.math.FastMath;
-import com.jme3.math.Quaternion;
-import com.jme3.math.Vector3f;
-import com.jme3.renderer.Camera;
+import com.jme3.math.*;
 import com.jme3.scene.Spatial;
-
+import com.jme3.renderer.Camera;
 import java.util.Set;
 
 public class PlayerMovementController {
-    private static final float WALK_SPEED = 5f;
-    private static final float RUN_SPEED = 10f;
-    private static final float ROTATION_SPEED = 10f;
-
     private final Spatial player;
     private final Camera camera;
 
@@ -23,12 +16,10 @@ public class PlayerMovementController {
 
     public void handleMovement(Set<String> pressedKeys, boolean isRunning, float tpf) {
         Vector3f movement = calculateMovementDirection(pressedKeys);
-
         if (movement.lengthSquared() > 0f) {
             movement.normalizeLocal();
-            float currentSpeed = isRunning ? RUN_SPEED : WALK_SPEED;
+            float currentSpeed = isRunning ? GameConfig.RUN_SPEED : GameConfig.WALK_SPEED;
             Vector3f step = movement.mult(currentSpeed * tpf);
-
             player.move(step);
             rotateTowardsMovement(step, tpf);
         }
@@ -44,13 +35,10 @@ public class PlayerMovementController {
         left.normalizeLocal();
 
         Vector3f movement = new Vector3f();
-
-        if (pressedKeys.contains("moveForward")) movement.addLocal(forward);
-        if (pressedKeys.contains("moveBackward"))
-            movement.addLocal(forward.negate());
-        if (pressedKeys.contains("moveRight")) movement.addLocal(left.negate());
-        if (pressedKeys.contains("moveLeft")) movement.addLocal(left);
-
+        if (pressedKeys.contains("moveForward"))  movement.addLocal(forward);
+        if (pressedKeys.contains("moveBackward")) movement.addLocal(forward.negate());
+        if (pressedKeys.contains("moveRight"))    movement.addLocal(left.negate());
+        if (pressedKeys.contains("moveLeft"))     movement.addLocal(left);
         return movement;
     }
 
@@ -60,9 +48,8 @@ public class PlayerMovementController {
         float currentYaw = angles[1];
         float diff = targetYaw - currentYaw;
         diff = (diff + FastMath.PI) % FastMath.TWO_PI - FastMath.PI;
-        float lerp = Math.min(1f, ROTATION_SPEED * tpf);
+        float lerp = Math.min(1f, GameConfig.ROTATION_SPEED * tpf);
         float newYaw = currentYaw + diff * lerp;
         player.setLocalRotation(new Quaternion().fromAngles(0f, newYaw, 0f));
     }
 }
-

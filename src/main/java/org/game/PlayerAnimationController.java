@@ -3,12 +3,11 @@ package org.game;
 import com.jme3.anim.AnimComposer;
 
 public class PlayerAnimationController {
-    // Constants moved here
-    private static final float MIN_ANIMATION_DURATION = 0.5f;
-    private static final float IDLE_ANIMATION_DURATION = 0.15f;
+    private static final float MIN_ANIMATION_DURATION = GameConfig.MIN_ANIMATION_DURATION;
+    private static final float IDLE_ANIMATION_DURATION = GameConfig.IDLE_ANIMATION_DURATION;
     private final AnimComposer animComposer;
-    // Animation state
-    private String targetAnimation = "animation.lael.idlemain";
+    
+    private String targetAnimation = GameConfig.ANIM_IDLE;
     private boolean animationLocked = false;
     private float animationLockTime = 0f;
 
@@ -46,14 +45,14 @@ public class PlayerAnimationController {
 
     private String determineTargetAnimation(boolean isWalking, boolean isRunning) {
         if (isWalking) {
-            return isRunning ? "animation.lael.run" : "animation.lael.walk";
+            return isRunning ? GameConfig.ANIM_RUN : GameConfig.ANIM_WALK;
         } else {
-            return "animation.lael.idlemain";
+            return GameConfig.ANIM_IDLE;
         }
     }
 
     public void forceUnlockIfMoving(boolean isWalking) {
-        if (isWalking && animationLocked && targetAnimation.equals("animation.lael.idlemain") && animationLockTime < 0.1f) {
+        if (isWalking && animationLocked && targetAnimation.equals(GameConfig.ANIM_IDLE) && animationLockTime < GameConfig.ANIMATION_UNLOCK_THRESHOLD) {
             animationLocked = false;
         }
     }
@@ -63,7 +62,8 @@ public class PlayerAnimationController {
             try {
                 animComposer.setCurrentAction(animationName);
                 animationLocked = true;
-                animationLockTime = animationName.equals("animation.lael.idlemain") ? IDLE_ANIMATION_DURATION : MIN_ANIMATION_DURATION;
+                animationLockTime = animationName.equals(GameConfig.ANIM_IDLE) ?
+                        IDLE_ANIMATION_DURATION : MIN_ANIMATION_DURATION;
             } catch (Exception e) {
                 System.err.println("Error setting animation: " + e.getMessage());
             }
