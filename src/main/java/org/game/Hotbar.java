@@ -2,13 +2,6 @@ package org.game;
 
 
 import com.jme3.asset.AssetManager;
-import com.jme3.input.InputManager;
-import com.jme3.input.KeyInput;
-import com.jme3.input.MouseInput;
-import com.jme3.input.controls.ActionListener;
-import com.jme3.input.controls.AnalogListener;
-import com.jme3.input.controls.KeyTrigger;
-import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.renderer.queue.RenderQueue;
@@ -17,7 +10,7 @@ import com.jme3.scene.Node;
 import com.jme3.scene.shape.Quad;
 import com.jme3.ui.Picture;
 
-public class Hotbar implements ActionListener, AnalogListener {
+public class Hotbar {
     public static final int SLOT_COUNT = 9;
 
     private final Node root = new Node("HotbarRoot");
@@ -29,20 +22,15 @@ public class Hotbar implements ActionListener, AnalogListener {
     private final HotbarItem[] items = new HotbarItem[SLOT_COUNT];
 
     private final AssetManager assetManager;
-    private final InputManager input;
-    private final Node guiNode;
     // UI sizes (px)
     private final int slotSize = 64;
     private final int slotGap = 6;
-    private final int marginBottom = 12;
     private int screenW;
     private int screenH;
     private int selected = 0;
 
-    public Hotbar(Node guiNode, AssetManager assetManager, InputManager input, int screenW, int screenH) {
-        this.guiNode = guiNode;
+    public Hotbar(Node guiNode, AssetManager assetManager, int screenW, int screenH) {
         this.assetManager = assetManager;
-        this.input = input;
         this.screenW = screenW;
         this.screenH = screenH;
 
@@ -56,7 +44,6 @@ public class Hotbar implements ActionListener, AnalogListener {
         buildSlots();
         buildHighlight();
         centerAlongBottom();
-        setupInput();
         updateHighlight();
     }
 
@@ -93,23 +80,10 @@ public class Hotbar implements ActionListener, AnalogListener {
     private void centerAlongBottom() {
         int totalW = SLOT_COUNT * slotSize + (SLOT_COUNT - 1) * slotGap;
         int x = (screenW - totalW) / 2;
-        int y = marginBottom;
-        root.setLocalTranslation(x, y, 0);
+        int marginBottom = 12;
+        root.setLocalTranslation(x, marginBottom, 0);
     }
-
-    private void setupInput() {
-        // number keys 1-9
-        for (int i = 0; i < SLOT_COUNT; i++) {
-            String map = "hotbar_" + (i + 1);
-            input.addMapping(map, new KeyTrigger(KeyInput.KEY_1 + i));
-            input.addListener(this, map);
-        }
-        // mouse wheel cycle
-        input.addMapping("hotbar_prev", new MouseAxisTrigger(MouseInput.AXIS_WHEEL, true));
-        input.addMapping("hotbar_next", new MouseAxisTrigger(MouseInput.AXIS_WHEEL, false));
-        input.addListener(this, "hotbar_prev", "hotbar_next");
-    }
-
+    
     public void setItem(int slot, HotbarItem item) {
         if (slot < 0 || slot >= SLOT_COUNT) return;
         items[slot] = item;
@@ -128,15 +102,14 @@ public class Hotbar implements ActionListener, AnalogListener {
         HotbarItem item = items[slot];
         if (item != null && item.iconPath != null && !item.iconPath.isEmpty()) {
             Picture p = new Picture("icon_" + slot);
-            p.setImage(assetManager, item.iconPath, true); // true = альфа [5]
+            p.setImage(assetManager, item.iconPath, true); 
             int pad = 6;
             p.setWidth(slotSize - pad * 2);
             p.setHeight(slotSize - pad * 2);
             float x = slot * (slotSize + slotGap) + pad;
-            float y = pad;
-            p.setPosition(x, y);
+            p.setPosition(x, (float) pad);
 
-            p.setQueueBucket(RenderQueue.Bucket.Gui); // ВАЖНО [5]
+            p.setQueueBucket(RenderQueue.Bucket.Gui); 
 
             iconsNode.attachChild(p);
             slotIcon[slot] = p;
@@ -148,7 +121,7 @@ public class Hotbar implements ActionListener, AnalogListener {
         int border = 4;
         float x = selected * (slotSize + slotGap) - border;
         float y = -border;
-        sel.setLocalTranslation(x, y, -1); // Z slightly back so icons render above
+        sel.setLocalTranslation(x, y, -1);
     }
 
     private void setSelected(int idx) {
@@ -158,37 +131,17 @@ public class Hotbar implements ActionListener, AnalogListener {
         updateHighlight();
     }
 
-    private void step(int delta) {
-        setSelected((selected + delta + SLOT_COUNT) % SLOT_COUNT);
-    }
+    public void select(int idx) { setSelected(idx); }
+
+    public void step(int delta) { setSelected((selected + delta + SLOT_COUNT) % SLOT_COUNT); }
 
     public void updateViewportSizeIfChanged(int w, int h) {
         if (w != screenW || h != screenH) {
             screenW = w;
             screenH = h;
-            centerAlongBottom(); // перецентровать
+            centerAlongBottom();
         }
     }
-
-    @Override
-    public void onAction(String name, boolean isPressed, float tpf) {
-        if (!isPressed) return;
-        if (name.startsWith("hotbar_")) {
-            if ("hotbar_prev".equals(name) || "hotbar_next".equals(name)) {
-                return;
-            }
-            String tail = name.substring("hotbar_".length());
-            try {
-                int idx = Integer.parseInt(tail) - 1;
-                setSelected(idx);
-            } catch (NumberFormatException ignored) { /* ничего */ }
-        }
-    }
-
-    @Override
-    public void onAnalog(String name, float value, float tpf) {
-        if ("hotbar_next".equals(name)) step(+1);
-        else if ("hotbar_prev".equals(name)) step(-1);
-    }
+    
 }
 

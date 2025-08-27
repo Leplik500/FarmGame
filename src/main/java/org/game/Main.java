@@ -4,11 +4,8 @@ import com.jme3.anim.AnimComposer;
 import com.jme3.app.SimpleApplication;
 import com.jme3.cursors.plugins.JmeCursor;
 import com.jme3.input.ChaseCamera;
-import com.jme3.input.KeyInput;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
-import com.jme3.input.controls.KeyTrigger;
-import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
@@ -21,6 +18,7 @@ import com.jme3.scene.shape.Box;
 import com.jme3.system.AppSettings;
 import com.jme3.texture.Texture;
 import com.jme3.util.SkyFactory;
+import org.game.input.*;
 
 import java.awt.*;
 
@@ -35,7 +33,6 @@ public class Main extends SimpleApplication implements ActionListener {
     private PlayerMovementController movementController;
     private PlayerAnimationController animationController;
     private Hotbar hotbar;
-    private boolean ctrlDown = false;
     private ChaseCamera chaseCam;
 
     public static void main(String[] args) {
@@ -101,10 +98,9 @@ public class Main extends SimpleApplication implements ActionListener {
         camTarget.setLocalRotation(player.getLocalRotation());
         configureCamera();
         createFaceHighlight();
-        registerInput();
         setupCustomCursor();
 
-        hotbar = new Hotbar(guiNode, assetManager, inputManager, cam.getWidth(), cam.getHeight());
+        hotbar = new Hotbar(guiNode, assetManager, cam.getWidth(), cam.getHeight());
         hotbar.setItem(0, new HotbarItem("apple_seeds", "Textures/apple_seeds" +
                 ".png"));
         hotbar.setItem(1, new HotbarItem("tomato_seeds", "Textures" +
@@ -113,33 +109,21 @@ public class Main extends SimpleApplication implements ActionListener {
         inputHandler = new PlayerInputHandler();
         movementController = new PlayerMovementController(player, cam);
         animationController = new PlayerAnimationController(animComposer);
+
+        GameInputRouter router = new GameInputRouter(inputManager);
+        CameraInput cameraInput = new CameraInput(chaseCam);
+        HotbarInput hotbarInput = new HotbarInput(hotbar, cameraInput);
+        MovementInput movementInput = new MovementInput(inputHandler);
+
+        router.addActionModule(cameraInput);
+        router.addAnalogModule(cameraInput);
+
+        router.addActionModule(hotbarInput);
+        router.addAnalogModule(hotbarInput);
+
+        router.addActionModule(movementInput);
     }
-
-    private void registerInput() {
-        inputManager.addMapping("moveForward", new KeyTrigger(KeyInput.KEY_W));
-        inputManager.addMapping("moveBackward", new KeyTrigger(KeyInput.KEY_S));
-        inputManager.addMapping("moveLeft", new KeyTrigger(KeyInput.KEY_A));
-        inputManager.addMapping("moveRight", new KeyTrigger(KeyInput.KEY_D));
-        inputManager.addMapping("ctrl", new KeyTrigger(KeyInput.KEY_LCONTROL),
-                new KeyTrigger(KeyInput.KEY_RCONTROL));
-        inputManager.addMapping("wheel_up",   new MouseAxisTrigger(MouseInput.AXIS_WHEEL, false));
-        inputManager.addMapping("wheel_down", new MouseAxisTrigger(MouseInput.AXIS_WHEEL, true));
-        
-        inputManager.addListener(this, "moveForward", "moveBackward", "moveLeft", "moveRight");
-        inputManager.addListener((ActionListener) (name, isPressed, tpf) -> {
-            if (!"ctrl".equals(name)) return;
-            ctrlDown = isPressed;
-            if (ctrlDown) {
-                chaseCam.setZoomInTrigger( new MouseAxisTrigger(MouseInput.AXIS_WHEEL, false) ); // wheel up
-                chaseCam.setZoomOutTrigger(new MouseAxisTrigger(MouseInput.AXIS_WHEEL, true) );  // wheel down
-            } else {
-                chaseCam.setZoomInTrigger(); 
-                chaseCam.setZoomOutTrigger();
-            }
-        }, "ctrl");
-
-    }
-
+    
     @Override
     public void onAction(String name, boolean isPressed, float tpf) {
         if (isPressed) {
@@ -160,10 +144,8 @@ public class Main extends SimpleApplication implements ActionListener {
             movementController.handleMovement(inputHandler.getPressedKeys(), inputHandler.isRunning(), tpf);
         }
 
-        // Update animation
         animationController.update(tpf, inputHandler.isWalking(), inputHandler.isRunning());
 
-        // Update camera
         Vector3f to = player.getWorldTranslation();
         Vector3f from = camTarget.getLocalTranslation();
         float camFollowPosSpeed = GameConfig.CAM_FOLLOW_SPEED;
@@ -209,7 +191,7 @@ public class Main extends SimpleApplication implements ActionListener {
 
     private void configureCamera() {
         flyCam.setEnabled(false);
-        ChaseCamera chaseCam = new ChaseCamera(cam, camTarget, inputManager);
+        chaseCam = new ChaseCamera(cam, camTarget, inputManager);
         chaseCam.setDefaultDistance(GameConfig.CAM_DEFAULT_DISTANCE);
         chaseCam.setMinDistance(GameConfig.CAM_MIN_DISTANCE);
         chaseCam.setMaxDistance(GameConfig.CAM_MAX_DISTANCE);

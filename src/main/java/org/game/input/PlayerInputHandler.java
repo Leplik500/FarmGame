@@ -1,4 +1,6 @@
-package org.game;
+package org.game.input;
+
+import org.game.GameConfig;
 
 import java.util.HashSet;
 import java.util.Set;

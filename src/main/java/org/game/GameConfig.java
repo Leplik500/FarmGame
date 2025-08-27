@@ -68,7 +68,6 @@ public final class GameConfig {
     public static final String SKYBOX_PZ = "SkyBox/pz.png";
     public static final String SKYBOX_NZ = "SkyBox/nz.png";
 
-    // Prevent instantiation
     private GameConfig() {}
 }
 
