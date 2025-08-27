@@ -9,7 +9,7 @@ public final class GameConfig {
     // ========== DISPLAY SETTINGS ==========
     public static final int SCREEN_WIDTH = 800;
     public static final int SCREEN_HEIGHT = 814;
-    public static final boolean FULLSCREEN = true;
+    public static final boolean FULLSCREEN = false;
 
     // ========== PLAYER MOVEMENT ==========
     public static final float WALK_SPEED = 5f;

@@ -33,6 +33,7 @@ public class Main extends SimpleApplication implements ActionListener {
     private PlayerInputHandler inputHandler;
     private PlayerMovementController movementController;
     private PlayerAnimationController animationController;
+    private Hotbar hotbar;
 
     public static void main(String[] args) {
         AppSettings settings = new AppSettings(true);
@@ -100,6 +101,12 @@ public class Main extends SimpleApplication implements ActionListener {
         registerInput();
         setupCustomCursor();
 
+        hotbar = new Hotbar(guiNode, assetManager, inputManager, cam.getWidth(), cam.getHeight());
+        hotbar.setItem(0, new HotbarItem("apple_seeds", "Textures/apple_seeds" +
+                ".png"));
+        hotbar.setItem(1, new HotbarItem("tomato_seeds", "Textures" +
+                "/tomato_seeds" +
+                ".png"));
         inputHandler = new PlayerInputHandler();
         movementController = new PlayerMovementController(player, cam);
         animationController = new PlayerAnimationController(animComposer);
@@ -145,6 +152,9 @@ public class Main extends SimpleApplication implements ActionListener {
         camTarget.move(posDelta);
 
         updateFaceHighlight();
+        if (hotbar != null) {
+            hotbar.updateViewportSizeIfChanged(cam.getWidth(), cam.getHeight());
+        }
     }
 
 
@@ -190,6 +200,8 @@ public class Main extends SimpleApplication implements ActionListener {
         chaseCam.setDefaultHorizontalRotation(GameConfig.CAM_HORIZONTAL_ANGLE);
         chaseCam.setLookAtOffset(GameConfig.CAM_LOOK_OFFSET);
         chaseCam.setToggleRotationTrigger(new MouseButtonTrigger(MouseInput.BUTTON_MIDDLE));
+        chaseCam.setZoomInTrigger();
+        chaseCam.setZoomOutTrigger();
         chaseCam.setDragToRotate(true);
         chaseCam.setRotationSpeed(GameConfig.CAM_ROTATION_SPEED);
         chaseCam.setZoomSensitivity(GameConfig.CAM_ZOOM_SENSITIVITY);
