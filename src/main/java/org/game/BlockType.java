@@ -11,43 +11,38 @@ import java.util.Map;
 public class BlockType {
     public static final int AIR = 0;
     public static final int GRASS = 1;
-    public static final int DIRT = 2;
-    public static final int STONE = 3;
+    public static final int PLOWED_DRY = 2;
+    public static final int PLOWED_WET = 3;
 
-    // Кэш материалов чтобы не создавать их каждый раз
     private static final Map<Integer, Material> materialCache = new HashMap<>();
 
     public static Material getMaterial(int blockId, AssetManager assetManager) {
-        // Проверяем кэш
         if (materialCache.containsKey(blockId)) {
             return materialCache.get(blockId);
         }
-
         Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-
         switch (blockId) {
-            case GRASS:
-                Texture grassTex = assetManager.loadTexture("Textures/grass7" + ".jpg");
-                grassTex.setWrap(Texture.WrapMode.Repeat); // для тайлинга
-//                mat.setColor("Color", new ColorRGBA(0.8f, 1.0f, 0.8f, 1.0f));
-                mat.setTexture("ColorMap", grassTex);
+            case GRASS: {
+                Texture tex = assetManager.loadTexture("Textures/grass7.jpg");
+                tex.setWrap(Texture.WrapMode.Repeat);
+                mat.setTexture("ColorMap", tex);
                 break;
-//            case DIRT:
-//                Texture dirtTex = assetManager.loadTexture("Textures/dirt.jpg");
-//                dirtTex.setWrap(Texture.WrapMode.Repeat);
-//                mat.setTexture("ColorMap", dirtTex);
-//                break;
-//            case STONE:
-//                Texture stoneTex = assetManager.loadTexture("Textures/stone.jpg");
-//                stoneTex.setWrap(Texture.WrapMode.Repeat);
-//                mat.setTexture("ColorMap", stoneTex);
-//                break;
+            }
+            case PLOWED_DRY: {
+                Texture tex = assetManager.loadTexture("Textures/plowed_dirt.jpg"); // сухая
+                tex.setWrap(Texture.WrapMode.Repeat);
+                mat.setTexture("ColorMap", tex);
+                break;
+            }
+            case PLOWED_WET: {
+                Texture tex = assetManager.loadTexture("Textures/plowed_dirt_wet.jpg"); // влажная
+                tex.setWrap(Texture.WrapMode.Repeat);
+                mat.setTexture("ColorMap", tex);
+                break;
+            }
             default:
                 mat.setColor("Color", ColorRGBA.White);
-                break;
         }
-
-        // Сохраняем в кэш
         materialCache.put(blockId, mat);
         return mat;
     }
