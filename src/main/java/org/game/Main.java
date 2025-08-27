@@ -8,6 +8,7 @@ import com.jme3.input.KeyInput;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
+import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
@@ -34,6 +35,8 @@ public class Main extends SimpleApplication implements ActionListener {
     private PlayerMovementController movementController;
     private PlayerAnimationController animationController;
     private Hotbar hotbar;
+    private boolean ctrlDown = false;
+    private ChaseCamera chaseCam;
 
     public static void main(String[] args) {
         AppSettings settings = new AppSettings(true);
@@ -117,8 +120,24 @@ public class Main extends SimpleApplication implements ActionListener {
         inputManager.addMapping("moveBackward", new KeyTrigger(KeyInput.KEY_S));
         inputManager.addMapping("moveLeft", new KeyTrigger(KeyInput.KEY_A));
         inputManager.addMapping("moveRight", new KeyTrigger(KeyInput.KEY_D));
-
+        inputManager.addMapping("ctrl", new KeyTrigger(KeyInput.KEY_LCONTROL),
+                new KeyTrigger(KeyInput.KEY_RCONTROL));
+        inputManager.addMapping("wheel_up",   new MouseAxisTrigger(MouseInput.AXIS_WHEEL, false));
+        inputManager.addMapping("wheel_down", new MouseAxisTrigger(MouseInput.AXIS_WHEEL, true));
+        
         inputManager.addListener(this, "moveForward", "moveBackward", "moveLeft", "moveRight");
+        inputManager.addListener((ActionListener) (name, isPressed, tpf) -> {
+            if (!"ctrl".equals(name)) return;
+            ctrlDown = isPressed;
+            if (ctrlDown) {
+                chaseCam.setZoomInTrigger( new MouseAxisTrigger(MouseInput.AXIS_WHEEL, false) ); // wheel up
+                chaseCam.setZoomOutTrigger(new MouseAxisTrigger(MouseInput.AXIS_WHEEL, true) );  // wheel down
+            } else {
+                chaseCam.setZoomInTrigger(); 
+                chaseCam.setZoomOutTrigger();
+            }
+        }, "ctrl");
+
     }
 
     @Override

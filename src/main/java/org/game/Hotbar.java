@@ -107,7 +107,7 @@ public class Hotbar implements ActionListener, AnalogListener {
         // mouse wheel cycle
         input.addMapping("hotbar_prev", new MouseAxisTrigger(MouseInput.AXIS_WHEEL, true));
         input.addMapping("hotbar_next", new MouseAxisTrigger(MouseInput.AXIS_WHEEL, false));
-        input.addListener((AnalogListener) this, "hotbar_prev", "hotbar_next");
+        input.addListener(this, "hotbar_prev", "hotbar_next");
     }
 
     public void setItem(int slot, HotbarItem item) {
