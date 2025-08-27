@@ -3,6 +3,7 @@ package org.game.input;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.*;
 import com.jme3.input.ChaseCamera;
+import org.game.GameConfig;
 
 public class CameraInput implements ActionListener, AnalogListener {
     private final ChaseCamera chaseCam;
@@ -25,8 +26,18 @@ public class CameraInput implements ActionListener, AnalogListener {
                 chaseCam.setZoomInTrigger();
                 chaseCam.setZoomOutTrigger();
             }
+            return;
+        }
+
+        if (isPressed && InputNames.CAMERA_RESET_ZOOM.equals(name)) {
+            resetZoom();
         }
     }
+
+    private void resetZoom() {
+        chaseCam.setDefaultDistance(GameConfig.CAM_DEFAULT_DISTANCE);
+    }
+
 
     @Override
     public void onAnalog(String name, float value, float tpf) {

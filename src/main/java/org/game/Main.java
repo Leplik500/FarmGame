@@ -65,7 +65,6 @@ public class Main extends SimpleApplication implements ActionListener {
         return settings;
     }
 
-
     @Override
     public void simpleInitApp() {
         player = assetManager.loadModel(GameConfig.MODEL_PLAYER);
@@ -117,10 +116,8 @@ public class Main extends SimpleApplication implements ActionListener {
 
         router.addActionModule(cameraInput);
         router.addAnalogModule(cameraInput);
-
         router.addActionModule(hotbarInput);
         router.addAnalogModule(hotbarInput);
-
         router.addActionModule(movementInput);
     }
     
