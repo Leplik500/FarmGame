@@ -38,8 +38,10 @@ public class GameInputRouter implements ActionListener, AnalogListener {
             input.addMapping(InputNames.hotbarSlot(i), new KeyTrigger(KeyInput.KEY_1 + (i-1)));
         }
 
-        input.addMapping(InputNames.HOTBAR_NEXT, new MouseAxisTrigger(MouseInput.AXIS_WHEEL, false));
-        input.addMapping(InputNames.HOTBAR_PREV, new MouseAxisTrigger(MouseInput.AXIS_WHEEL, true));
+        input.addMapping(InputNames.HOTBAR_PREV,
+                new MouseAxisTrigger(MouseInput.AXIS_WHEEL, false));
+        input.addMapping(InputNames.HOTBAR_NEXT,
+                new MouseAxisTrigger(MouseInput.AXIS_WHEEL, true));
 
         input.addListener(this,
                 InputNames.MOVE_FWD, InputNames.MOVE_BACK, InputNames.MOVE_LEFT, InputNames.MOVE_RIGHT,

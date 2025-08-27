@@ -3,6 +3,7 @@ package org.game;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.material.Material;
+import com.jme3.material.RenderState;
 import com.jme3.math.ColorRGBA;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
@@ -52,9 +53,8 @@ public class Hotbar {
             Quad q = new Quad(slotSize, slotSize);
             Geometry g = new Geometry("slotBG_" + i, q);
             Material m = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-            m.setColor("Color", new ColorRGBA(0, 0, 0, 0.45f));
+            m.setColor("Color", new ColorRGBA(255, 255, 255, 0f));
             g.setMaterial(m);
-
             g.setQueueBucket(RenderQueue.Bucket.Gui);
 
             float x = i * (slotSize + slotGap);
