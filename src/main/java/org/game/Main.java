@@ -91,6 +91,10 @@ public class Main extends SimpleApplication implements ActionListener {
 
         blockWorld = new SimpleBlockWorld(rootNode, assetManager);
         blockWorld.generateFlatWorld(GameConfig.WORLD_SIZE_X, GameConfig.WORLD_SIZE_Z);
+        FarmlandMoistureState moisture = new FarmlandMoistureState(blockWorld);
+        stateManager.attach(moisture);
+        int y = 0;
+        
         addSky();
         rootNode.attachChild(camTarget);
         camTarget.setLocalTranslation(player.getLocalTranslation());

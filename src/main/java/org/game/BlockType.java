@@ -14,6 +14,7 @@ public class BlockType {
     public static final int PLOWED_DRY = 2;
     public static final int PLOWED_WET = 3;
 
+
     private static final Map<Integer, Material> materialCache = new HashMap<>();
 
     public static Material getMaterial(int blockId, AssetManager assetManager) {
@@ -29,13 +30,15 @@ public class BlockType {
                 break;
             }
             case PLOWED_DRY: {
-                Texture tex = assetManager.loadTexture("Textures/plowed_dirt.jpg"); // сухая
+                Texture tex = assetManager.loadTexture("Textures/plowed_dirt" +
+                        ".png");
                 tex.setWrap(Texture.WrapMode.Repeat);
                 mat.setTexture("ColorMap", tex);
                 break;
             }
             case PLOWED_WET: {
-                Texture tex = assetManager.loadTexture("Textures/plowed_dirt_wet.jpg"); // влажная
+                Texture tex = assetManager.loadTexture("Textures" +
+                        "/plowed_dirt_wet.png");
                 tex.setWrap(Texture.WrapMode.Repeat);
                 mat.setTexture("ColorMap", tex);
                 break;
