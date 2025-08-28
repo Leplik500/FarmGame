@@ -109,10 +109,12 @@ public class Main extends SimpleApplication implements ActionListener {
         setupCustomCursor();
 
         hotbar = new Hotbar(guiNode, assetManager, cam.getWidth(), cam.getHeight());
-        hotbar.setItem(0, new HotbarItem("pumpkin_seeds", "Textures/pumpkin_seeds.png", 64));
-        hotbar.setItem(1, new HotbarItem("tomato_seeds", "Textures/tomato_seeds.png", 32));
-        hotbar.setItem(2, new HotbarItem("watering_can", "Textures/watering_can.png", 1));
-        hotbar.setItem(3, new HotbarItem("hoe", "Textures/hoe.png", 1));
+        hotbar.setItem(0, new HotbarItem("pumpkin_seeds", "Textures" +
+                "/pumpkin_seeds.png", 64));
+        hotbar.setItem(1, new HotbarItem("tomato_seeds", "Textures" +
+                "/tomato_seeds.png", 32));
+        hotbar.setItem(2, new HotbarItem("watering_can", "Textures/watering_can.png"));
+        hotbar.setItem(3, new HotbarItem("hoe", "Textures/hoe.png"));
 
         inputHandler = new PlayerInputHandler();
         movementController = new PlayerMovementController(player, cam);

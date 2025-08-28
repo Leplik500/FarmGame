@@ -55,7 +55,6 @@ public class WorldInteractionInput implements ActionListener {
         if (targetBlock == null) return;
 
         int type = world.getBlock(targetBlock.x(), targetBlock.y(), targetBlock.z());
-
         Vector3i aboveBlock = new Vector3i(targetBlock.x(), targetBlock.y() + 1, targetBlock.z());
 
         if ("pumpkin_seeds".equals(selectedItem.id())) {
@@ -64,6 +63,8 @@ public class WorldInteractionInput implements ActionListener {
                         && !growth.hasPlantAt(aboveBlock)) {
                     Spatial s = plantPumpkinSapling(aboveBlock, targetBlock);
                     growth.registerPlanted(PlantKind.PUMPKIN, targetBlock, aboveBlock, s);
+                    // Уменьшить количество семян
+                    hotbar.reduceItemCount(hotbar.getSelectedSlot(), 1);
                 }
             }
             return;
@@ -73,25 +74,27 @@ public class WorldInteractionInput implements ActionListener {
             if (type == BlockType.PLOWED_DRY || type == BlockType.PLOWED_WET) {
                 if (world.getBlock(aboveBlock.x(), aboveBlock.y(), aboveBlock.z()) == BlockType.AIR
                         && !growth.hasPlantAt(aboveBlock)) {
-                    Spatial s = plantTomatoSapling(aboveBlock, targetBlock); 
+                    Spatial s = plantTomatoSapling(aboveBlock, targetBlock);
                     growth.registerPlanted(PlantKind.TOMATO, targetBlock, aboveBlock, s);
+                    // Уменьшить количество семян
+                    hotbar.reduceItemCount(hotbar.getSelectedSlot(), 1);
                 }
             }
             return;
         }
-        
+
         if ("hoe".equals(selectedItem.id())) {
             if (type == BlockType.GRASS) {
                 world.setBlock(targetBlock.x(), targetBlock.y(), targetBlock.z(), BlockType.PLOWED_DRY);
                 System.out.println("Tilled soil at: " + targetBlock);
             }
-            return; 
+            return;
         }
 
         if ("watering_can".equals(selectedItem.id())) {
             if (type == BlockType.PLOWED_DRY) {
                 world.setBlock(targetBlock.x(), targetBlock.y(), targetBlock.z(), BlockType.PLOWED_WET);
-                moisture.markWet(targetBlock.x(), targetBlock.y(), targetBlock.z(), null); // дефолтный таймер
+                moisture.markWet(targetBlock.x(), targetBlock.y(), targetBlock.z(), null);
                 System.out.println("Watered soil at: " + targetBlock);
             } else if (type == BlockType.PLOWED_WET) {
                 moisture.markWet(targetBlock.x(), targetBlock.y(), targetBlock.z(), null);

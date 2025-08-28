@@ -98,6 +98,10 @@ public class Hotbar {
         return items[selected];
     }
 
+    public int getSelectedSlot() {
+        return selected;
+    }
+
     private void updateSlotIcon(int slot) {
         if (slotIcon[slot] != null) {
             slotIcon[slot].removeFromParent();
@@ -179,5 +183,30 @@ public class Hotbar {
         }
     }
 
+    public void reduceItemCount(int slot, int amount) {
+        if (slot < 0 || slot >= SLOT_COUNT) return;
+        HotbarItem item = items[slot];
+        if (item == null) return;
+
+        int newCount = item.count() - amount;
+        if (newCount <= 0) {
+            clearSlot(slot);
+        } else {
+            items[slot] = item.withCount(newCount);
+            updateSlotCount(slot, newCount);
+        }
+    }
+
+    private void clearSlot(int slot) {
+        if (slot < 0 || slot >= SLOT_COUNT) return;
+
+        if (slotIcon[slot] != null) {
+            slotIcon[slot].removeFromParent();
+            slotIcon[slot] = null;
+        }
+
+        items[slot] = null;
+        updateSlotCount(slot, 0);
+    }
 }
 
