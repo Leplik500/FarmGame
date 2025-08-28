@@ -74,6 +74,7 @@ public class Main extends SimpleApplication implements ActionListener {
                 animComposer = spatial.getControl(AnimComposer.class);
             }
         });
+        player.setLocalTranslation(0f, -0.5f, 0f);
 
         if (animComposer != null) {
             System.out.println("Available animations: " + animComposer.getAnimClipsNames());
