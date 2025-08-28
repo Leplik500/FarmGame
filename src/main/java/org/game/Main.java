@@ -109,6 +109,10 @@ public class Main extends SimpleApplication implements ActionListener {
         hotbar.setItem(1, new HotbarItem("tomato_seeds", "Textures" +
                 "/tomato_seeds" +
                 ".png"));
+        hotbar.setItem(2, new HotbarItem("watering_can", "Textures" +
+                "/watering_can" +
+                ".png"));
+        hotbar.setItem(3, new HotbarItem("hoe", "Textures/hoe.png"));
         inputHandler = new PlayerInputHandler();
         movementController = new PlayerMovementController(player, cam);
         animationController = new PlayerAnimationController(animComposer);
@@ -117,12 +121,15 @@ public class Main extends SimpleApplication implements ActionListener {
         CameraInput cameraInput = new CameraInput(chaseCam);
         HotbarInput hotbarInput = new HotbarInput(hotbar, cameraInput);
         MovementInput movementInput = new MovementInput(inputHandler);
+        WorldInteractionInput worldInput = new WorldInteractionInput(
+                blockWorld, hotbar, cam, inputManager);
 
         router.addActionModule(cameraInput);
         router.addAnalogModule(cameraInput);
         router.addActionModule(hotbarInput);
         router.addAnalogModule(hotbarInput);
         router.addActionModule(movementInput);
+        router.addActionModule(worldInput);
     }
     
     @Override

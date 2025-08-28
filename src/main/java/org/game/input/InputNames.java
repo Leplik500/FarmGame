@@ -19,4 +19,6 @@ public final class InputNames {
     public static final String HOTBAR_PREV = "hotbar_prev";
 
     public static final String CAMERA_RESET_ZOOM = "camera_reset_zoom";
+
+    public static final String WORLD_INTERACT = "world_interact";
 }

@@ -46,6 +46,9 @@ public class GameInputRouter implements ActionListener, AnalogListener {
         input.addMapping(InputNames.CAMERA_RESET_ZOOM,
                 new KeyTrigger(KeyInput.KEY_R));
 
+        input.addMapping(InputNames.WORLD_INTERACT,
+                new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
+
         input.addListener(this,
                 InputNames.MOVE_FWD, InputNames.MOVE_BACK, InputNames.MOVE_LEFT, InputNames.MOVE_RIGHT,
                 InputNames.CTRL
@@ -56,7 +59,7 @@ public class GameInputRouter implements ActionListener, AnalogListener {
         input.addListener(this, InputNames.WHEEL_UP, InputNames.WHEEL_DOWN,
                 InputNames.HOTBAR_NEXT, InputNames.HOTBAR_PREV);
         input.addListener(this, InputNames.CAMERA_RESET_ZOOM);
-        
+        input.addListener(this, InputNames.WORLD_INTERACT);
     }
 
     @Override
