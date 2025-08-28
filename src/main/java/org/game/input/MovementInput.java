@@ -16,9 +16,9 @@ public class MovementInput implements ActionListener {
             case InputNames.MOVE_RIGHT:
                 if (isPressed) handler.handleKeyPress(name);
                 else           handler.handleKeyRelease(name);
-                handler.updateWalkingState(); // <-- добавьте
+                handler.updateWalkingState(); 
                 break;
-            default: /* ignore */
+            default:
         }
     }
 }

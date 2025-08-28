@@ -3,7 +3,6 @@ package org.game;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.material.Material;
-import com.jme3.material.RenderState;
 import com.jme3.math.ColorRGBA;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
@@ -23,7 +22,6 @@ public class Hotbar {
     private final HotbarItem[] items = new HotbarItem[SLOT_COUNT];
 
     private final AssetManager assetManager;
-    // UI sizes (px)
     private final int slotSize = 64;
     private final int slotGap = 6;
     private int screenW;
@@ -35,7 +33,6 @@ public class Hotbar {
         this.screenW = screenW;
         this.screenH = screenH;
 
-        // GUI bucket & hierarchy
         root.setQueueBucket(RenderQueue.Bucket.Gui);
         root.attachChild(slotsNode);
         root.attachChild(iconsNode);
@@ -100,9 +97,9 @@ public class Hotbar {
             slotIcon[slot] = null;
         }
         HotbarItem item = items[slot];
-        if (item != null && item.iconPath != null && !item.iconPath.isEmpty()) {
+        if (item != null && item.iconPath() != null && !item.iconPath().isEmpty()) {
             Picture p = new Picture("icon_" + slot);
-            p.setImage(assetManager, item.iconPath, true); 
+            p.setImage(assetManager, item.iconPath(), true); 
             int pad = 6;
             p.setWidth(slotSize - pad * 2);
             p.setHeight(slotSize - pad * 2);

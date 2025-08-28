@@ -34,7 +34,6 @@ public class Main extends SimpleApplication implements ActionListener {
     private PlayerAnimationController animationController;
     private Hotbar hotbar;
     private ChaseCamera chaseCam;
-    private FarmlandMoistureState moisture;
 
     public static void main(String[] args) {
         AppSettings settings = new AppSettings(true);
@@ -92,7 +91,7 @@ public class Main extends SimpleApplication implements ActionListener {
 
         blockWorld = new SimpleBlockWorld(rootNode, assetManager);
         blockWorld.generateFlatWorld(GameConfig.WORLD_SIZE_X, GameConfig.WORLD_SIZE_Z);
-        moisture = new FarmlandMoistureState(blockWorld);
+        FarmlandMoistureState moisture = new FarmlandMoistureState(blockWorld);
         stateManager.attach(moisture);
 
         addSky();

@@ -41,34 +41,27 @@ public class WorldInteractionInput implements ActionListener {
 
         int type = world.getBlock(targetBlock.x(), targetBlock.y(), targetBlock.z());
 
-        // 1) Мотыга: трава -> вспаханная
-        if ("hoe".equals(selectedItem.id)) {
+        if ("hoe".equals(selectedItem.id())) {
             if (type == BlockType.GRASS) {
                 world.setBlock(targetBlock.x(), targetBlock.y(), targetBlock.z(), BlockType.PLOWED_DRY);
                 System.out.println("Tilled soil at: " + targetBlock);
             }
-            return; // другие типы игнорируем
+            return; 
         }
 
-        // 2) Лейка: сухая вспаханная -> влажная (и запустить/обновить таймер)
-        if ("watering_can".equals(selectedItem.id)) {
+        if ("watering_can".equals(selectedItem.id())) {
             if (type == BlockType.PLOWED_DRY) {
                 world.setBlock(targetBlock.x(), targetBlock.y(), targetBlock.z(), BlockType.PLOWED_WET);
                 moisture.markWet(targetBlock.x(), targetBlock.y(), targetBlock.z(), null); // дефолтный таймер
                 System.out.println("Watered soil at: " + targetBlock);
             } else if (type == BlockType.PLOWED_WET) {
-                // Обновить таймер увлажнения повторным поливом
                 moisture.markWet(targetBlock.x(), targetBlock.y(), targetBlock.z(), null);
                 System.out.println("Refreshed moisture at: " + targetBlock);
             }
-            return; // иные типы игнорируем
         }
-
-        // Иные предметы — ничего не происходит
     }
 
     private Vector3i getBlockUnderCursor() {
-        // Луч из позиции курсора: convert 2D -> 3D и шагать вдоль направления
         Vector2f cursorPos = inputManager.getCursorPosition();
         Vector3f origin = camera.getWorldCoordinates(cursorPos, 0f);
         Vector3f direction = camera.getWorldCoordinates(cursorPos, 1f)

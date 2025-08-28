@@ -34,7 +34,6 @@ public class FarmlandMoistureState extends BaseAppState {
         while (it.hasNext()) {
             Map.Entry<Vector3i, Float> e = it.next();
             Vector3i pos = e.getKey();
-            // Если клетка успела измениться чем-то ещё — убрать таймер
             int id = world.getBlock(pos.x(), pos.y(), pos.z());
             if (id != BlockType.PLOWED_WET) {
                 it.remove();

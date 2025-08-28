@@ -13,14 +13,14 @@ public class PlayerInputHandler {
 
     public void handleKeyPress(String keyName) {
         pressedKeys.add(keyName);
-        if ("moveForward".equals(keyName)) {
+        if (InputNames.MOVE_FWD.equals(keyName)) {
             checkForDoubleTab();
         }
     }
 
     public void handleKeyRelease(String keyName) {
         pressedKeys.remove(keyName);
-        if ("moveForward".equals(keyName) && isRunning) {
+        if (InputNames.MOVE_FWD.equals(keyName) && isRunning) {
             isRunning = false;
         }
     }

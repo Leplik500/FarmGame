@@ -27,7 +27,7 @@ public final class GameConfig {
     // Animation names
     public static final String ANIM_IDLE = "animation.lael.idlemain";
     public static final String ANIM_WALK = "animation.lael.walk";
-    public static final String ANIM_RUN = "animation.lael.run";
+    public static final String ANIM_RUN = "animation.lael.fast_run";
 
     // ========== CAMERA SETTINGS ==========
     public static final float CAM_DEFAULT_DISTANCE = 40f;
