@@ -59,8 +59,18 @@ public final class GameConfig {
     // ========== ASSET PATHS ==========
     public static final String MODEL_PLAYER = "Models/rhea_wilson.glb";
     public static final String CURSOR_PATH = "Cursors/hand.cur";
-    public static final String MODEL_APPLE_SAPLING_S1 = "Models/Apple_1.glb";
-    public static final String MODEL_TOMATO_SAPLING_S1 = "Models/Tomato_1.glb";
+    public static final String[] PUMPKIN_GROWTH_MODELS = {
+            "Models/Pumpkin_1.glb",
+            "Models/Pumpkin_2.glb",
+            "Models/Pumpkin_3.glb",
+            "Models/Pumpkin_4.glb"
+    };
+    public static final String[] TOMATO_GROWTH_MODELS = {
+            "Models/Tomato_1.glb",
+            "Models/Tomato_2.glb",
+            "Models/Tomato_3.glb",
+            "Models/Tomato_4.glb"
+    };
 
     // SkyBox textures
     public static final String SKYBOX_PX = "SkyBox/px.png";
@@ -69,6 +79,8 @@ public final class GameConfig {
     public static final String SKYBOX_NY = "SkyBox/ny.png";
     public static final String SKYBOX_PZ = "SkyBox/pz.png";
     public static final String SKYBOX_NZ = "SkyBox/nz.png";
+
+    public static final float[] GROWTH_STAGE_SECONDS = { 15f, 20f, 30f };
 
     private GameConfig() {}
 }

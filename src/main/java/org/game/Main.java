@@ -84,9 +84,8 @@ public class Main extends SimpleApplication implements ActionListener {
             System.err.println("No AnimComposer found!");
         }
 
-        rootNode.attachChild(plantsRoot);
         rootNode.attachChild(player);
-
+        
         DirectionalLight light = new DirectionalLight();
         light.setDirection(GameConfig.LIGHT_DIRECTION.normalizeLocal());
         light.setColor(ColorRGBA.White.mult(GameConfig.LIGHT_INTENSITY));
@@ -96,6 +95,10 @@ public class Main extends SimpleApplication implements ActionListener {
         blockWorld.generateFlatWorld(GameConfig.WORLD_SIZE_X, GameConfig.WORLD_SIZE_Z);
         FarmlandMoistureState moisture = new FarmlandMoistureState(blockWorld);
         stateManager.attach(moisture);
+        rootNode.attachChild(plantsRoot);
+        PlantGrowthState growth = new PlantGrowthState(blockWorld, assetManager, plantsRoot);
+        stateManager.attach(growth);
+
 
         addSky();
         rootNode.attachChild(camTarget);
@@ -106,7 +109,7 @@ public class Main extends SimpleApplication implements ActionListener {
         setupCustomCursor();
 
         hotbar = new Hotbar(guiNode, assetManager, cam.getWidth(), cam.getHeight());
-        hotbar.setItem(0, new HotbarItem("apple_seeds", "Textures/apple_seeds" +
+        hotbar.setItem(0, new HotbarItem("pumpkin_seeds", "Textures/pumpkin_seeds" +
                 ".png"));
         hotbar.setItem(1, new HotbarItem("tomato_seeds", "Textures" +
                 "/tomato_seeds" +
@@ -124,9 +127,7 @@ public class Main extends SimpleApplication implements ActionListener {
         HotbarInput hotbarInput = new HotbarInput(hotbar, cameraInput);
         MovementInput movementInput = new MovementInput(inputHandler);
         WorldInteractionInput worldInput = new WorldInteractionInput(
-                blockWorld, hotbar, cam, inputManager, moisture, assetManager
-                , plantsRoot);
-
+                blockWorld, hotbar, cam, inputManager, moisture, assetManager, plantsRoot, growth);
         router.addActionModule(cameraInput);
         router.addAnalogModule(cameraInput);
         router.addActionModule(hotbarInput);

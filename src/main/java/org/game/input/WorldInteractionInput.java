@@ -22,12 +22,13 @@ public class WorldInteractionInput implements ActionListener {
     private final AssetManager assetManager;
     private final Node plantsRoot;
     private final Set<Vector3i> planted = new HashSet<>();
+    private final PlantGrowthState growth;
 
 
     public WorldInteractionInput(SimpleBlockWorld world, Hotbar hotbar,
                                  Camera camera, InputManager inputManager,
                                  FarmlandMoistureState moisture,
-                                 AssetManager assetManager, Node plantsRoot) {
+                                 AssetManager assetManager, Node plantsRoot, PlantGrowthState growth) {
         this.world = world;
         this.hotbar = hotbar;
         this.camera = camera;
@@ -35,6 +36,7 @@ public class WorldInteractionInput implements ActionListener {
         this.moisture = moisture;
         this.assetManager = assetManager;
         this.plantsRoot = plantsRoot;
+        this.growth = growth;
     }
 
     @Override
@@ -55,13 +57,27 @@ public class WorldInteractionInput implements ActionListener {
         int type = world.getBlock(targetBlock.x(), targetBlock.y(), targetBlock.z());
 
         Vector3i aboveBlock = new Vector3i(targetBlock.x(), targetBlock.y() + 1, targetBlock.z());
-        if ("apple_seeds".equals(selectedItem.id())) {
+
+        if ("pumpkin_seeds".equals(selectedItem.id())) {
             if (type == BlockType.PLOWED_DRY || type == BlockType.PLOWED_WET) {
-                if (world.getBlock(aboveBlock.x(), aboveBlock.y(), aboveBlock.z()) == BlockType.AIR && !planted.contains(aboveBlock)) {
-                    plantAppleSapling(aboveBlock, targetBlock);
+                if (world.getBlock(aboveBlock.x(), aboveBlock.y(), aboveBlock.z()) == BlockType.AIR
+                        && !growth.hasPlantAt(aboveBlock)) {
+                    Spatial s = plantPumpkinSapling(aboveBlock, targetBlock);
+                    growth.registerPlanted(PlantKind.PUMPKIN, targetBlock, aboveBlock, s);
                 }
             }
-            return; 
+            return;
+        }
+
+        if ("tomato_seeds".equals(selectedItem.id())) {
+            if (type == BlockType.PLOWED_DRY || type == BlockType.PLOWED_WET) {
+                if (world.getBlock(aboveBlock.x(), aboveBlock.y(), aboveBlock.z()) == BlockType.AIR
+                        && !growth.hasPlantAt(aboveBlock)) {
+                    Spatial s = plantTomatoSapling(aboveBlock, targetBlock); 
+                    growth.registerPlanted(PlantKind.TOMATO, targetBlock, aboveBlock, s);
+                }
+            }
+            return;
         }
         
         if ("hoe".equals(selectedItem.id())) {
@@ -80,14 +96,6 @@ public class WorldInteractionInput implements ActionListener {
             } else if (type == BlockType.PLOWED_WET) {
                 moisture.markWet(targetBlock.x(), targetBlock.y(), targetBlock.z(), null);
                 System.out.println("Refreshed moisture at: " + targetBlock);
-            }
-        }
-
-        if ("tomato_seeds".equals(selectedItem.id())) {
-            if (type == BlockType.PLOWED_DRY || type == BlockType.PLOWED_WET) {
-                if (world.getBlock(aboveBlock.x(), aboveBlock.y(), aboveBlock.z()) == BlockType.AIR && !planted.contains(aboveBlock)) {
-                    plantTomatoSapling(aboveBlock, targetBlock);
-                }
             }
         }
     }
@@ -110,26 +118,28 @@ public class WorldInteractionInput implements ActionListener {
         }
         return null;
     }
-
-    private void plantAppleSapling(Vector3i above, Vector3i soil) {
-        Spatial sapling = assetManager.loadModel(GameConfig.MODEL_APPLE_SAPLING_S1);
+    
+    private Spatial plantPumpkinSapling(Vector3i above, Vector3i soil) {
+        Spatial sapling =
+                assetManager.loadModel(GameConfig.PUMPKIN_GROWTH_MODELS[0]); 
         float yTop = soil.y() + 0.5f;
         sapling.setLocalTranslation(new Vector3f(soil.x(), yTop, soil.z()));
         sapling.scale(3f);
-
-        plantsRoot.attachChild(sapling);
-        planted.add(above);
-        System.out.println("Planted apple sapling at: " + soil + " (top@" + yTop + ")");
+        plantsRoot.attachChild(sapling); 
+        System.out.println("Planted pumpkin sapling at: " + soil + " (top@" + yTop + ")");
+        return sapling;
     }
 
-    private void plantTomatoSapling(Vector3i above, Vector3i soil) {
-        Spatial sapling = assetManager.loadModel(GameConfig.MODEL_TOMATO_SAPLING_S1);
-        float yTop = soil.y() + 0.5f;             
+    private Spatial plantTomatoSapling(Vector3i above, Vector3i soil) {
+        Spatial sapling =
+                assetManager.loadModel(GameConfig.TOMATO_GROWTH_MODELS[0]);
+        float yTop = soil.y() + 0.5f;
         sapling.setLocalTranslation(new Vector3f(soil.x(), yTop, soil.z()));
-        sapling.scale(3f);                      
-        plantsRoot.attachChild(sapling);
-        planted.add(above);
+        sapling.scale(3f);
+        plantsRoot.attachChild(sapling); 
         System.out.println("Planted tomato sapling at: " + soil + " (top@" + yTop + ")");
+        return sapling;
     }
+
 
 }
