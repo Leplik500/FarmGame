@@ -35,6 +35,8 @@ public class Main extends SimpleApplication implements ActionListener {
     private PlayerAnimationController animationController;
     private Hotbar hotbar;
     private ChaseCamera chaseCam;
+    private MoneyDisplay moneyDisplay;
+    private Spatial shopModel;
 
     public static void main(String[] args) {
         AppSettings settings = new AppSettings(true);
@@ -99,6 +101,7 @@ public class Main extends SimpleApplication implements ActionListener {
         PlantGrowthState growth = new PlantGrowthState(blockWorld, assetManager, plantsRoot);
         stateManager.attach(growth);
 
+        addShopToScene();
 
         addSky();
         rootNode.attachChild(camTarget);
@@ -115,6 +118,9 @@ public class Main extends SimpleApplication implements ActionListener {
                 "/tomato_seeds.png", 32));
         hotbar.setItem(2, new HotbarItem("watering_can", "Textures/watering_can.png"));
         hotbar.setItem(3, new HotbarItem("hoe", "Textures/hoe.png"));
+
+        moneyDisplay = new MoneyDisplay(guiNode, assetManager, cam.getWidth(), cam.getHeight());
+        moneyDisplay.setMoney(100);
 
         inputHandler = new PlayerInputHandler();
         movementController = new PlayerMovementController(player, cam);
@@ -165,6 +171,7 @@ public class Main extends SimpleApplication implements ActionListener {
         updateFaceHighlight();
         if (hotbar != null) {
             hotbar.updateViewportSizeIfChanged(cam.getWidth(), cam.getHeight());
+            moneyDisplay.updatePosition(cam.getWidth(), cam.getHeight());
         }
     }
 
@@ -323,5 +330,15 @@ public class Main extends SimpleApplication implements ActionListener {
         cursor.setWidth(GameConfig.CURSOR_SIZE);
         inputManager.setMouseCursor(cursor);
     }
+
+    private void addShopToScene() {
+        shopModel = assetManager.loadModel(GameConfig.SHOP_MODEL);
+        shopModel.setLocalTranslation(0, 0, 0); // Позиция магазина на карте
+        shopModel.setLocalScale(1f); // Масштаб при необходимости
+        rootNode.attachChild(shopModel);
+        System.out.println("Shop placed at (15, 0, 15)");
+    }
+    
+    
 
 }

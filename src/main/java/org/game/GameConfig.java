@@ -76,10 +76,12 @@ public final class GameConfig {
             "Models/Tomato_3.glb",
             "Models/Tomato_4.glb"
     };
+    public static final String SHOP_MODEL = "Models/store6.glb";
 
     public static final String PUMPKIN_ITEM = "Textures/pumpkin.png";
     public static final String TOMATO_ITEM = "Textures/tomato.png";
     public static final String DEFAULT_ITEM = "Textures/default_item.png";
+    public static final String MONEY_ICON = "Textures/money.png";
 
     public static final String SKYBOX_PX = "SkyBox/px.png";
     public static final String SKYBOX_NX = "SkyBox/nx.png";
