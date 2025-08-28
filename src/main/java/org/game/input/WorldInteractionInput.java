@@ -10,9 +10,6 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import org.game.*;
 
-import java.util.HashSet;
-import java.util.Set;
-
 public class WorldInteractionInput implements ActionListener {
     private final SimpleBlockWorld world;
     private final Hotbar hotbar;
@@ -21,7 +18,6 @@ public class WorldInteractionInput implements ActionListener {
     private final FarmlandMoistureState moisture;
     private final AssetManager assetManager;
     private final Node plantsRoot;
-    private final Set<Vector3i> planted = new HashSet<>();
     private final PlantGrowthState growth;
 
 
@@ -49,21 +45,30 @@ public class WorldInteractionInput implements ActionListener {
 
     private void handleWorldClick() {
         HotbarItem selectedItem = hotbar.getSelectedItem();
-        if (selectedItem == null) return;
 
         Vector3i targetBlock = getBlockUnderCursor();
         if (targetBlock == null) return;
 
-        int type = world.getBlock(targetBlock.x(), targetBlock.y(), targetBlock.z());
         Vector3i aboveBlock = new Vector3i(targetBlock.x(), targetBlock.y() + 1, targetBlock.z());
+        if (selectedItem == null) {
+            if (harvestPlantAt(aboveBlock)) {
+                return;
+            }
+            if (harvestPlantAt(targetBlock)) {
+                return;
+            }
+            return;
+        }
+        
+
+        int type = world.getBlock(targetBlock.x(), targetBlock.y(), targetBlock.z());
 
         if ("pumpkin_seeds".equals(selectedItem.id())) {
             if (type == BlockType.PLOWED_DRY || type == BlockType.PLOWED_WET) {
                 if (world.getBlock(aboveBlock.x(), aboveBlock.y(), aboveBlock.z()) == BlockType.AIR
                         && !growth.hasPlantAt(aboveBlock)) {
-                    Spatial s = plantPumpkinSapling(aboveBlock, targetBlock);
+                    Spatial s = plantPumpkinSapling(targetBlock);
                     growth.registerPlanted(PlantKind.PUMPKIN, targetBlock, aboveBlock, s);
-                    // Уменьшить количество семян
                     hotbar.reduceItemCount(hotbar.getSelectedSlot(), 1);
                 }
             }
@@ -74,9 +79,8 @@ public class WorldInteractionInput implements ActionListener {
             if (type == BlockType.PLOWED_DRY || type == BlockType.PLOWED_WET) {
                 if (world.getBlock(aboveBlock.x(), aboveBlock.y(), aboveBlock.z()) == BlockType.AIR
                         && !growth.hasPlantAt(aboveBlock)) {
-                    Spatial s = plantTomatoSapling(aboveBlock, targetBlock);
+                    Spatial s = plantTomatoSapling(targetBlock);
                     growth.registerPlanted(PlantKind.TOMATO, targetBlock, aboveBlock, s);
-                    // Уменьшить количество семян
                     hotbar.reduceItemCount(hotbar.getSelectedSlot(), 1);
                 }
             }
@@ -122,7 +126,7 @@ public class WorldInteractionInput implements ActionListener {
         return null;
     }
     
-    private Spatial plantPumpkinSapling(Vector3i above, Vector3i soil) {
+    private Spatial plantPumpkinSapling(Vector3i soil) {
         Spatial sapling =
                 assetManager.loadModel(GameConfig.PUMPKIN_GROWTH_MODELS[0]); 
         float yTop = soil.y() + 0.5f;
@@ -133,7 +137,7 @@ public class WorldInteractionInput implements ActionListener {
         return sapling;
     }
 
-    private Spatial plantTomatoSapling(Vector3i above, Vector3i soil) {
+    private Spatial plantTomatoSapling(Vector3i soil) {
         Spatial sapling =
                 assetManager.loadModel(GameConfig.TOMATO_GROWTH_MODELS[0]);
         float yTop = soil.y() + 0.5f;
@@ -144,5 +148,68 @@ public class WorldInteractionInput implements ActionListener {
         return sapling;
     }
 
+    private boolean harvestPlantAt(Vector3i position) {
+        PlantGrowthState.Plant plant = growth.getPlantAt(position);
+        if (plant == null) return false;
+        if (plant.stageIndex != 3) return false; 
+
+        String harvestedModelPath = switch (plant.kind) {
+            case PUMPKIN -> GameConfig.PUMPKIN_HARVESTED_MODEL;
+            case TOMATO -> GameConfig.TOMATO_HARVESTED_MODEL;
+        };
+
+        Spatial harvestedModel = assetManager.loadModel(harvestedModelPath);
+        harvestedModel.setLocalTranslation(plant.spatial.getLocalTranslation());
+        harvestedModel.setLocalRotation(plant.spatial.getLocalRotation());
+        harvestedModel.setLocalScale(plant.spatial.getLocalScale());
+
+        if (plant.spatial.getParent() != null) {
+            plant.spatial.removeFromParent();
+        }
+        growth.getPlantsRoot().attachChild(harvestedModel);
+
+        growth.removePlant(position);
+
+        if (plant.kind == PlantKind.PUMPKIN) {
+            addToInventory("pumpkin", 1);
+            System.out.println("Harvested 1 pumpkin!");
+        } else if (plant.kind == PlantKind.TOMATO) {
+            int count = 1 + (int)(Math.random() * 4); 
+            addToInventory("tomato", count);
+            System.out.println("Harvested " + count + " tomatoes!");
+        }
+
+        return true;
+    }
+
+    private void addToInventory(String itemId, int count) {
+        for (int i = 0; i < 9; i++) {
+            HotbarItem existing = hotbar.getSlotItem(i);
+            if (existing != null && existing.id().equals(itemId)) {
+                HotbarItem updated = existing.withCount(existing.count() + count);
+                hotbar.setItem(i, updated);
+                return;
+            }
+        }
+
+        for (int i = 0; i < 9; i++) {
+            HotbarItem existing = hotbar.getSlotItem(i);
+            if (existing == null) {
+                String iconPath = getIconPath(itemId);
+                hotbar.setItem(i, new HotbarItem(itemId, iconPath, count));
+                return;
+            }
+        }
+
+        System.out.println("Inventory full! Couldn't pick up " + count + " " + itemId);
+    }
+
+    private String getIconPath(String itemId) {
+        return switch (itemId) {
+            case "pumpkin" -> GameConfig.PUMPKIN_ITEM;
+            case "tomato" -> GameConfig.TOMATO_ITEM;
+            default -> GameConfig.DEFAULT_ITEM;
+        };
+    }
 
 }

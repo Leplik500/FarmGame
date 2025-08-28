@@ -14,16 +14,16 @@ public class PlantGrowthState extends BaseAppState {
     private final AssetManager assetManager;
     private final Node plantsRoot;
 
-    private static final class Plant {
-        final PlantKind kind;
+    public static final class Plant {
+        public final PlantKind kind;
         final Vector3i soil;   
         final Vector3i above;  
-        int stageIndex;        
+        public int stageIndex;        
         float timeLeft;        
-        Spatial spatial;       
+        public Spatial spatial;
 
-        Plant(PlantKind kind, Vector3i soil, Vector3i above, int stageIndex,
-              float timeLeft, Spatial spatial) {
+        public Plant(PlantKind kind, Vector3i soil, Vector3i above, int stageIndex,
+                     float timeLeft, Spatial spatial) {
             this.kind = kind; this.soil = soil; this.above = above;
             this.stageIndex = stageIndex; this.timeLeft = timeLeft; this.spatial = spatial;
         }
@@ -94,4 +94,18 @@ public class PlantGrowthState extends BaseAppState {
         plantsRoot.attachChild(next);
         p.spatial = next;
     }
+
+
+    public Plant getPlantAt(Vector3i above) {
+        return plants.get(above);
+    }
+
+    public void removePlant(Vector3i above) {
+        plants.remove(above);
+    }
+
+    public Node getPlantsRoot() {
+        return plantsRoot;
+    }
+
 }

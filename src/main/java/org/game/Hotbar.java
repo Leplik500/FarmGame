@@ -102,6 +102,11 @@ public class Hotbar {
         return selected;
     }
 
+    public HotbarItem getSlotItem(int slot) {
+        if (slot < 0 || slot >= SLOT_COUNT) return null;
+        return items[slot];
+    }
+
     private void updateSlotIcon(int slot) {
         if (slotIcon[slot] != null) {
             slotIcon[slot].removeFromParent();

@@ -24,7 +24,6 @@ public final class GameConfig {
     public static final float IDLE_ANIMATION_DURATION = 0.15f;
     public static final float ANIMATION_UNLOCK_THRESHOLD = 0.1f;
 
-    // Animation names
     public static final String ANIM_IDLE = "animation.lael.idlemain";
     public static final String ANIM_WALK = "animation.lael.walk";
     public static final String ANIM_RUN = "animation.lael.fast_run";
@@ -65,6 +64,12 @@ public final class GameConfig {
             "Models/Pumpkin_3.glb",
             "Models/Pumpkin_4.glb"
     };
+
+    public static final String PUMPKIN_HARVESTED_MODEL = "Models" +
+            "/Pumpkin_Harvested.glb";
+    public static final String TOMATO_HARVESTED_MODEL = "Models" +
+            "/Tomato_Harvested.glb";
+
     public static final String[] TOMATO_GROWTH_MODELS = {
             "Models/Tomato_1.glb",
             "Models/Tomato_2.glb",
@@ -72,7 +77,10 @@ public final class GameConfig {
             "Models/Tomato_4.glb"
     };
 
-    // SkyBox textures
+    public static final String PUMPKIN_ITEM = "Textures/pumpkin.png";
+    public static final String TOMATO_ITEM = "Textures/tomato.png";
+    public static final String DEFAULT_ITEM = "Textures/default_item.png";
+
     public static final String SKYBOX_PX = "SkyBox/px.png";
     public static final String SKYBOX_NX = "SkyBox/nx.png";
     public static final String SKYBOX_PY = "SkyBox/py.png";
