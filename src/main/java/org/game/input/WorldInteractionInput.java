@@ -12,13 +12,16 @@ public class WorldInteractionInput implements ActionListener {
     private final Hotbar hotbar;
     private final Camera camera;
     private final InputManager inputManager;
+    private final FarmlandMoistureState moisture; 
 
     public WorldInteractionInput(SimpleBlockWorld world, Hotbar hotbar,
-                                 Camera camera, InputManager inputManager) {
+                                 Camera camera, InputManager inputManager,
+                                 FarmlandMoistureState moisture) {
         this.world = world;
         this.hotbar = hotbar;
         this.camera = camera;
         this.inputManager = inputManager;
+        this.moisture = moisture;
     }
 
     @Override
@@ -30,30 +33,46 @@ public class WorldInteractionInput implements ActionListener {
     }
 
     private void handleWorldClick() {
-        // Получаем выбранный предмет
         HotbarItem selectedItem = hotbar.getSelectedItem();
         if (selectedItem == null) return;
 
-        // Проверяем, что это мотыга
-        if (!"hoe".equals(selectedItem.id)) return;
-
-        // Находим блок под курсором (аналогично updateFaceHighlight)
         Vector3i targetBlock = getBlockUnderCursor();
         if (targetBlock == null) return;
 
-        // Проверяем, что это трава
-        int blockType = world.getBlock(targetBlock.x(), targetBlock.y(), targetBlock.z());
-        if (blockType == BlockType.GRASS) {
-            // Превращаем в вспаханную землю
-            world.setBlock(targetBlock.x(), targetBlock.y(), targetBlock.z(), BlockType.PLOWED_DRY);
-            System.out.println("Tilled soil at: " + targetBlock);
+        int type = world.getBlock(targetBlock.x(), targetBlock.y(), targetBlock.z());
+
+        // 1) Мотыга: трава -> вспаханная
+        if ("hoe".equals(selectedItem.id)) {
+            if (type == BlockType.GRASS) {
+                world.setBlock(targetBlock.x(), targetBlock.y(), targetBlock.z(), BlockType.PLOWED_DRY);
+                System.out.println("Tilled soil at: " + targetBlock);
+            }
+            return; // другие типы игнорируем
         }
+
+        // 2) Лейка: сухая вспаханная -> влажная (и запустить/обновить таймер)
+        if ("watering_can".equals(selectedItem.id)) {
+            if (type == BlockType.PLOWED_DRY) {
+                world.setBlock(targetBlock.x(), targetBlock.y(), targetBlock.z(), BlockType.PLOWED_WET);
+                moisture.markWet(targetBlock.x(), targetBlock.y(), targetBlock.z(), null); // дефолтный таймер
+                System.out.println("Watered soil at: " + targetBlock);
+            } else if (type == BlockType.PLOWED_WET) {
+                // Обновить таймер увлажнения повторным поливом
+                moisture.markWet(targetBlock.x(), targetBlock.y(), targetBlock.z(), null);
+                System.out.println("Refreshed moisture at: " + targetBlock);
+            }
+            return; // иные типы игнорируем
+        }
+
+        // Иные предметы — ничего не происходит
     }
 
     private Vector3i getBlockUnderCursor() {
+        // Луч из позиции курсора: convert 2D -> 3D и шагать вдоль направления
         Vector2f cursorPos = inputManager.getCursorPosition();
         Vector3f origin = camera.getWorldCoordinates(cursorPos, 0f);
-        Vector3f direction = camera.getWorldCoordinates(cursorPos, 1f).subtract(origin).normalizeLocal();
+        Vector3f direction = camera.getWorldCoordinates(cursorPos, 1f)
+                .subtract(origin).normalizeLocal();
         Vector3f currentPos = origin.clone();
         Vector3f step = direction.mult(0.1f);
 
@@ -62,11 +81,10 @@ public class WorldInteractionInput implements ActionListener {
             int bx = (int) Math.floor(currentPos.x);
             int by = (int) Math.floor(currentPos.y);
             int bz = (int) Math.floor(currentPos.z);
-
             if (world.getBlock(bx, by, bz) != BlockType.AIR) {
                 return new Vector3i(bx, by, bz);
             }
         }
-        return null; // ничего не найдено
+        return null;
     }
 }
