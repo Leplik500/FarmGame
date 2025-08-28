@@ -59,6 +59,8 @@ public final class GameConfig {
     // ========== ASSET PATHS ==========
     public static final String MODEL_PLAYER = "Models/rhea_wilson.glb";
     public static final String CURSOR_PATH = "Cursors/hand.cur";
+    public static final String MODEL_APPLE_SAPLING_S1 = "Models/Apple_1.glb";
+    public static final String MODEL_TOMATO_SAPLING_S1 = "Models/Tomato_1.glb";
 
     // SkyBox textures
     public static final String SKYBOX_PX = "SkyBox/px.png";

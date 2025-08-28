@@ -25,6 +25,7 @@ import java.awt.*;
 public class Main extends SimpleApplication implements ActionListener {
 
     private final Node camTarget = new Node("CamTarget");
+    private final Node plantsRoot = new Node("PlantsRoot");
     private Spatial player;
     private SimpleBlockWorld blockWorld;
     private Spatial faceHighlight;
@@ -82,6 +83,7 @@ public class Main extends SimpleApplication implements ActionListener {
             System.err.println("No AnimComposer found!");
         }
 
+        rootNode.attachChild(plantsRoot);
         rootNode.attachChild(player);
 
         DirectionalLight light = new DirectionalLight();
@@ -121,7 +123,8 @@ public class Main extends SimpleApplication implements ActionListener {
         HotbarInput hotbarInput = new HotbarInput(hotbar, cameraInput);
         MovementInput movementInput = new MovementInput(inputHandler);
         WorldInteractionInput worldInput = new WorldInteractionInput(
-                blockWorld, hotbar, cam, inputManager, moisture);
+                blockWorld, hotbar, cam, inputManager, moisture, assetManager
+                , plantsRoot);
 
         router.addActionModule(cameraInput);
         router.addAnalogModule(cameraInput);
