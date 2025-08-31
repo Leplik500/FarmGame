@@ -19,12 +19,16 @@ public class WorldInteractionInput implements ActionListener {
     private final AssetManager assetManager;
     private final Node plantsRoot;
     private final PlantGrowthState growth;
+    private final Spatial shopModel;
+    private final ShopUI shopUI;
+
 
 
     public WorldInteractionInput(SimpleBlockWorld world, Hotbar hotbar,
                                  Camera camera, InputManager inputManager,
                                  FarmlandMoistureState moisture,
-                                 AssetManager assetManager, Node plantsRoot, PlantGrowthState growth) {
+                                 AssetManager assetManager, Node plantsRoot,
+                                 PlantGrowthState growth, Spatial shopModel, ShopUI shopUI) {
         this.world = world;
         this.hotbar = hotbar;
         this.camera = camera;
@@ -33,6 +37,8 @@ public class WorldInteractionInput implements ActionListener {
         this.assetManager = assetManager;
         this.plantsRoot = plantsRoot;
         this.growth = growth;
+        this.shopModel = shopModel;
+        this.shopUI = shopUI;
     }
 
     @Override
@@ -44,6 +50,17 @@ public class WorldInteractionInput implements ActionListener {
     }
 
     private void handleWorldClick() {
+        if (shopUI.isVisible()) {
+            Vector2f cursorPos = inputManager.getCursorPosition();
+            shopUI.handleClick(cursorPos.x, cursorPos.y);
+            return;
+        }
+
+        if (isClickOnShop()) {
+            shopUI.setVisible(true);
+            return;
+        }
+        
         HotbarItem selectedItem = hotbar.getSelectedItem();
 
         Vector3i targetBlock = getBlockUnderCursor();
@@ -212,4 +229,16 @@ public class WorldInteractionInput implements ActionListener {
         };
     }
 
+
+    private boolean isClickOnShop() {
+        Vector3i targetBlock = getBlockUnderCursor();
+        if (targetBlock == null) return false;
+
+        // Check if clicked position is near shop (simple distance check)
+        Vector3f shopPos = shopModel.getWorldTranslation();
+        float distance = new Vector3f(targetBlock.x(), targetBlock.y(), targetBlock.z())
+                .distance(shopPos);
+
+        return distance < 5.0f; // 5 unit radius around shop
+    }
 }

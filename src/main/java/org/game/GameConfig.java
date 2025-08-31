@@ -92,6 +92,13 @@ public final class GameConfig {
 
     public static final float[] GROWTH_STAGE_SECONDS = { 15f, 20f, 30f };
 
+    // ========== SHOP SETTINGS ==========
+    public static final int PUMPKIN_SEEDS_PRICE = 5;
+    public static final int TOMATO_SEEDS_PRICE = 3;
+    public static final int PUMPKIN_SELL_PRICE = 20;
+    public static final int TOMATO_SELL_PRICE = 15;
+
+
     private GameConfig() {}
 }
 
