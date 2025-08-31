@@ -91,7 +91,6 @@ public class Main extends SimpleApplication implements ActionListener {
 
         if (animComposer != null) {
             System.out.println("Available animations: " + animComposer.getAnimClipsNames());
-            setAndLockAnimation(GameConfig.ANIM_IDLE);
         }
 
         rootNode.attachChild(player);
@@ -167,9 +166,7 @@ public class Main extends SimpleApplication implements ActionListener {
             inputHandler.handleKeyRelease(name);
         }
 
-        if (inputHandler.updateWalkingState()) {
-            animationController.forceUnlockIfMoving(inputHandler.isWalking());
-        }
+        inputHandler.updateWalkingState();
     }
 
 
@@ -191,26 +188,6 @@ public class Main extends SimpleApplication implements ActionListener {
         if (hotbar != null) {
             hotbar.updateViewportSizeIfChanged(cam.getWidth(), cam.getHeight());
             moneyDisplay.updatePosition(cam.getWidth(), cam.getHeight());
-        }
-    }
-
-
-    private void setAndLockAnimation(String animationName) {
-        if (animComposer != null && animComposer.getAnimClipsNames().contains(animationName)) {
-            try {
-                animComposer.setCurrentAction(animationName);
-
-                float animationLockTime;
-                if (animationName.equals("animation.lael.idlemain")) {
-                    animationLockTime = GameConfig.IDLE_ANIMATION_DURATION;
-                } else {
-                    animationLockTime = GameConfig.MIN_ANIMATION_DURATION;
-                }
-
-                System.out.println("Animation set and locked: " + animationName + " for " + animationLockTime + "s");
-            } catch (Exception e) {
-                System.err.println("Error setting animation: " + e.getMessage());
-            }
         }
     }
 
@@ -352,8 +329,8 @@ public class Main extends SimpleApplication implements ActionListener {
 
     private void addShopToScene() {
         shopModel = assetManager.loadModel(GameConfig.SHOP_MODEL);
-        shopModel.setLocalTranslation(0, 0, 0); // Позиция магазина на карте
-        shopModel.setLocalScale(1f); // Масштаб при необходимости
+        shopModel.setLocalTranslation(0, 0, 0);
+        shopModel.setLocalScale(1f);
         rootNode.attachChild(shopModel);
         System.out.println("Shop placed at (15, 0, 15)");
     }

@@ -20,10 +20,6 @@ public final class GameConfig {
     public static final long DOUBLE_TAP_WINDOW_NS = 600_000_000L; // 600ms
 
     // ========== ANIMATION SETTINGS ==========
-    public static final float MIN_ANIMATION_DURATION = 0.5f;
-    public static final float IDLE_ANIMATION_DURATION = 0.15f;
-    public static final float ANIMATION_UNLOCK_THRESHOLD = 0.1f;
-
     public static final String ANIM_IDLE = "animation.lael.idlemain";
     public static final String ANIM_WALK = "animation.lael.walk";
     public static final String ANIM_RUN = "animation.lael.fast_run";
