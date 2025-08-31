@@ -7,8 +7,7 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Node;
 import com.jme3.ui.Picture;
-import org.game.events.GameEventManager;
-import org.game.events.MoneyChangedEvent;
+import org.game.events.SimpleEventBus;
 
 public class MoneyDisplay {
     private final Node root = new Node("MoneyDisplay");
@@ -16,9 +15,7 @@ public class MoneyDisplay {
     private int money = 0;
 
     public MoneyDisplay(Node guiNode, AssetManager assetManager, int screenW, int screenH) {
-        GameEventManager.INSTANCE.subscribe(MoneyChangedEvent.class, event -> {
-            setMoney(event.newAmount());
-        });
+        SimpleEventBus.INSTANCE.subscribeToMoney("moneyDisplay", this::updateMoneyDisplay);
         
         root.setQueueBucket(RenderQueue.Bucket.Gui);
 
@@ -66,12 +63,13 @@ public class MoneyDisplay {
     }
 
     public void addMoney(int amount) {
-        GameEventManager.INSTANCE.publish(new MoneyChangedEvent(money + amount));
+        SimpleEventBus.INSTANCE.publishMoneyChanged(money + amount);
     }
+
 
     public boolean spendMoney(int amount) {
         if (money >= amount) {
-            GameEventManager.INSTANCE.publish(new MoneyChangedEvent(money - amount));
+            SimpleEventBus.INSTANCE.publishMoneyChanged(money - amount);
             return true;
         }
         return false;
@@ -79,5 +77,10 @@ public class MoneyDisplay {
 
     public void updatePosition(int screenW, int screenH) {
         positionRightOfHotbar(screenW, screenH);
+    }
+    
+    private void updateMoneyDisplay(int newAmount) {
+        this.money = Math.max(0, newAmount);
+        moneyText.setText(String.valueOf(this.money));
     }
 }

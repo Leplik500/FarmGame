@@ -8,8 +8,7 @@ import com.jme3.renderer.Camera;
 import com.jme3.input.InputManager;
 import com.jme3.scene.Spatial;
 import org.game.*;
-import org.game.events.GameEventManager;
-import org.game.events.InventoryChangedEvent;
+import org.game.events.SimpleEventBus;
 
 public class WorldInteractionInput implements ActionListener {
     private final SimpleBlockWorld world;
@@ -86,7 +85,7 @@ public class WorldInteractionInput implements ActionListener {
                         && !growth.hasPlantAt(aboveBlock)) {
                     Spatial s = plantFactory.createPlant(PlantKind.PUMPKIN, targetBlock);
                     growth.registerPlanted(PlantKind.PUMPKIN, targetBlock, aboveBlock, s);
-                    hotbar.reduceItemCount(hotbar.getSelectedSlot(), 1);
+                    reduceSelectedItemCount(1);
                 }
             }
             return;
@@ -98,7 +97,7 @@ public class WorldInteractionInput implements ActionListener {
                         && !growth.hasPlantAt(aboveBlock)) {
                     Spatial s = plantFactory.createPlant(PlantKind.TOMATO, targetBlock);
                     growth.registerPlanted(PlantKind.TOMATO, targetBlock, aboveBlock, s);
-                    hotbar.reduceItemCount(hotbar.getSelectedSlot(), 1);
+                    reduceSelectedItemCount(1);
                 }
             }
             return;
@@ -166,23 +165,23 @@ public class WorldInteractionInput implements ActionListener {
         growth.removePlant(position);
 
         if (plant.kind == PlantKind.PUMPKIN) {
-            addToInventory("pumpkin", 1);
+            addToInventoryViaEvents("pumpkin", 1);
             System.out.println("Harvested 1 pumpkin!");
         } else if (plant.kind == PlantKind.TOMATO) {
-            int count = 1 + (int)(Math.random() * 4); 
-            addToInventory("tomato", count);
+            int count = 1 + (int)(Math.random() * 4);
+            addToInventoryViaEvents("tomato", count);
             System.out.println("Harvested " + count + " tomatoes!");
         }
 
         return true;
     }
 
-    private void addToInventory(String itemId, int count) {
+    private void addToInventoryViaEvents(String itemId, int count) {
         for (int i = 0; i < 9; i++) {
             HotbarItem existing = hotbar.getSlotItem(i);
             if (existing != null && existing.id().equals(itemId)) {
                 HotbarItem updated = existing.withCount(existing.count() + count);
-                GameEventManager.INSTANCE.publish(new InventoryChangedEvent(i, updated));
+                SimpleEventBus.INSTANCE.publishInventoryChanged(i, updated);
                 return;
             }
         }
@@ -192,7 +191,7 @@ public class WorldInteractionInput implements ActionListener {
             if (existing == null) {
                 String iconPath = getIconPath(itemId);
                 HotbarItem newItem = new HotbarItem(itemId, iconPath, count);
-                GameEventManager.INSTANCE.publish(new InventoryChangedEvent(i, newItem));
+                SimpleEventBus.INSTANCE.publishInventoryChanged(i, newItem);
                 return;
             }
         }
@@ -219,5 +218,20 @@ public class WorldInteractionInput implements ActionListener {
                 .distance(shopPos);
 
         return distance < 5.0f; // 5 unit radius around shop
+    }
+
+    private void reduceSelectedItemCount(int amount) {
+        int selectedSlot = hotbar.getSelectedSlot();
+        HotbarItem currentItem = hotbar.getSlotItem(selectedSlot);
+
+        if (currentItem != null && currentItem.count() >= amount) {
+            int newCount = currentItem.count() - amount;
+            if (newCount <= 0) {
+                SimpleEventBus.INSTANCE.publishInventoryChanged(selectedSlot, null);
+            } else {
+                HotbarItem updatedItem = currentItem.withCount(newCount);
+                SimpleEventBus.INSTANCE.publishInventoryChanged(selectedSlot, updatedItem);
+            }
+        }
     }
 }

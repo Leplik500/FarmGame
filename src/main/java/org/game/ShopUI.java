@@ -1,4 +1,3 @@
-// org/game/ShopUI.java
 package org.game;
 
 import com.jme3.asset.AssetManager;
@@ -12,6 +11,7 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Quad;
 import com.jme3.ui.Picture;
+import org.game.events.SimpleEventBus;
 
 public class ShopUI {
     private final Node root = new Node("ShopUI");
@@ -171,28 +171,15 @@ public class ShopUI {
         String itemId = BUY_ITEMS[index];
         int price = BUY_PRICES[index];
 
-        if (moneyDisplay.spendMoney(price)) {
-            for (int i = 0; i < 9; i++) {
-                HotbarItem existing = hotbar.getSlotItem(i);
-                if (existing != null && existing.id().equals(itemId)) {
-                    hotbar.setItem(i, existing.withCount(existing.count() + 1));
-                    System.out.println("Bought " + itemId + " for $" + price);
-                    return;
-                }
-            }
+        if (moneyDisplay.getMoney() >= price) {
+            SimpleEventBus.INSTANCE.publishMoneyChanged(moneyDisplay.getMoney() - price);
 
-            for (int i = 0; i < 9; i++) {
-                if (hotbar.getSlotItem(i) == null) {
-                    String iconPath = getIconPath(itemId);
-                    hotbar.setItem(i, new HotbarItem(itemId, iconPath, 1));
-                    System.out.println("Bought " + itemId + " for $" + price);
-                    return;
-                }
+            if (addItemToInventoryViaEvents(itemId, 1)) {
+                System.out.println("Bought " + itemId + " for $" + price);
+            } else {
+                SimpleEventBus.INSTANCE.publishMoneyChanged(moneyDisplay.getMoney() + price);
+                System.out.println("Inventory full! Purchase refunded.");
             }
-
-            // Refund if no space
-            moneyDisplay.addMoney(price);
-            System.out.println("Inventory full! Purchase refunded.");
         } else {
             System.out.println("Not enough money to buy " + itemId);
         }
@@ -205,8 +192,15 @@ public class ShopUI {
         for (int i = 0; i < 9; i++) {
             HotbarItem item = hotbar.getSlotItem(i);
             if (item != null && item.id().equals(itemId) && item.count() > 0) {
-                hotbar.reduceItemCount(i, 1);
-                moneyDisplay.addMoney(price);
+                int newCount = item.count() - 1;
+                if (newCount <= 0) {
+                    SimpleEventBus.INSTANCE.publishInventoryChanged(i, null);
+                } else {
+                    HotbarItem updated = item.withCount(newCount);
+                    SimpleEventBus.INSTANCE.publishInventoryChanged(i, updated);
+                }
+
+                SimpleEventBus.INSTANCE.publishMoneyChanged(moneyDisplay.getMoney() + price);
                 System.out.println("Sold " + itemId + " for $" + price);
                 return;
             }
@@ -214,7 +208,7 @@ public class ShopUI {
 
         System.out.println("No " + itemId + " to sell!");
     }
-
+    
     private String getIconPath(String itemId) {
         return switch (itemId) {
             case "pumpkin_seeds" -> "Textures/pumpkin_seeds.png";
@@ -224,4 +218,27 @@ public class ShopUI {
             default -> GameConfig.DEFAULT_ITEM;
         };
     }
+
+    private boolean addItemToInventoryViaEvents(String itemId, int count) {
+        for (int i = 0; i < 9; i++) {
+            HotbarItem existing = hotbar.getSlotItem(i);
+            if (existing != null && existing.id().equals(itemId)) {
+                HotbarItem updated = existing.withCount(existing.count() + count);
+                SimpleEventBus.INSTANCE.publishInventoryChanged(i, updated);
+                return true;
+            }
+        }
+
+        for (int i = 0; i < 9; i++) {
+            if (hotbar.getSlotItem(i) == null) {
+                String iconPath = getIconPath(itemId);
+                HotbarItem newItem = new HotbarItem(itemId, iconPath, count);
+                SimpleEventBus.INSTANCE.publishInventoryChanged(i, newItem);
+                return true;
+            }
+        }
+
+        return false; 
+    }
+
 }
