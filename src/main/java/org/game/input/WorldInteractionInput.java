@@ -21,14 +21,14 @@ public class WorldInteractionInput implements ActionListener {
     private final PlantGrowthState growth;
     private final Spatial shopModel;
     private final ShopUI shopUI;
-
-
+    private final PlantFactory plantFactory;
 
     public WorldInteractionInput(SimpleBlockWorld world, Hotbar hotbar,
                                  Camera camera, InputManager inputManager,
                                  FarmlandMoistureState moisture,
                                  AssetManager assetManager, Node plantsRoot,
-                                 PlantGrowthState growth, Spatial shopModel, ShopUI shopUI) {
+                                 PlantGrowthState growth, Spatial shopModel,
+                                 ShopUI shopUI, PlantFactory plantFactory) {
         this.world = world;
         this.hotbar = hotbar;
         this.camera = camera;
@@ -39,6 +39,7 @@ public class WorldInteractionInput implements ActionListener {
         this.growth = growth;
         this.shopModel = shopModel;
         this.shopUI = shopUI;
+        this.plantFactory = plantFactory;
     }
 
     @Override
@@ -84,7 +85,7 @@ public class WorldInteractionInput implements ActionListener {
             if (type == BlockType.PLOWED_DRY || type == BlockType.PLOWED_WET) {
                 if (world.getBlock(aboveBlock.x(), aboveBlock.y(), aboveBlock.z()) == BlockType.AIR
                         && !growth.hasPlantAt(aboveBlock)) {
-                    Spatial s = plantPumpkinSapling(targetBlock);
+                    Spatial s = plantFactory.createPlant(PlantKind.PUMPKIN, targetBlock);
                     growth.registerPlanted(PlantKind.PUMPKIN, targetBlock, aboveBlock, s);
                     hotbar.reduceItemCount(hotbar.getSelectedSlot(), 1);
                 }
@@ -96,7 +97,7 @@ public class WorldInteractionInput implements ActionListener {
             if (type == BlockType.PLOWED_DRY || type == BlockType.PLOWED_WET) {
                 if (world.getBlock(aboveBlock.x(), aboveBlock.y(), aboveBlock.z()) == BlockType.AIR
                         && !growth.hasPlantAt(aboveBlock)) {
-                    Spatial s = plantTomatoSapling(targetBlock);
+                    Spatial s = plantFactory.createPlant(PlantKind.TOMATO, targetBlock);
                     growth.registerPlanted(PlantKind.TOMATO, targetBlock, aboveBlock, s);
                     hotbar.reduceItemCount(hotbar.getSelectedSlot(), 1);
                 }
@@ -141,28 +142,6 @@ public class WorldInteractionInput implements ActionListener {
             }
         }
         return null;
-    }
-    
-    private Spatial plantPumpkinSapling(Vector3i soil) {
-        Spatial sapling =
-                assetManager.loadModel(GameConfig.PUMPKIN_GROWTH_MODELS[0]); 
-        float yTop = soil.y() + 0.5f;
-        sapling.setLocalTranslation(new Vector3f(soil.x(), yTop, soil.z()));
-        sapling.scale(3f);
-        plantsRoot.attachChild(sapling); 
-        System.out.println("Planted pumpkin sapling at: " + soil + " (top@" + yTop + ")");
-        return sapling;
-    }
-
-    private Spatial plantTomatoSapling(Vector3i soil) {
-        Spatial sapling =
-                assetManager.loadModel(GameConfig.TOMATO_GROWTH_MODELS[0]);
-        float yTop = soil.y() + 0.5f;
-        sapling.setLocalTranslation(new Vector3f(soil.x(), yTop, soil.z()));
-        sapling.scale(3f);
-        plantsRoot.attachChild(sapling); 
-        System.out.println("Planted tomato sapling at: " + soil + " (top@" + yTop + ")");
-        return sapling;
     }
 
     private boolean harvestPlantAt(Vector3i position) {

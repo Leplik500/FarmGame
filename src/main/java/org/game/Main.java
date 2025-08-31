@@ -40,7 +40,7 @@ public class Main extends SimpleApplication implements ActionListener {
     private ShopUI shopUI;
     private PlantGrowthState growth;
     private FarmlandMoistureState moisture;
-
+    private PlantFactory plantFactory;
 
     public static void main(String[] args) {
         AppSettings settings = new AppSettings(true);
@@ -110,6 +110,7 @@ public class Main extends SimpleApplication implements ActionListener {
         stateManager.attach(moisture);
 
         rootNode.attachChild(plantsRoot);
+        plantFactory = new PlantFactory(assetManager, plantsRoot);
         growth = new PlantGrowthState(blockWorld, assetManager, plantsRoot);
         stateManager.attach(growth);
 
@@ -146,7 +147,7 @@ public class Main extends SimpleApplication implements ActionListener {
         MovementInput movementInput = new MovementInput(inputHandler);
         WorldInteractionInput worldInput = new WorldInteractionInput(
                 blockWorld, hotbar, cam, inputManager, moisture, assetManager,
-                plantsRoot, growth, shopModel, shopUI);
+                plantsRoot, growth, shopModel, shopUI, plantFactory);
 
         router.addActionModule(cameraInput);
         router.addAnalogModule(cameraInput);
@@ -355,7 +356,4 @@ public class Main extends SimpleApplication implements ActionListener {
         rootNode.attachChild(shopModel);
         System.out.println("Shop placed at (15, 0, 15)");
     }
-    
-    
-
 }
