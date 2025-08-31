@@ -37,6 +37,9 @@ public class Main extends SimpleApplication implements ActionListener {
     private ChaseCamera chaseCam;
     private MoneyDisplay moneyDisplay;
     private Spatial shopModel;
+    private ShopUI shopUI;
+    private PlantGrowthState growth;
+    private FarmlandMoistureState moisture;
 
 
     public static void main(String[] args) {
@@ -71,6 +74,13 @@ public class Main extends SimpleApplication implements ActionListener {
 
     @Override
     public void simpleInitApp() {
+        initPlayer();
+        initWorld();
+        initUI();
+        initInput();
+    }
+
+    private void initPlayer() {
         player = assetManager.loadModel(GameConfig.MODEL_PLAYER);
         player.depthFirstTraversal(spatial -> {
             if (spatial.getControl(AnimComposer.class) != null) {
@@ -81,14 +91,13 @@ public class Main extends SimpleApplication implements ActionListener {
 
         if (animComposer != null) {
             System.out.println("Available animations: " + animComposer.getAnimClipsNames());
-            String targetAnimation = GameConfig.ANIM_IDLE;
-            setAndLockAnimation(targetAnimation);
-        } else {
-            System.err.println("No AnimComposer found!");
+            setAndLockAnimation(GameConfig.ANIM_IDLE);
         }
 
         rootNode.attachChild(player);
-        
+    }
+
+    private void initWorld() {
         DirectionalLight light = new DirectionalLight();
         light.setDirection(GameConfig.LIGHT_DIRECTION.normalizeLocal());
         light.setColor(ColorRGBA.White.mult(GameConfig.LIGHT_INTENSITY));
@@ -96,15 +105,19 @@ public class Main extends SimpleApplication implements ActionListener {
 
         blockWorld = new SimpleBlockWorld(rootNode, assetManager);
         blockWorld.generateFlatWorld(GameConfig.WORLD_SIZE_X, GameConfig.WORLD_SIZE_Z);
-        FarmlandMoistureState moisture = new FarmlandMoistureState(blockWorld);
+
+        moisture = new FarmlandMoistureState(blockWorld);
         stateManager.attach(moisture);
+
         rootNode.attachChild(plantsRoot);
-        PlantGrowthState growth = new PlantGrowthState(blockWorld, assetManager, plantsRoot);
+        growth = new PlantGrowthState(blockWorld, assetManager, plantsRoot);
         stateManager.attach(growth);
 
         addShopToScene();
-
         addSky();
+    }
+
+    private void initUI() {
         rootNode.attachChild(camTarget);
         camTarget.setLocalTranslation(player.getLocalTranslation());
         camTarget.setLocalRotation(player.getLocalRotation());
@@ -119,8 +132,10 @@ public class Main extends SimpleApplication implements ActionListener {
         moneyDisplay = new MoneyDisplay(guiNode, assetManager, cam.getWidth(), cam.getHeight());
         moneyDisplay.setMoney(100);
 
-        ShopUI shopUI = new ShopUI(guiNode, assetManager, hotbar, moneyDisplay);
-        
+        shopUI = new ShopUI(guiNode, assetManager, hotbar, moneyDisplay);
+    }
+
+    private void initInput() {
         inputHandler = new PlayerInputHandler();
         movementController = new PlayerMovementController(player, cam);
         animationController = new PlayerAnimationController(animComposer);
@@ -132,6 +147,7 @@ public class Main extends SimpleApplication implements ActionListener {
         WorldInteractionInput worldInput = new WorldInteractionInput(
                 blockWorld, hotbar, cam, inputManager, moisture, assetManager,
                 plantsRoot, growth, shopModel, shopUI);
+
         router.addActionModule(cameraInput);
         router.addAnalogModule(cameraInput);
         router.addActionModule(hotbarInput);
@@ -139,7 +155,8 @@ public class Main extends SimpleApplication implements ActionListener {
         router.addActionModule(movementInput);
         router.addActionModule(worldInput);
     }
-    
+
+
     @Override
     public void onAction(String name, boolean isPressed, float tpf) {
         if (isPressed) {
