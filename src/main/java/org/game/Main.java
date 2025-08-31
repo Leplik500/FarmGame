@@ -131,7 +131,7 @@ public class Main extends SimpleApplication implements ActionListener {
         hotbar.setItem(3, new HotbarItem("hoe", "Textures/hoe.png"));
 
         moneyDisplay = new MoneyDisplay(guiNode, assetManager, cam.getWidth(), cam.getHeight());
-        moneyDisplay.setMoney(100);
+        moneyDisplay.addMoney(10);
 
         shopUI = new ShopUI(guiNode, assetManager, hotbar, moneyDisplay);
     }
@@ -147,7 +147,7 @@ public class Main extends SimpleApplication implements ActionListener {
         MovementInput movementInput = new MovementInput(inputHandler);
         WorldInteractionInput worldInput = new WorldInteractionInput(
                 blockWorld, hotbar, cam, inputManager, moisture, assetManager,
-                plantsRoot, growth, shopModel, shopUI, plantFactory);
+                growth, shopModel, shopUI, plantFactory);
 
         router.addActionModule(cameraInput);
         router.addAnalogModule(cameraInput);

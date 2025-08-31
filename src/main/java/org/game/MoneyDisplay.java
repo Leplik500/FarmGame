@@ -7,6 +7,8 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Node;
 import com.jme3.ui.Picture;
+import org.game.events.GameEventManager;
+import org.game.events.MoneyChangedEvent;
 
 public class MoneyDisplay {
     private final Node root = new Node("MoneyDisplay");
@@ -14,6 +16,10 @@ public class MoneyDisplay {
     private int money = 0;
 
     public MoneyDisplay(Node guiNode, AssetManager assetManager, int screenW, int screenH) {
+        GameEventManager.INSTANCE.subscribe(MoneyChangedEvent.class, event -> {
+            setMoney(event.newAmount());
+        });
+        
         root.setQueueBucket(RenderQueue.Bucket.Gui);
 
         Picture moneyIcon = new Picture("MoneyIcon");
@@ -50,7 +56,7 @@ public class MoneyDisplay {
         root.setLocalTranslation(x, marginBottom, 0);
     }
 
-    public void setMoney(int amount) {
+    private void setMoney(int amount) {
         this.money = Math.max(0, amount); 
         moneyText.setText(String.valueOf(this.money));
     }
@@ -60,12 +66,12 @@ public class MoneyDisplay {
     }
 
     public void addMoney(int amount) {
-        setMoney(money + amount);
+        GameEventManager.INSTANCE.publish(new MoneyChangedEvent(money + amount));
     }
 
     public boolean spendMoney(int amount) {
         if (money >= amount) {
-            setMoney(money - amount);
+            GameEventManager.INSTANCE.publish(new MoneyChangedEvent(money - amount));
             return true;
         }
         return false;

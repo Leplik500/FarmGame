@@ -6,9 +6,10 @@ import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
 import com.jme3.input.InputManager;
-import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import org.game.*;
+import org.game.events.GameEventManager;
+import org.game.events.InventoryChangedEvent;
 
 public class WorldInteractionInput implements ActionListener {
     private final SimpleBlockWorld world;
@@ -17,7 +18,6 @@ public class WorldInteractionInput implements ActionListener {
     private final InputManager inputManager;
     private final FarmlandMoistureState moisture;
     private final AssetManager assetManager;
-    private final Node plantsRoot;
     private final PlantGrowthState growth;
     private final Spatial shopModel;
     private final ShopUI shopUI;
@@ -26,7 +26,7 @@ public class WorldInteractionInput implements ActionListener {
     public WorldInteractionInput(SimpleBlockWorld world, Hotbar hotbar,
                                  Camera camera, InputManager inputManager,
                                  FarmlandMoistureState moisture,
-                                 AssetManager assetManager, Node plantsRoot,
+                                 AssetManager assetManager,
                                  PlantGrowthState growth, Spatial shopModel,
                                  ShopUI shopUI, PlantFactory plantFactory) {
         this.world = world;
@@ -35,7 +35,6 @@ public class WorldInteractionInput implements ActionListener {
         this.inputManager = inputManager;
         this.moisture = moisture;
         this.assetManager = assetManager;
-        this.plantsRoot = plantsRoot;
         this.growth = growth;
         this.shopModel = shopModel;
         this.shopUI = shopUI;
@@ -183,7 +182,7 @@ public class WorldInteractionInput implements ActionListener {
             HotbarItem existing = hotbar.getSlotItem(i);
             if (existing != null && existing.id().equals(itemId)) {
                 HotbarItem updated = existing.withCount(existing.count() + count);
-                hotbar.setItem(i, updated);
+                GameEventManager.INSTANCE.publish(new InventoryChangedEvent(i, updated));
                 return;
             }
         }
@@ -192,7 +191,8 @@ public class WorldInteractionInput implements ActionListener {
             HotbarItem existing = hotbar.getSlotItem(i);
             if (existing == null) {
                 String iconPath = getIconPath(itemId);
-                hotbar.setItem(i, new HotbarItem(itemId, iconPath, count));
+                HotbarItem newItem = new HotbarItem(itemId, iconPath, count);
+                GameEventManager.INSTANCE.publish(new InventoryChangedEvent(i, newItem));
                 return;
             }
         }

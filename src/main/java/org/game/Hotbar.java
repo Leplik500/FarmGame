@@ -12,6 +12,8 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Quad;
 import com.jme3.ui.Picture;
+import org.game.events.GameEventManager;
+import org.game.events.InventoryChangedEvent;
 
 public class Hotbar {
     public static final int SLOT_COUNT = 9;
@@ -33,6 +35,10 @@ public class Hotbar {
     private int selected = 0;
 
     public Hotbar(Node guiNode, AssetManager assetManager, int screenW, int screenH) {
+        GameEventManager.INSTANCE.subscribe(InventoryChangedEvent.class, event -> {
+            setItem(event.slot(), event.item());
+        });
+        
         this.assetManager = assetManager;
         this.screenW = screenW;
         this.screenH = screenH;
