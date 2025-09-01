@@ -70,11 +70,15 @@ public class DayNightCycle extends BaseAppState {
             return GameConfig.NIGHT_LIGHT_INTENSITY;
         }
     }
-
-
-
-
-
+    
+    public void skipToDay() {
+        if (isNight()) {
+            currentTime = 30f;
+            isDay = true;
+            System.out.println("Skipped to dawn - a new day begins!");
+        }
+    }
+    
     private float lerp(float a, float b, float t) {
         return a + (b - a) * t;
     }

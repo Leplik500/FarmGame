@@ -38,6 +38,7 @@ public class Main extends SimpleApplication implements ActionListener {
     private ChaseCamera chaseCam;
     private MoneyDisplay moneyDisplay;
     private Spatial shopModel;
+    private Spatial houseModel;
     private ShopUI shopUI;
     private PlantGrowthState growth;
     private FarmlandMoistureState moisture;
@@ -125,6 +126,7 @@ public class Main extends SimpleApplication implements ActionListener {
         stateManager.attach(growth);
 
         addShopToScene();
+        addHouseToScene();
         addSky();
     }
 
@@ -159,8 +161,8 @@ public class Main extends SimpleApplication implements ActionListener {
         MovementInput movementInput = new MovementInput(inputHandler);
         WorldInteractionInput worldInput = new WorldInteractionInput(
                 blockWorld, hotbar, cam, inputManager, moisture, assetManager,
-                growth, shopModel, shopUI, plantFactory);
-
+                growth, shopModel, shopUI, plantFactory, houseModel, dayNightCycle);
+        
         router.addActionModule(cameraInput);
         router.addAnalogModule(cameraInput);
         router.addActionModule(hotbarInput);
@@ -344,18 +346,26 @@ public class Main extends SimpleApplication implements ActionListener {
 
     private void addShopToScene() {
         shopModel = assetManager.loadModel(GameConfig.SHOP_MODEL);
-        shopModel.setLocalTranslation(0, 0, 0);
+        shopModel.setLocalTranslation(15, 0, 15);
         shopModel.setLocalScale(1f);
         rootNode.attachChild(shopModel);
         System.out.println("Shop placed at (15, 0, 15)");
     }
 
+    private void addHouseToScene() {
+        houseModel = assetManager.loadModel(GameConfig.HOUSE_MODEL);
+        houseModel.setLocalTranslation(10, 0, 10);
+        houseModel.setLocalScale(0.3f);
+        rootNode.attachChild(houseModel);
+        System.out.println("House placed at (10, 0, 10)");
+    }
+
+
     private void updateLighting() {
         float intensity = dayNightCycle.getLightIntensity();
         sunLight.setColor(ColorRGBA.White.mult(intensity));
 
-        // Также изменяем интенсивность фонового освещения
-        float ambientIntensity = intensity * 0.1f + 0.05f; // Минимум 5% освещения
+        float ambientIntensity = intensity * 0.1f + 0.05f; 
         ambientLight.setColor(ColorRGBA.White.mult(ambientIntensity));
     }
 

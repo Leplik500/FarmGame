@@ -21,13 +21,16 @@ public class WorldInteractionInput implements ActionListener {
     private final Spatial shopModel;
     private final ShopUI shopUI;
     private final PlantFactory plantFactory;
+    private final DayNightCycle dayNightCycle;
+    private Spatial houseModel;
 
     public WorldInteractionInput(SimpleBlockWorld world, Hotbar hotbar,
                                  Camera camera, InputManager inputManager,
                                  FarmlandMoistureState moisture,
                                  AssetManager assetManager,
                                  PlantGrowthState growth, Spatial shopModel,
-                                 ShopUI shopUI, PlantFactory plantFactory) {
+                                 ShopUI shopUI, PlantFactory plantFactory,
+                                 Spatial houseModel, DayNightCycle dayNightCycle) { // ИЗМЕНИТЬ СИГНАТУРУ
         this.world = world;
         this.hotbar = hotbar;
         this.camera = camera;
@@ -38,7 +41,10 @@ public class WorldInteractionInput implements ActionListener {
         this.shopModel = shopModel;
         this.shopUI = shopUI;
         this.plantFactory = plantFactory;
+        this.houseModel = houseModel;
+        this.dayNightCycle = dayNightCycle;
     }
+
 
     @Override
     public void onAction(String name, boolean isPressed, float tpf) {
@@ -57,6 +63,11 @@ public class WorldInteractionInput implements ActionListener {
 
         if (isClickOnShop()) {
             shopUI.setVisible(true);
+            return;
+        }
+
+        if (isClickOnHouse()) {
+            handleHouseClick();
             return;
         }
         
@@ -221,6 +232,27 @@ public class WorldInteractionInput implements ActionListener {
 
         return distance < 5.0f; // 5 unit radius around shop
     }
+
+    private boolean isClickOnHouse() {
+        Vector3i targetBlock = getBlockUnderCursor();
+        if (targetBlock == null) return false;
+
+        Vector3f housePos = houseModel.getWorldTranslation();
+        float distance = new Vector3f(targetBlock.x(), targetBlock.y(), targetBlock.z())
+                .distance(housePos);
+
+        return distance < 5.0f; // 5 unit radius around house
+    }
+
+    private void handleHouseClick() {
+        if (dayNightCycle.isNight()) {
+            dayNightCycle.skipToDay();
+            System.out.println("You slept through the night. Good morning!");
+        } else {
+            System.out.println("You can only sleep at night.");
+        }
+    }
+
 
     private void reduceSelectedItemCount() {
         int selectedSlot = hotbar.getSelectedSlot();

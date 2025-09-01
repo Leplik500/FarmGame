@@ -77,6 +77,7 @@ public final class GameConfig {
             "Models/Tomato_4.glb"
     };
     public static final String SHOP_MODEL = "Models/store6.glb";
+    public static final String HOUSE_MODEL = "Models/house1.glb";
 
     public static final String PUMPKIN_ITEM = "Textures/pumpkin.png";
     public static final String TOMATO_ITEM = "Textures/tomato.png";
