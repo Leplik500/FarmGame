@@ -85,7 +85,7 @@ public class WorldInteractionInput implements ActionListener {
                         && !growth.hasPlantAt(aboveBlock)) {
                     Spatial s = plantFactory.createPlant(PlantKind.PUMPKIN, targetBlock);
                     growth.registerPlanted(PlantKind.PUMPKIN, targetBlock, aboveBlock, s);
-                    reduceSelectedItemCount(1);
+                    reduceSelectedItemCount();
                 }
             }
             return;
@@ -97,7 +97,7 @@ public class WorldInteractionInput implements ActionListener {
                         && !growth.hasPlantAt(aboveBlock)) {
                     Spatial s = plantFactory.createPlant(PlantKind.TOMATO, targetBlock);
                     growth.registerPlanted(PlantKind.TOMATO, targetBlock, aboveBlock, s);
-                    reduceSelectedItemCount(1);
+                    reduceSelectedItemCount();
                 }
             }
             return;
@@ -145,7 +145,19 @@ public class WorldInteractionInput implements ActionListener {
     private boolean harvestPlantAt(Vector3i position) {
         PlantGrowthState.Plant plant = growth.getPlantAt(position);
         if (plant == null) return false;
-        if (plant.stageIndex != 3) return false; 
+        if (plant.stageIndex != 3) return false;
+
+        if (plant.kind == PlantKind.PUMPKIN) {
+            addToInventoryViaEvents("pumpkin", 1);
+            System.out.println("Harvested 1 pumpkin!");
+        } else if (plant.kind == PlantKind.TOMATO) {
+            int count = 1 + (int)(Math.random() * 4);
+            addToInventoryViaEvents("tomato", count);
+            System.out.println("Harvested " + count + " tomatoes!");
+        }
+
+        plant.stageIndex = 4; 
+        plant.timeLeft = GameConfig.FRUIT_REGROW_SECONDS; 
 
         String harvestedModelPath = switch (plant.kind) {
             case PUMPKIN -> GameConfig.PUMPKIN_HARVESTED_MODEL;
@@ -161,20 +173,11 @@ public class WorldInteractionInput implements ActionListener {
             plant.spatial.removeFromParent();
         }
         growth.getPlantsRoot().attachChild(harvestedModel);
-
-        growth.removePlant(position);
-
-        if (plant.kind == PlantKind.PUMPKIN) {
-            addToInventoryViaEvents("pumpkin", 1);
-            System.out.println("Harvested 1 pumpkin!");
-        } else if (plant.kind == PlantKind.TOMATO) {
-            int count = 1 + (int)(Math.random() * 4);
-            addToInventoryViaEvents("tomato", count);
-            System.out.println("Harvested " + count + " tomatoes!");
-        }
+        plant.spatial = harvestedModel;
 
         return true;
     }
+
 
     private void addToInventoryViaEvents(String itemId, int count) {
         for (int i = 0; i < 9; i++) {
@@ -212,7 +215,6 @@ public class WorldInteractionInput implements ActionListener {
         Vector3i targetBlock = getBlockUnderCursor();
         if (targetBlock == null) return false;
 
-        // Check if clicked position is near shop (simple distance check)
         Vector3f shopPos = shopModel.getWorldTranslation();
         float distance = new Vector3f(targetBlock.x(), targetBlock.y(), targetBlock.z())
                 .distance(shopPos);
@@ -220,12 +222,12 @@ public class WorldInteractionInput implements ActionListener {
         return distance < 5.0f; // 5 unit radius around shop
     }
 
-    private void reduceSelectedItemCount(int amount) {
+    private void reduceSelectedItemCount() {
         int selectedSlot = hotbar.getSelectedSlot();
         HotbarItem currentItem = hotbar.getSlotItem(selectedSlot);
 
-        if (currentItem != null && currentItem.count() >= amount) {
-            int newCount = currentItem.count() - amount;
+        if (currentItem != null && currentItem.count() >= 1) {
+            int newCount = currentItem.count() - 1;
             if (newCount <= 0) {
                 SimpleEventBus.INSTANCE.publishInventoryChanged(selectedSlot, null);
             } else {

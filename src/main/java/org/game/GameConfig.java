@@ -87,6 +87,7 @@ public final class GameConfig {
     public static final String SKYBOX_NZ = "SkyBox/nz.png";
 
     public static final float[] GROWTH_STAGE_SECONDS = { 15f, 20f, 30f };
+    public static final float FRUIT_REGROW_SECONDS = 45f;
 
     // ========== SHOP SETTINGS ==========
     public static final int PUMPKIN_SEEDS_PRICE = 5;

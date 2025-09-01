@@ -1,4 +1,3 @@
-// org/game/PlantGrowthState.java
 package org.game;
 
 import com.jme3.app.Application;
@@ -19,7 +18,7 @@ public class PlantGrowthState extends BaseAppState {
         final Vector3i soil;   
         final Vector3i above;  
         public int stageIndex;        
-        float timeLeft;        
+        public float timeLeft;        
         public Spatial spatial;
 
         public Plant(PlantKind kind, Vector3i soil, Vector3i above, int stageIndex,
@@ -64,14 +63,25 @@ public class PlantGrowthState extends BaseAppState {
 
             if (soilType != BlockType.PLOWED_WET) continue;
 
-            if (p.stageIndex >= 3) continue;
+            // Обрабатываем только стадии 0-2 (рост) и стадию 4 (harvested -> regrow)
+            if (p.stageIndex == 3) continue; // Стадия плодов - не обрабатываем таймер
+            if (p.stageIndex >= 5) continue;
 
             p.timeLeft -= tpf;
             if (p.timeLeft <= 0f) {
-                p.stageIndex++;
-                replaceModel(p);
                 if (p.stageIndex < 3) {
-                    p.timeLeft = GameConfig.GROWTH_STAGE_SECONDS[p.stageIndex];
+                    // Обычный рост до плодоношения
+                    p.stageIndex++;
+                    replaceModel(p);
+                    if (p.stageIndex < GameConfig.GROWTH_STAGE_SECONDS.length) {
+                        p.timeLeft = GameConfig.GROWTH_STAGE_SECONDS[p.stageIndex];
+                    }
+                    // На стадии 3 (плоды) таймер не устанавливается
+                } else if (p.stageIndex == 4) {
+                    // Переход от harvested обратно к плодоношению
+                    p.stageIndex = 3;
+                    replaceModel(p);
+                    // На стадии плодов таймер не нужен
                 }
             }
         }
@@ -79,11 +89,11 @@ public class PlantGrowthState extends BaseAppState {
         for (Vector3i a : toRemove) plants.remove(a);
     }
 
+
+
     private void replaceModel(Plant p) {
-        String path = switch (p.kind) {
-            case PUMPKIN  -> GameConfig.PUMPKIN_GROWTH_MODELS[p.stageIndex];
-            case TOMATO -> GameConfig.TOMATO_GROWTH_MODELS[p.stageIndex];
-        };
+        String path = getModelPath(p);
+
         Spatial next = assetManager.loadModel(path);
         Vector3f pos = p.spatial.getLocalTranslation().clone();
         next.setLocalTranslation(pos);
@@ -93,6 +103,22 @@ public class PlantGrowthState extends BaseAppState {
         if (p.spatial.getParent() != null) p.spatial.removeFromParent();
         plantsRoot.attachChild(next);
         p.spatial = next;
+    }
+
+    private static String getModelPath(Plant p) {
+        String path;
+        if (p.stageIndex == 4) {
+            path = switch (p.kind) {
+                case PUMPKIN -> GameConfig.PUMPKIN_HARVESTED_MODEL;
+                case TOMATO -> GameConfig.TOMATO_HARVESTED_MODEL;
+            };
+        } else {
+            path = switch (p.kind) {
+                case PUMPKIN -> GameConfig.PUMPKIN_GROWTH_MODELS[p.stageIndex];
+                case TOMATO -> GameConfig.TOMATO_GROWTH_MODELS[p.stageIndex];
+            };
+        }
+        return path;
     }
 
 
