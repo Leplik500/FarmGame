@@ -21,32 +21,33 @@ public class BlockType {
         if (materialCache.containsKey(blockId)) {
             return materialCache.get(blockId);
         }
-        Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+
+        Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
+
         switch (blockId) {
             case GRASS: {
                 Texture tex = assetManager.loadTexture("Textures/grass7.jpg");
                 tex.setWrap(Texture.WrapMode.Repeat);
-                mat.setTexture("ColorMap", tex);
+                mat.setTexture("DiffuseMap", tex); 
                 break;
             }
             case PLOWED_DRY: {
-                Texture tex = assetManager.loadTexture("Textures/plowed_dirt" +
-                        ".png");
+                Texture tex = assetManager.loadTexture("Textures/plowed_dirt.png");
                 tex.setWrap(Texture.WrapMode.Repeat);
-                mat.setTexture("ColorMap", tex);
+                mat.setTexture("DiffuseMap", tex);
                 break;
             }
             case PLOWED_WET: {
-                Texture tex = assetManager.loadTexture("Textures" +
-                        "/plowed_dirt_wet.png");
+                Texture tex = assetManager.loadTexture("Textures/plowed_dirt_wet.png");
                 tex.setWrap(Texture.WrapMode.Repeat);
-                mat.setTexture("ColorMap", tex);
+                mat.setTexture("DiffuseMap", tex);
                 break;
             }
             default:
-                mat.setColor("Color", ColorRGBA.White);
+                mat.setColor("Diffuse", ColorRGBA.White); 
         }
         materialCache.put(blockId, mat);
         return mat;
     }
+
 }

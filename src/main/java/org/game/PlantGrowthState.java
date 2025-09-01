@@ -12,6 +12,7 @@ public class PlantGrowthState extends BaseAppState {
     private final SimpleBlockWorld world;
     private final AssetManager assetManager;
     private final Node plantsRoot;
+    private DayNightCycle dayNightCycle;
 
     public static final class Plant {
         public final PlantKind kind;
@@ -30,10 +31,11 @@ public class PlantGrowthState extends BaseAppState {
 
     private final Map<Vector3i, Plant> plants = new HashMap<>();
 
-    public PlantGrowthState(SimpleBlockWorld world, AssetManager assetManager, Node plantsRoot) {
+    public PlantGrowthState(SimpleBlockWorld world, AssetManager assetManager, Node plantsRoot, DayNightCycle dayNightCycle) {
         this.world = world;
         this.assetManager = assetManager;
         this.plantsRoot = plantsRoot;
+        this.dayNightCycle = dayNightCycle;
     }
 
     public boolean hasPlantAt(Vector3i above) { return plants.containsKey(above); } 
@@ -51,6 +53,9 @@ public class PlantGrowthState extends BaseAppState {
     @Override
     public void update(float tpf) {
         if (plants.isEmpty()) return;
+
+        if (dayNightCycle.isNight()) return;
+
         List<Vector3i> toRemove = new ArrayList<>();
 
         for (Plant p : plants.values()) {
@@ -63,25 +68,20 @@ public class PlantGrowthState extends BaseAppState {
 
             if (soilType != BlockType.PLOWED_WET) continue;
 
-            // Обрабатываем только стадии 0-2 (рост) и стадию 4 (harvested -> regrow)
-            if (p.stageIndex == 3) continue; // Стадия плодов - не обрабатываем таймер
+            if (p.stageIndex == 3) continue;
             if (p.stageIndex >= 5) continue;
 
             p.timeLeft -= tpf;
             if (p.timeLeft <= 0f) {
                 if (p.stageIndex < 3) {
-                    // Обычный рост до плодоношения
                     p.stageIndex++;
                     replaceModel(p);
                     if (p.stageIndex < GameConfig.GROWTH_STAGE_SECONDS.length) {
                         p.timeLeft = GameConfig.GROWTH_STAGE_SECONDS[p.stageIndex];
                     }
-                    // На стадии 3 (плоды) таймер не устанавливается
                 } else if (p.stageIndex == 4) {
-                    // Переход от harvested обратно к плодоношению
                     p.stageIndex = 3;
                     replaceModel(p);
-                    // На стадии плодов таймер не нужен
                 }
             }
         }

@@ -7,6 +7,7 @@ import com.jme3.input.ChaseCamera;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.MouseButtonTrigger;
+import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.*;
@@ -41,6 +42,9 @@ public class Main extends SimpleApplication implements ActionListener {
     private PlantGrowthState growth;
     private FarmlandMoistureState moisture;
     private PlantFactory plantFactory;
+    private DayNightCycle dayNightCycle;
+    private DirectionalLight sunLight;
+    private AmbientLight ambientLight;
 
     public static void main(String[] args) {
         AppSettings settings = new AppSettings(true);
@@ -97,10 +101,14 @@ public class Main extends SimpleApplication implements ActionListener {
     }
 
     private void initWorld() {
-        DirectionalLight light = new DirectionalLight();
-        light.setDirection(GameConfig.LIGHT_DIRECTION.normalizeLocal());
-        light.setColor(ColorRGBA.White.mult(GameConfig.LIGHT_INTENSITY));
-        rootNode.addLight(light);
+        sunLight = new DirectionalLight();
+        sunLight.setDirection(GameConfig.LIGHT_DIRECTION.normalizeLocal());
+        sunLight.setColor(ColorRGBA.White.mult(GameConfig.DAY_LIGHT_INTENSITY));
+        rootNode.addLight(sunLight);
+
+        ambientLight = new AmbientLight();
+        ambientLight.setColor(ColorRGBA.White.mult(0.15f));
+        rootNode.addLight(ambientLight);
 
         blockWorld = new SimpleBlockWorld(rootNode, assetManager);
         blockWorld.generateFlatWorld(GameConfig.WORLD_SIZE_X, GameConfig.WORLD_SIZE_Z);
@@ -108,14 +116,18 @@ public class Main extends SimpleApplication implements ActionListener {
         moisture = new FarmlandMoistureState(blockWorld);
         stateManager.attach(moisture);
 
+        dayNightCycle = new DayNightCycle();
+        stateManager.attach(dayNightCycle);
+
         rootNode.attachChild(plantsRoot);
         plantFactory = new PlantFactory(assetManager, plantsRoot);
-        growth = new PlantGrowthState(blockWorld, assetManager, plantsRoot);
+        growth = new PlantGrowthState(blockWorld, assetManager, plantsRoot, dayNightCycle);
         stateManager.attach(growth);
 
         addShopToScene();
         addSky();
     }
+
 
     private void initUI() {
         rootNode.attachChild(camTarget);
@@ -184,12 +196,15 @@ public class Main extends SimpleApplication implements ActionListener {
         Vector3f posDelta = to.subtract(from).multLocal(Math.min(1f, camFollowPosSpeed * tpf));
         camTarget.move(posDelta);
 
+        updateLighting();
+
         updateFaceHighlight();
         if (hotbar != null) {
             hotbar.updateViewportSizeIfChanged(cam.getWidth(), cam.getHeight());
             moneyDisplay.updatePosition(cam.getWidth(), cam.getHeight());
         }
     }
+
 
     private void addSky() {
         Texture px = assetManager.loadTexture(GameConfig.SKYBOX_PX);
@@ -334,4 +349,14 @@ public class Main extends SimpleApplication implements ActionListener {
         rootNode.attachChild(shopModel);
         System.out.println("Shop placed at (15, 0, 15)");
     }
+
+    private void updateLighting() {
+        float intensity = dayNightCycle.getLightIntensity();
+        sunLight.setColor(ColorRGBA.White.mult(intensity));
+
+        // Также изменяем интенсивность фонового освещения
+        float ambientIntensity = intensity * 0.1f + 0.05f; // Минимум 5% освещения
+        ambientLight.setColor(ColorRGBA.White.mult(ambientIntensity));
+    }
+
 }

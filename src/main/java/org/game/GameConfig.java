@@ -39,6 +39,11 @@ public final class GameConfig {
     // ========== LIGHTING SETTINGS ==========
     public static final Vector3f LIGHT_DIRECTION = new Vector3f(-1f, -1f, -1f);
     public static final float LIGHT_INTENSITY = 2f;
+    public static final float DAY_DURATION_SECONDS = 60f; // 5 минут день
+    public static final float NIGHT_DURATION_SECONDS = 30f; // 3 минуты ночь
+    public static final float DAY_LIGHT_INTENSITY = 2f;
+    public static final float NIGHT_LIGHT_INTENSITY = 0.3f;
+
 
     // ========== WORLD SETTINGS ==========
     public static final int WORLD_SIZE_X = 100;
