@@ -78,7 +78,10 @@ public class DayNightCycle extends BaseAppState {
             System.out.println("Skipped to dawn - a new day begins!");
         }
     }
-    
+
+    public float getCurrentTime() { return currentTime; }
+    public void setCurrentTime(float time) { this.currentTime = time; }
+
     private float lerp(float a, float b, float t) {
         return a + (b - a) * t;
     }

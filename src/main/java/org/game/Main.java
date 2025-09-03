@@ -46,6 +46,7 @@ public class Main extends SimpleApplication implements ActionListener {
     private DayNightCycle dayNightCycle;
     private DirectionalLight sunLight;
     private AmbientLight ambientLight;
+    private GameSaveManager saveManager = new GameSaveManager();
 
     public static void main(String[] args) {
         AppSettings settings = new AppSettings(true);
@@ -169,6 +170,7 @@ public class Main extends SimpleApplication implements ActionListener {
         router.addAnalogModule(hotbarInput);
         router.addActionModule(movementInput);
         router.addActionModule(worldInput);
+        router.addActionModule(new SaveLoadInput(this, saveManager));
     }
 
 
@@ -369,4 +371,11 @@ public class Main extends SimpleApplication implements ActionListener {
         ambientLight.setColor(ColorRGBA.White.mult(ambientIntensity));
     }
 
+    public Spatial getPlayer() { return player; }
+    public MoneyDisplay getMoneyDisplay() { return moneyDisplay; }
+    public Hotbar getHotbar() { return hotbar; }
+    public SimpleBlockWorld getBlockWorld() { return blockWorld; }
+    public PlantGrowthState getPlantGrowthState() { return growth; }
+    public PlantFactory getPlantFactory() { return plantFactory; }
+    public DayNightCycle getDayNightCycle() { return dayNightCycle; }
 }

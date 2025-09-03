@@ -61,5 +61,25 @@ public class SimpleBlockWorld {
             }
         }
     }
+
+    public Map<String, Integer> getAllBlocks() {
+        Map<String, Integer> result = new HashMap<>();
+        for (Map.Entry<Vector3i, Integer> entry : blocks.entrySet()) {
+            Vector3i pos = entry.getKey();
+            String key = pos.x() + "," + pos.y() + "," + pos.z();
+            result.put(key, entry.getValue());
+        }
+        System.out.println("getAllBlocks() returning " + result.size() + " blocks");
+        return result;
+    }
+
+
+    public void clearAll() {
+        for (Geometry geo : blockGeometries.values()) {
+            geo.removeFromParent();
+        }
+        blocks.clear();
+        blockGeometries.clear();
+    }
 }
 

@@ -134,4 +134,21 @@ public class PlantGrowthState extends BaseAppState {
         return plantsRoot;
     }
 
+    public Map<Vector3i, Plant> getAllPlants() { return new HashMap<>(plants); }
+
+    public void clearAll() {
+        for (Plant plant : plants.values()) {
+            if (plant.spatial != null && plant.spatial.getParent() != null) {
+                plant.spatial.removeFromParent();
+            }
+        }
+        plants.clear();
+    }
+
+    public void registerPlantWithState(PlantKind kind, Vector3i soil, Vector3i above,
+                                       Spatial spatial, int stageIndex, float timeLeft) {
+        plants.put(above, new Plant(kind, soil, above, stageIndex, timeLeft, spatial));
+    }
+
+
 }

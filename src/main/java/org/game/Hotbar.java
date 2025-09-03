@@ -196,17 +196,22 @@ public class Hotbar {
         removeItemFromSlot(slot, amount);
     }
 
-    private void clearSlot(int slot) {
-        if (slot < 0 || slot >= SLOT_COUNT) return;
+//    private void clearSlot(int slot) {
+//        if (slot < 0 || slot >= SLOT_COUNT) return;
+//
+//        if (slotIcon[slot] != null) {
+//            slotIcon[slot].removeFromParent();
+//            slotIcon[slot] = null;
+//        }
+//
+//        items[slot] = null;
+//        updateSlotCount(slot, 0);
+//    }
 
-        if (slotIcon[slot] != null) {
-            slotIcon[slot].removeFromParent();
-            slotIcon[slot] = null;
-        }
-
-        items[slot] = null;
-        updateSlotCount(slot, 0);
+    public void clearSlot(int slot) {
+        SimpleEventBus.INSTANCE.publishInventoryChanged(slot, null);
     }
+
 
     private void updateInventorySlot(int slot, HotbarItem item) {
         if (slot < 0 || slot >= SLOT_COUNT) return;
@@ -232,5 +237,7 @@ public class Hotbar {
             SimpleEventBus.INSTANCE.publishInventoryChanged(slot, updatedItem);
         }
     }
+    
+    
 }
 

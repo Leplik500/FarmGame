@@ -53,9 +53,13 @@ public class MoneyDisplay {
         root.setLocalTranslation(x, marginBottom, 0);
     }
 
-    private void setMoney(int amount) {
-        this.money = Math.max(0, amount); 
-        moneyText.setText(String.valueOf(this.money));
+//    private void setMoney(int amount) {
+//        this.money = Math.max(0, amount); 
+//        moneyText.setText(String.valueOf(this.money));
+//    }
+
+    public void setMoney(int amount) {
+        SimpleEventBus.INSTANCE.publishMoneyChanged(amount);
     }
 
     public int getMoney() {
@@ -83,4 +87,6 @@ public class MoneyDisplay {
         this.money = Math.max(0, newAmount);
         moneyText.setText(String.valueOf(this.money));
     }
+    
+    
 }

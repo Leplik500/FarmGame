@@ -10,6 +10,7 @@ repositories {
 }
 
 dependencies {
+    implementation("com.google.code.gson:gson:2.10.1")
     implementation("org.jmonkeyengine:jme3-core:3.8.1-stable")
     implementation("org.jmonkeyengine:jme3-desktop:3.8.1-stable")
     implementation("org.jmonkeyengine:jme3-lwjgl3:3.8.1-stable")

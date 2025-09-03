@@ -21,4 +21,7 @@ public final class InputNames {
     public static final String CAMERA_RESET_ZOOM = "camera_reset_zoom";
 
     public static final String WORLD_INTERACT = "world_interact";
+    
+    public static final String LOAD_GAME = "load_game";
+    public static final String SAVE_GAME = "save_game";
 }
