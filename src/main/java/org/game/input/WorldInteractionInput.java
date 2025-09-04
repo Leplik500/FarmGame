@@ -24,6 +24,7 @@ public class WorldInteractionInput implements ActionListener {
     private final DayNightCycle dayNightCycle;
     private final Spatial houseModel;
     private final Spatial player;
+    private final PlayerMovementController movementController;
     
 
     public WorldInteractionInput(SimpleBlockWorld world, Hotbar hotbar,
@@ -33,7 +34,9 @@ public class WorldInteractionInput implements ActionListener {
                                  PlantGrowthState growth, Spatial shopModel,
                                  ShopUI shopUI, PlantFactory plantFactory,
                                  Spatial houseModel,
-                                 DayNightCycle dayNightCycle, Spatial player) {
+                                 DayNightCycle dayNightCycle, Spatial player,
+                                 PlayerMovementController movementController
+                                 ) {
         this.world = world;
         this.hotbar = hotbar;
         this.camera = camera;
@@ -47,6 +50,7 @@ public class WorldInteractionInput implements ActionListener {
         this.houseModel = houseModel;
         this.dayNightCycle = dayNightCycle;
         this.player = player;
+        this.movementController = movementController;
     }
 
 
@@ -67,13 +71,17 @@ public class WorldInteractionInput implements ActionListener {
             return;
         }
 
-        if (isClickOnShop(playerPos)) {
-            shopUI.setVisible(true);
+        Spatial clickedObject = getClickedObject();
+
+        if (clickedObject == shopModel) {
+            InteractionCommand shopCommand = new InteractionCommands.ShopCommand(shopModel, shopUI);
+            executeOrQueueCommandWithValidation(shopCommand, playerPos); // ИЗМЕНЕНО: добавлена валидация
             return;
         }
 
-        if (isClickOnHouse(playerPos)) {
-            handleHouseClick();
+        if (clickedObject == houseModel) {
+            InteractionCommand houseCommand = new InteractionCommands.HouseCommand(houseModel, dayNightCycle);
+            executeOrQueueCommandWithValidation(houseCommand, playerPos); // ИЗМЕНЕНО: добавлена валидация
             return;
         }
 
@@ -81,68 +89,30 @@ public class WorldInteractionInput implements ActionListener {
         Vector3i targetBlock = getBlockUnderCursor();
         if (targetBlock == null) return;
 
-        if (!ActionRange.isWithinRange(playerPos, targetBlock)) {
-            System.out.println("Too far to interact! Move closer.");
-            return;
-        }
-
         Vector3i aboveBlock = new Vector3i(targetBlock.x(), targetBlock.y() + 1, targetBlock.z());
 
         if (selectedItem == null) {
-            if (harvestPlantAt(aboveBlock)) {
+            if (growth.getPlantAt(aboveBlock) != null && growth.getPlantAt(aboveBlock).stageIndex == 3) {
+                InteractionCommand harvestCommand = new InteractionCommands.HarvestCommand(
+                        aboveBlock, growth, assetManager, hotbar);
+                executeOrQueueCommandWithValidation(harvestCommand, playerPos);
                 return;
             }
-            if (harvestPlantAt(targetBlock)) {
+            if (growth.getPlantAt(targetBlock) != null && growth.getPlantAt(targetBlock).stageIndex == 3) {
+                InteractionCommand harvestCommand = new InteractionCommands.HarvestCommand(
+                        targetBlock, growth, assetManager, hotbar);
+                executeOrQueueCommandWithValidation(harvestCommand, playerPos);
                 return;
             }
             return;
         }
 
-        int type = world.getBlock(targetBlock.x(), targetBlock.y(), targetBlock.z());
-
-        if ("pumpkin_seeds".equals(selectedItem.id())) {
-            if (type == BlockType.PLOWED_DRY || type == BlockType.PLOWED_WET) {
-                if (world.getBlock(aboveBlock.x(), aboveBlock.y(), aboveBlock.z()) == BlockType.AIR
-                        && !growth.hasPlantAt(aboveBlock)) {
-                    Spatial s = plantFactory.createPlant(PlantKind.PUMPKIN, targetBlock);
-                    growth.registerPlanted(PlantKind.PUMPKIN, targetBlock, aboveBlock, s);
-                    reduceSelectedItemCount();
-                }
-            }
-            return;
-        }
-
-        if ("tomato_seeds".equals(selectedItem.id())) {
-            if (type == BlockType.PLOWED_DRY || type == BlockType.PLOWED_WET) {
-                if (world.getBlock(aboveBlock.x(), aboveBlock.y(), aboveBlock.z()) == BlockType.AIR
-                        && !growth.hasPlantAt(aboveBlock)) {
-                    Spatial s = plantFactory.createPlant(PlantKind.TOMATO, targetBlock);
-                    growth.registerPlanted(PlantKind.TOMATO, targetBlock, aboveBlock, s);
-                    reduceSelectedItemCount();
-                }
-            }
-            return;
-        }
-
-        if ("hoe".equals(selectedItem.id())) {
-            if (type == BlockType.GRASS) {
-                world.setBlock(targetBlock.x(), targetBlock.y(), targetBlock.z(), BlockType.PLOWED_DRY);
-                System.out.println("Tilled soil at: " + targetBlock);
-            }
-            return;
-        }
-
-        if ("watering_can".equals(selectedItem.id())) {
-            if (type == BlockType.PLOWED_DRY) {
-                world.setBlock(targetBlock.x(), targetBlock.y(), targetBlock.z(), BlockType.PLOWED_WET);
-                moisture.markWet(targetBlock.x(), targetBlock.y(), targetBlock.z(), null);
-                System.out.println("Watered soil at: " + targetBlock);
-            } else if (type == BlockType.PLOWED_WET) {
-                moisture.markWet(targetBlock.x(), targetBlock.y(), targetBlock.z(), null);
-                System.out.println("Refreshed moisture at: " + targetBlock);
-            }
+        InteractionCommand command = createCommandForItem(selectedItem, targetBlock);
+        if (command != null) {
+            executeOrQueueCommandWithValidation(command, playerPos);
         }
     }
+
 
     private Vector3i getBlockUnderCursor() {
         Vector2f cursorPos = inputManager.getCursorPosition();
@@ -272,4 +242,78 @@ public class WorldInteractionInput implements ActionListener {
     private Vector3f getPlayerPosition() {
         return player.getWorldTranslation();
     }
+
+    private void executeOrQueueCommand(InteractionCommand command, Vector3f playerPos) {
+        if (command.canExecuteAtCurrentPosition(playerPos)) {
+            command.execute();
+        } else {
+            movementController.getAutoMovementController().startAutoMovement(command);
+        }
+    }
+        
+    private InteractionCommand createCommandForItem(HotbarItem selectedItem, Vector3i targetBlock) {
+        return switch (selectedItem.id()) {
+            case "pumpkin_seeds" -> new InteractionCommands.PlantSeedCommand(
+                    PlantKind.PUMPKIN, targetBlock, world, growth, plantFactory, hotbar);
+            case "tomato_seeds" -> new InteractionCommands.PlantSeedCommand(
+                    PlantKind.TOMATO, targetBlock, world, growth, plantFactory, hotbar);
+            case "hoe" -> new InteractionCommands.HoeCommand(targetBlock, world);
+            case "watering_can" -> new InteractionCommands.WaterCommand(targetBlock, world, moisture);
+            default -> null;
+        };
+    }
+
+    private Spatial getClickedObject() {
+        Vector2f cursorPos = inputManager.getCursorPosition();
+        Vector3f origin = camera.getWorldCoordinates(cursorPos, 0f);
+        Vector3f direction = camera.getWorldCoordinates(cursorPos, 1f)
+                .subtract(origin).normalizeLocal();
+        Vector3f currentPos = origin.clone();
+        Vector3f step = direction.mult(0.1f);
+
+        for (int i = 0; i < 1000; i++) {
+            currentPos.addLocal(step);
+
+            // Проверяем попадание в магазин
+            if (isPositionInObject(currentPos, shopModel)) {
+                return shopModel;
+            }
+
+            // Проверяем попадание в дом
+            if (isPositionInObject(currentPos, houseModel)) {
+                return houseModel;
+            }
+
+            // Если попали в блок, прекращаем поиск
+            int bx = (int)Math.floor(currentPos.x);
+            int by = (int)Math.floor(currentPos.y);
+            int bz = (int)Math.floor(currentPos.z);
+            if (world.getBlock(bx, by, bz) != BlockType.AIR) {
+                break;
+            }
+        }
+        return null;
+    }
+
+    private boolean isPositionInObject(Vector3f pos, Spatial object) {
+        Vector3f objectPos = object.getWorldTranslation();
+        float scale = object.getWorldScale().x;
+        float radius = 2.0f * scale; 
+
+        return pos.distance(objectPos) <= radius;
+    }
+
+    private void executeOrQueueCommandWithValidation(InteractionCommand command, Vector3f playerPos) {
+        if (!command.isValidTarget()) {
+            System.out.println("Cannot perform action: " + command.getDescription() + " - invalid target");
+            return;
+        }
+
+        if (command.canExecuteAtCurrentPosition(playerPos)) {
+            command.execute();
+        } else {
+            movementController.getAutoMovementController().startAutoMovement(command);
+        }
+    }
+
 }

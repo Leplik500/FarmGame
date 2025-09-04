@@ -165,7 +165,7 @@ public class Main extends SimpleApplication implements ActionListener {
         WorldInteractionInput worldInput = new WorldInteractionInput(
                 blockWorld, hotbar, cam, inputManager, moisture, assetManager,
                 growth, shopModel, shopUI, plantFactory, houseModel, dayNightCycle,
-                player);        
+                player, movementController);      
         router.addActionModule(cameraInput);
         router.addAnalogModule(cameraInput);
         router.addActionModule(hotbarInput);
@@ -190,11 +190,16 @@ public class Main extends SimpleApplication implements ActionListener {
 
     @Override
     public void simpleUpdate(float tpf) {
-        if (inputHandler.isWalking()) {
+        boolean hasManualInput = inputHandler.isWalking();
+        boolean hasAutoMovement = movementController.getAutoMovementController().isAutoMoving();
+
+        if (hasManualInput || hasAutoMovement) {
             movementController.handleMovement(inputHandler.getPressedKeys(), inputHandler.isRunning(), tpf);
         }
 
-        animationController.update(tpf, inputHandler.isWalking(), inputHandler.isRunning());
+        boolean isMoving = hasManualInput || hasAutoMovement;
+        boolean isRunning = hasManualInput ? inputHandler.isRunning() : hasAutoMovement;
+        animationController.update(tpf, isMoving, isRunning);
 
         Vector3f to = player.getWorldTranslation();
         Vector3f from = camTarget.getLocalTranslation();
@@ -210,6 +215,7 @@ public class Main extends SimpleApplication implements ActionListener {
             moneyDisplay.updatePosition(cam.getWidth(), cam.getHeight());
         }
     }
+
 
 
     private void addSky() {

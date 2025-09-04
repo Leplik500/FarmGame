@@ -8,14 +8,30 @@ import java.util.Set;
 public class PlayerMovementController {
     private final Spatial player;
     private final Camera camera;
+    private final AutoMovementController autoMovementController;
 
     public PlayerMovementController(Spatial player, Camera camera) {
         this.player = player;
         this.camera = camera;
+        this.autoMovementController = new AutoMovementController(); 
     }
-
+    
     public void handleMovement(Set<String> pressedKeys, boolean isRunning, float tpf) {
+        if (!pressedKeys.isEmpty()) {
+            autoMovementController.cancelAutoMovement();
+        }
+
         Vector3f movement = calculateMovementDirection(pressedKeys);
+
+        if (movement.lengthSquared() == 0) {
+            Vector3f autoMovement = autoMovementController.updateAutoMovement(
+                    player.getWorldTranslation(), tpf);
+            if (autoMovement != null) {
+                movement = autoMovement;
+                isRunning = true;
+            }
+        }
+
         if (movement.lengthSquared() > 0f) {
             movement.normalizeLocal();
             float currentSpeed = isRunning ? GameConfig.RUN_SPEED : GameConfig.WALK_SPEED;
@@ -23,9 +39,7 @@ public class PlayerMovementController {
 
             Vector3f currentPos = player.getWorldTranslation();
             Vector3f newPos = currentPos.add(step);
-
             Vector3f clampedPos = WorldBounds.clampToWorldBounds(newPos);
-
             Vector3f clampedStep = clampedPos.subtract(currentPos);
 
             if (clampedStep.lengthSquared() > 0.0001f) {
@@ -34,6 +48,7 @@ public class PlayerMovementController {
             }
         }
     }
+
 
 
     private Vector3f calculateMovementDirection(Set<String> pressedKeys) {
@@ -62,5 +77,9 @@ public class PlayerMovementController {
         float lerp = Math.min(1f, GameConfig.ROTATION_SPEED * tpf);
         float newYaw = currentYaw + diff * lerp;
         player.setLocalRotation(new Quaternion().fromAngles(0f, newYaw, 0f));
+    }
+
+    public AutoMovementController getAutoMovementController() {
+        return autoMovementController;
     }
 }
