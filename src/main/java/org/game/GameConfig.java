@@ -47,6 +47,11 @@ public final class GameConfig {
     // ========== WORLD SETTINGS ==========
     public static final int WORLD_SIZE_X = 100;
     public static final int WORLD_SIZE_Z = 100;
+    public static final float WORLD_BOUNDARY_MIN_X = -(WORLD_SIZE_X / 2f);
+    public static final float WORLD_BOUNDARY_MAX_X = (WORLD_SIZE_X / 2f) - 1;
+    public static final float WORLD_BOUNDARY_MIN_Z = -(WORLD_SIZE_Z / 2f);
+    public static final float WORLD_BOUNDARY_MAX_Z = (WORLD_SIZE_Z / 2f) - 1;
+
 
     // ========== UI SETTINGS ==========
     public static final float HIGHLIGHT_THICKNESS = 0.2f;

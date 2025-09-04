@@ -20,10 +20,21 @@ public class PlayerMovementController {
             movement.normalizeLocal();
             float currentSpeed = isRunning ? GameConfig.RUN_SPEED : GameConfig.WALK_SPEED;
             Vector3f step = movement.mult(currentSpeed * tpf);
-            player.move(step);
-            rotateTowardsMovement(step, tpf);
+
+            Vector3f currentPos = player.getWorldTranslation();
+            Vector3f newPos = currentPos.add(step);
+
+            Vector3f clampedPos = WorldBounds.clampToWorldBounds(newPos);
+
+            Vector3f clampedStep = clampedPos.subtract(currentPos);
+
+            if (clampedStep.lengthSquared() > 0.0001f) {
+                player.move(clampedStep);
+                rotateTowardsMovement(clampedStep, tpf);
+            }
         }
     }
+
 
     private Vector3f calculateMovementDirection(Set<String> pressedKeys) {
         Vector3f forward = camera.getDirection().clone();

@@ -10,6 +10,7 @@ import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
+import com.jme3.material.RenderState;
 import com.jme3.math.*;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
@@ -46,7 +47,6 @@ public class Main extends SimpleApplication implements ActionListener {
     private DayNightCycle dayNightCycle;
     private DirectionalLight sunLight;
     private AmbientLight ambientLight;
-    private GameSaveManager saveManager = new GameSaveManager();
 
     public static void main(String[] args) {
         AppSettings settings = new AppSettings(true);
@@ -128,6 +128,7 @@ public class Main extends SimpleApplication implements ActionListener {
 
         addShopToScene();
         addHouseToScene();
+        createWorldBoundaries();
         addSky();
     }
 
@@ -160,6 +161,7 @@ public class Main extends SimpleApplication implements ActionListener {
         CameraInput cameraInput = new CameraInput(chaseCam);
         HotbarInput hotbarInput = new HotbarInput(hotbar, cameraInput);
         MovementInput movementInput = new MovementInput(inputHandler);
+        GameSaveManager saveManager = new GameSaveManager();
         WorldInteractionInput worldInput = new WorldInteractionInput(
                 blockWorld, hotbar, cam, inputManager, moisture, assetManager,
                 growth, shopModel, shopUI, plantFactory, houseModel, dayNightCycle);
@@ -370,6 +372,52 @@ public class Main extends SimpleApplication implements ActionListener {
         float ambientIntensity = intensity * 0.1f + 0.05f; 
         ambientLight.setColor(ColorRGBA.White.mult(ambientIntensity));
     }
+
+    private void createWorldBoundaries() {
+        Material boundaryMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        boundaryMat.setColor("Color", new ColorRGBA(1f, 1f, 1f, 0.3f)); // Белый полупрозрачный
+        boundaryMat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
+
+        float wallHeight = 25f;
+        float wallThickness = 0.5f;
+
+        float minX = GameConfig.WORLD_BOUNDARY_MIN_X;
+        float maxX = GameConfig.WORLD_BOUNDARY_MAX_X;
+        float minZ = GameConfig.WORLD_BOUNDARY_MIN_Z;
+        float maxZ = GameConfig.WORLD_BOUNDARY_MAX_Z;
+
+        float worldWidth = maxX - minX + 1 + wallThickness * 2; // Добавляем толщину стен
+        float worldDepth = maxZ - minZ + 1 + wallThickness * 2;
+
+        Box northWall = new Box(worldWidth/2f, wallHeight/2f, wallThickness/2f);
+        Geometry northGeo = new Geometry("NorthBoundary", northWall);
+        northGeo.setLocalTranslation((minX + maxX)/2f, wallHeight/2f, maxZ + 0.5f + wallThickness/2f);
+        northGeo.setMaterial(boundaryMat);
+        northGeo.setQueueBucket(RenderQueue.Bucket.Transparent);
+        rootNode.attachChild(northGeo);
+
+        Box southWall = new Box(worldWidth/2f, wallHeight/2f, wallThickness/2f);
+        Geometry southGeo = new Geometry("SouthBoundary", southWall);
+        southGeo.setLocalTranslation((minX + maxX)/2f, wallHeight/2f, minZ - 0.5f - wallThickness/2f);
+        southGeo.setMaterial(boundaryMat);
+        southGeo.setQueueBucket(RenderQueue.Bucket.Transparent);
+        rootNode.attachChild(southGeo);
+
+        Box eastWall = new Box(wallThickness/2f, wallHeight/2f, (worldDepth - wallThickness * 2)/2f);
+        Geometry eastGeo = new Geometry("EastBoundary", eastWall);
+        eastGeo.setLocalTranslation(maxX + 0.5f + wallThickness/2f, wallHeight/2f, (minZ + maxZ)/2f);
+        eastGeo.setMaterial(boundaryMat);
+        eastGeo.setQueueBucket(RenderQueue.Bucket.Transparent);
+        rootNode.attachChild(eastGeo);
+
+        Box westWall = new Box(wallThickness/2f, wallHeight/2f, (worldDepth - wallThickness * 2)/2f);
+        Geometry westGeo = new Geometry("WestBoundary", westWall);
+        westGeo.setLocalTranslation(minX - 0.5f - wallThickness/2f, wallHeight/2f, (minZ + maxZ)/2f);
+        westGeo.setMaterial(boundaryMat);
+        westGeo.setQueueBucket(RenderQueue.Bucket.Transparent);
+        rootNode.attachChild(westGeo);
+    }
+
 
     public Spatial getPlayer() { return player; }
     public MoneyDisplay getMoneyDisplay() { return moneyDisplay; }
