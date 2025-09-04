@@ -164,8 +164,8 @@ public class Main extends SimpleApplication implements ActionListener {
         GameSaveManager saveManager = new GameSaveManager();
         WorldInteractionInput worldInput = new WorldInteractionInput(
                 blockWorld, hotbar, cam, inputManager, moisture, assetManager,
-                growth, shopModel, shopUI, plantFactory, houseModel, dayNightCycle);
-        
+                growth, shopModel, shopUI, plantFactory, houseModel, dayNightCycle,
+                player);        
         router.addActionModule(cameraInput);
         router.addAnalogModule(cameraInput);
         router.addActionModule(hotbarInput);

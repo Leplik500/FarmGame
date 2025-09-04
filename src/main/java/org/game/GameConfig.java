@@ -15,6 +15,7 @@ public final class GameConfig {
     public static final float WALK_SPEED = 5f;
     public static final float RUN_SPEED = 10f;
     public static final float ROTATION_SPEED = 10f;
+    public static final float MAX_INTERACTION_RANGE = 6.0f;
 
     // ========== INPUT SETTINGS ==========
     public static final long DOUBLE_TAP_WINDOW_NS = 600_000_000L; // 600ms
@@ -51,6 +52,7 @@ public final class GameConfig {
     public static final float WORLD_BOUNDARY_MAX_X = (WORLD_SIZE_X / 2f) - 1;
     public static final float WORLD_BOUNDARY_MIN_Z = -(WORLD_SIZE_Z / 2f);
     public static final float WORLD_BOUNDARY_MAX_Z = (WORLD_SIZE_Z / 2f) - 1;
+    
 
 
     // ========== UI SETTINGS ==========

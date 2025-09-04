@@ -22,7 +22,9 @@ public class WorldInteractionInput implements ActionListener {
     private final ShopUI shopUI;
     private final PlantFactory plantFactory;
     private final DayNightCycle dayNightCycle;
-    private Spatial houseModel;
+    private final Spatial houseModel;
+    private final Spatial player;
+    
 
     public WorldInteractionInput(SimpleBlockWorld world, Hotbar hotbar,
                                  Camera camera, InputManager inputManager,
@@ -30,7 +32,8 @@ public class WorldInteractionInput implements ActionListener {
                                  AssetManager assetManager,
                                  PlantGrowthState growth, Spatial shopModel,
                                  ShopUI shopUI, PlantFactory plantFactory,
-                                 Spatial houseModel, DayNightCycle dayNightCycle) { // ИЗМЕНИТЬ СИГНАТУРУ
+                                 Spatial houseModel,
+                                 DayNightCycle dayNightCycle, Spatial player) {
         this.world = world;
         this.hotbar = hotbar;
         this.camera = camera;
@@ -43,6 +46,7 @@ public class WorldInteractionInput implements ActionListener {
         this.plantFactory = plantFactory;
         this.houseModel = houseModel;
         this.dayNightCycle = dayNightCycle;
+        this.player = player;
     }
 
 
@@ -55,28 +59,35 @@ public class WorldInteractionInput implements ActionListener {
     }
 
     private void handleWorldClick() {
+        Vector3f playerPos = getPlayerPosition();
+
         if (shopUI.isVisible()) {
             Vector2f cursorPos = inputManager.getCursorPosition();
             shopUI.handleClick(cursorPos.x, cursorPos.y);
             return;
         }
 
-        if (isClickOnShop()) {
+        if (isClickOnShop(playerPos)) {
             shopUI.setVisible(true);
             return;
         }
 
-        if (isClickOnHouse()) {
+        if (isClickOnHouse(playerPos)) {
             handleHouseClick();
             return;
         }
-        
-        HotbarItem selectedItem = hotbar.getSelectedItem();
 
+        HotbarItem selectedItem = hotbar.getSelectedItem();
         Vector3i targetBlock = getBlockUnderCursor();
         if (targetBlock == null) return;
 
+        if (!ActionRange.isWithinRange(playerPos, targetBlock)) {
+            System.out.println("Too far to interact! Move closer.");
+            return;
+        }
+
         Vector3i aboveBlock = new Vector3i(targetBlock.x(), targetBlock.y() + 1, targetBlock.z());
+
         if (selectedItem == null) {
             if (harvestPlantAt(aboveBlock)) {
                 return;
@@ -86,7 +97,6 @@ public class WorldInteractionInput implements ActionListener {
             }
             return;
         }
-        
 
         int type = world.getBlock(targetBlock.x(), targetBlock.y(), targetBlock.z());
 
@@ -222,27 +232,17 @@ public class WorldInteractionInput implements ActionListener {
     }
 
 
-    private boolean isClickOnShop() {
-        Vector3i targetBlock = getBlockUnderCursor();
-        if (targetBlock == null) return false;
-
+    private boolean isClickOnShop(Vector3f playerPos) {
         Vector3f shopPos = shopModel.getWorldTranslation();
-        float distance = new Vector3f(targetBlock.x(), targetBlock.y(), targetBlock.z())
-                .distance(shopPos);
-
-        return distance < 5.0f; // 5 unit radius around shop
+        return ActionRange.isWithinRange(playerPos, shopPos);
     }
 
-    private boolean isClickOnHouse() {
-        Vector3i targetBlock = getBlockUnderCursor();
-        if (targetBlock == null) return false;
-
+    private boolean isClickOnHouse(Vector3f playerPos) {
         Vector3f housePos = houseModel.getWorldTranslation();
-        float distance = new Vector3f(targetBlock.x(), targetBlock.y(), targetBlock.z())
-                .distance(housePos);
-
-        return distance < 5.0f; // 5 unit radius around house
+        return ActionRange.isWithinRange(playerPos, housePos);
     }
+
+
 
     private void handleHouseClick() {
         if (dayNightCycle.isNight()) {
@@ -267,5 +267,9 @@ public class WorldInteractionInput implements ActionListener {
                 SimpleEventBus.INSTANCE.publishInventoryChanged(selectedSlot, updatedItem);
             }
         }
+    }
+
+    private Vector3f getPlayerPosition() {
+        return player.getWorldTranslation();
     }
 }
