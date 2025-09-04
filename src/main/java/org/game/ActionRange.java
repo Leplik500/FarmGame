@@ -16,7 +16,4 @@ public final class ActionRange {
         return isWithinRange(playerPos, targetPos);
     }
 
-    public static float getDistance(Vector3f playerPos, Vector3f targetPos) {
-        return playerPos.distance(targetPos);
-    }
 }

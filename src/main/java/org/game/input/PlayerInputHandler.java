@@ -25,11 +25,8 @@ public class PlayerInputHandler {
         }
     }
 
-    public boolean updateWalkingState() {
-        boolean shouldBeWalking = !pressedKeys.isEmpty();
-        boolean stateChanged = shouldBeWalking != isWalking;
-        isWalking = shouldBeWalking;
-        return stateChanged;
+    public void updateWalkingState() {
+        isWalking = !pressedKeys.isEmpty();
     }
 
     private void checkForDoubleTab() {

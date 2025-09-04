@@ -24,4 +24,6 @@ public final class InputNames {
     
     public static final String LOAD_GAME = "load_game";
     public static final String SAVE_GAME = "save_game";
+
+    public static final String CLOSE_UI = "close_ui";
 }

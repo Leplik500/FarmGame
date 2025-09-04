@@ -25,7 +25,7 @@ public class PlayerMovementController {
 
         if (movement.lengthSquared() == 0) {
             Vector3f autoMovement = autoMovementController.updateAutoMovement(
-                    player.getWorldTranslation(), tpf);
+                    player.getWorldTranslation());
             if (autoMovement != null) {
                 movement = autoMovement;
                 isRunning = true;

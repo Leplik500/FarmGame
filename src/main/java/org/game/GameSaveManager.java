@@ -5,7 +5,6 @@ import com.google.gson.GsonBuilder;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
 
-import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,12 +25,12 @@ public class GameSaveManager {
         }
     }
 
-    public boolean loadGame(Main gameInstance) {
+    public void loadGame(Main gameInstance) {
         try {
             Path saveFile = Paths.get(SAVE_FILE);
             if (!Files.exists(saveFile)) {
                 System.out.println("No save file found.");
-                return false;
+                return;
             }
 
             String json = Files.readString(saveFile);
@@ -44,11 +43,9 @@ public class GameSaveManager {
 
             applyGameData(gameInstance, saveData);
             System.out.println("Game loaded successfully!");
-            return true;
         } catch (Exception e) {
             System.err.println("Failed to load game: " + e.getMessage());
             e.printStackTrace();
-            return false;
         }
     }
 

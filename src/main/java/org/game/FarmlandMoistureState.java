@@ -7,7 +7,6 @@ import java.util.*;
 public class FarmlandMoistureState extends BaseAppState {
     private final SimpleBlockWorld world;
     private final Map<Vector3i, Float> timers = new HashMap<>();
-    private float defaultWetSeconds = 30f; 
 
     public FarmlandMoistureState(SimpleBlockWorld world) {
         this.world = world;
@@ -15,11 +14,10 @@ public class FarmlandMoistureState extends BaseAppState {
 
     public void markWet(int x, int y, int z, Float seconds) {
         if (world.getBlock(x, y, z) == BlockType.PLOWED_WET) {
+            float defaultWetSeconds = 30f;
             timers.put(new Vector3i(x, y, z), seconds != null ? seconds : defaultWetSeconds);
         }
     }
-
-    public void setDefaultWetSeconds(float seconds) { this.defaultWetSeconds = seconds; }
 
     @Override protected void initialize(Application app) {}
     @Override protected void cleanup(Application app) { timers.clear(); }

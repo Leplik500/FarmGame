@@ -14,7 +14,7 @@ public class MoneyDisplay {
     private final BitmapText moneyText;
     private int money = 0;
 
-    public MoneyDisplay(Node guiNode, AssetManager assetManager, int screenW, int screenH) {
+    public MoneyDisplay(Node guiNode, AssetManager assetManager, int screenW) {
         SimpleEventBus.INSTANCE.subscribeToMoney("moneyDisplay", this::updateMoneyDisplay);
         
         root.setQueueBucket(RenderQueue.Bucket.Gui);
@@ -38,10 +38,10 @@ public class MoneyDisplay {
         root.attachChild(moneyText);
         guiNode.attachChild(root);
 
-        positionRightOfHotbar(screenW, screenH);
+        positionRightOfHotbar(screenW);
     }
 
-    private void positionRightOfHotbar(int screenW, int screenH) {
+    private void positionRightOfHotbar(int screenW) {
         int slotSize = 64;
         int slotGap = 6;
         int slotCount = 9;
@@ -52,11 +52,6 @@ public class MoneyDisplay {
         int x = hotbarX + totalHotbarW + 20; // 20px отступ от хотбара
         root.setLocalTranslation(x, marginBottom, 0);
     }
-
-//    private void setMoney(int amount) {
-//        this.money = Math.max(0, amount); 
-//        moneyText.setText(String.valueOf(this.money));
-//    }
 
     public void setMoney(int amount) {
         SimpleEventBus.INSTANCE.publishMoneyChanged(amount);
@@ -71,16 +66,8 @@ public class MoneyDisplay {
     }
 
 
-    public boolean spendMoney(int amount) {
-        if (money >= amount) {
-            SimpleEventBus.INSTANCE.publishMoneyChanged(money - amount);
-            return true;
-        }
-        return false;
-    }
-
-    public void updatePosition(int screenW, int screenH) {
-        positionRightOfHotbar(screenW, screenH);
+    public void updatePosition(int screenW) {
+        positionRightOfHotbar(screenW);
     }
     
     private void updateMoneyDisplay(int newAmount) {

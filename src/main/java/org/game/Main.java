@@ -146,7 +146,7 @@ public class Main extends SimpleApplication implements ActionListener {
                 "/watering_can.png"));
         hotbar.addItemToSlot(3, new HotbarItem("hoe", "Textures/hoe.png"));
 
-        moneyDisplay = new MoneyDisplay(guiNode, assetManager, cam.getWidth(), cam.getHeight());
+        moneyDisplay = new MoneyDisplay(guiNode, assetManager, cam.getWidth());
         moneyDisplay.addMoney(10);
 
         shopUI = new ShopUI(guiNode, assetManager, hotbar, moneyDisplay);
@@ -162,6 +162,8 @@ public class Main extends SimpleApplication implements ActionListener {
         HotbarInput hotbarInput = new HotbarInput(hotbar, cameraInput);
         MovementInput movementInput = new MovementInput(inputHandler);
         GameSaveManager saveManager = new GameSaveManager();
+        UIInput uiInput = new UIInput(shopUI);
+        
         WorldInteractionInput worldInput = new WorldInteractionInput(
                 blockWorld, hotbar, cam, inputManager, moisture, assetManager,
                 growth, shopModel, shopUI, plantFactory, houseModel, dayNightCycle,
@@ -172,6 +174,7 @@ public class Main extends SimpleApplication implements ActionListener {
         router.addAnalogModule(hotbarInput);
         router.addActionModule(movementInput);
         router.addActionModule(worldInput);
+        router.addActionModule(uiInput);
         router.addActionModule(new SaveLoadInput(this, saveManager));
     }
 
@@ -199,7 +202,7 @@ public class Main extends SimpleApplication implements ActionListener {
 
         boolean isMoving = hasManualInput || hasAutoMovement;
         boolean isRunning = hasManualInput ? inputHandler.isRunning() : hasAutoMovement;
-        animationController.update(tpf, isMoving, isRunning);
+        animationController.update(isMoving, isRunning);
 
         Vector3f to = player.getWorldTranslation();
         Vector3f from = camTarget.getLocalTranslation();
@@ -212,7 +215,7 @@ public class Main extends SimpleApplication implements ActionListener {
         updateFaceHighlight();
         if (hotbar != null) {
             hotbar.updateViewportSizeIfChanged(cam.getWidth(), cam.getHeight());
-            moneyDisplay.updatePosition(cam.getWidth(), cam.getHeight());
+            moneyDisplay.updatePosition(cam.getWidth());
         }
     }
 

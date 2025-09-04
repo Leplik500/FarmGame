@@ -23,7 +23,7 @@ public class AutoMovementController {
         }
     }
 
-    public Vector3f updateAutoMovement(Vector3f playerPos, float tpf) {
+    public Vector3f updateAutoMovement(Vector3f playerPos) {
         if (!isAutoMoving || currentCommand == null) {
             return null;
         }

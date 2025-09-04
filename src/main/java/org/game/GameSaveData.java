@@ -8,11 +8,9 @@ public class GameSaveData {
     public int money;
     public List<HotbarItemData> inventory;
 
-    // World data
     public Map<String, Integer> blocks; // "x,y,z" -> blockType
     public List<PlantData> plants;
 
-    // Time data
     public float currentTime;
     public boolean isDay;
 

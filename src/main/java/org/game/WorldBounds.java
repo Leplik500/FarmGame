@@ -16,10 +16,4 @@ public final class WorldBounds {
         );
     }
 
-    public static boolean isWithinBounds(Vector3f position) {
-        return position.x >= GameConfig.WORLD_BOUNDARY_MIN_X &&
-                position.x <= GameConfig.WORLD_BOUNDARY_MAX_X &&
-                position.z >= GameConfig.WORLD_BOUNDARY_MIN_Z &&
-                position.z <= GameConfig.WORLD_BOUNDARY_MAX_Z;
-    }
 }

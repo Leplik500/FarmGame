@@ -8,7 +8,7 @@ import com.jme3.renderer.Camera;
 import com.jme3.input.InputManager;
 import com.jme3.scene.Spatial;
 import org.game.*;
-import org.game.events.SimpleEventBus;
+import org.game.commands.*;
 
 public class WorldInteractionInput implements ActionListener {
     private final SimpleBlockWorld world;
@@ -74,14 +74,15 @@ public class WorldInteractionInput implements ActionListener {
         Spatial clickedObject = getClickedObject();
 
         if (clickedObject == shopModel) {
-            InteractionCommand shopCommand = new InteractionCommands.ShopCommand(shopModel, shopUI);
-            executeOrQueueCommandWithValidation(shopCommand, playerPos); // ИЗМЕНЕНО: добавлена валидация
+            InteractionCommand shopCommand = new ShopCommand(shopModel, shopUI);
+            executeOrQueueCommandWithValidation(shopCommand, playerPos);
             return;
         }
-
+        
         if (clickedObject == houseModel) {
-            InteractionCommand houseCommand = new InteractionCommands.HouseCommand(houseModel, dayNightCycle);
-            executeOrQueueCommandWithValidation(houseCommand, playerPos); // ИЗМЕНЕНО: добавлена валидация
+            InteractionCommand houseCommand = new HouseCommand(houseModel,
+                    dayNightCycle);
+            executeOrQueueCommandWithValidation(houseCommand, playerPos);
             return;
         }
 
@@ -93,14 +94,14 @@ public class WorldInteractionInput implements ActionListener {
 
         if (selectedItem == null) {
             if (growth.getPlantAt(aboveBlock) != null && growth.getPlantAt(aboveBlock).stageIndex == 3) {
-                InteractionCommand harvestCommand = new InteractionCommands.HarvestCommand(
+                InteractionCommand harvestCommand = new HarvestCommand(
                         aboveBlock, growth, assetManager, hotbar);
                 executeOrQueueCommandWithValidation(harvestCommand, playerPos);
                 return;
             }
             if (growth.getPlantAt(targetBlock) != null && growth.getPlantAt(targetBlock).stageIndex == 3) {
-                InteractionCommand harvestCommand = new InteractionCommands.HarvestCommand(
-                        targetBlock, growth, assetManager, hotbar);
+                InteractionCommand harvestCommand = new HarvestCommand(
+                        aboveBlock, growth, assetManager, hotbar);
                 executeOrQueueCommandWithValidation(harvestCommand, playerPos);
                 return;
             }
@@ -133,136 +134,23 @@ public class WorldInteractionInput implements ActionListener {
         return null;
     }
 
-    private boolean harvestPlantAt(Vector3i position) {
-        PlantGrowthState.Plant plant = growth.getPlantAt(position);
-        if (plant == null) return false;
-        if (plant.stageIndex != 3) return false;
-
-        if (plant.kind == PlantKind.PUMPKIN) {
-            addToInventoryViaEvents("pumpkin", 1);
-            System.out.println("Harvested 1 pumpkin!");
-        } else if (plant.kind == PlantKind.TOMATO) {
-            int count = 1 + (int)(Math.random() * 4);
-            addToInventoryViaEvents("tomato", count);
-            System.out.println("Harvested " + count + " tomatoes!");
-        }
-
-        plant.stageIndex = 4; 
-        plant.timeLeft = GameConfig.FRUIT_REGROW_SECONDS; 
-
-        String harvestedModelPath = switch (plant.kind) {
-            case PUMPKIN -> GameConfig.PUMPKIN_HARVESTED_MODEL;
-            case TOMATO -> GameConfig.TOMATO_HARVESTED_MODEL;
-        };
-
-        Spatial harvestedModel = assetManager.loadModel(harvestedModelPath);
-        harvestedModel.setLocalTranslation(plant.spatial.getLocalTranslation());
-        harvestedModel.setLocalRotation(plant.spatial.getLocalRotation());
-        harvestedModel.setLocalScale(plant.spatial.getLocalScale());
-
-        if (plant.spatial.getParent() != null) {
-            plant.spatial.removeFromParent();
-        }
-        growth.getPlantsRoot().attachChild(harvestedModel);
-        plant.spatial = harvestedModel;
-
-        return true;
-    }
-
-
-    private void addToInventoryViaEvents(String itemId, int count) {
-        for (int i = 0; i < 9; i++) {
-            HotbarItem existing = hotbar.getSlotItem(i);
-            if (existing != null && existing.id().equals(itemId)) {
-                HotbarItem updated = existing.withCount(existing.count() + count);
-                SimpleEventBus.INSTANCE.publishInventoryChanged(i, updated);
-                return;
-            }
-        }
-
-        for (int i = 0; i < 9; i++) {
-            HotbarItem existing = hotbar.getSlotItem(i);
-            if (existing == null) {
-                String iconPath = getIconPath(itemId);
-                HotbarItem newItem = new HotbarItem(itemId, iconPath, count);
-                SimpleEventBus.INSTANCE.publishInventoryChanged(i, newItem);
-                return;
-            }
-        }
-
-        System.out.println("Inventory full! Couldn't pick up " + count + " " + itemId);
-    }
-
-    private String getIconPath(String itemId) {
-        return switch (itemId) {
-            case "pumpkin" -> GameConfig.PUMPKIN_ITEM;
-            case "tomato" -> GameConfig.TOMATO_ITEM;
-            default -> GameConfig.DEFAULT_ITEM;
-        };
-    }
-
-
-    private boolean isClickOnShop(Vector3f playerPos) {
-        Vector3f shopPos = shopModel.getWorldTranslation();
-        return ActionRange.isWithinRange(playerPos, shopPos);
-    }
-
-    private boolean isClickOnHouse(Vector3f playerPos) {
-        Vector3f housePos = houseModel.getWorldTranslation();
-        return ActionRange.isWithinRange(playerPos, housePos);
-    }
-
-
-
-    private void handleHouseClick() {
-        if (dayNightCycle.isNight()) {
-            dayNightCycle.skipToDay();
-            System.out.println("You slept through the night. Good morning!");
-        } else {
-            System.out.println("You can only sleep at night.");
-        }
-    }
-
-
-    private void reduceSelectedItemCount() {
-        int selectedSlot = hotbar.getSelectedSlot();
-        HotbarItem currentItem = hotbar.getSlotItem(selectedSlot);
-
-        if (currentItem != null && currentItem.count() >= 1) {
-            int newCount = currentItem.count() - 1;
-            if (newCount <= 0) {
-                SimpleEventBus.INSTANCE.publishInventoryChanged(selectedSlot, null);
-            } else {
-                HotbarItem updatedItem = currentItem.withCount(newCount);
-                SimpleEventBus.INSTANCE.publishInventoryChanged(selectedSlot, updatedItem);
-            }
-        }
-    }
 
     private Vector3f getPlayerPosition() {
         return player.getWorldTranslation();
     }
 
-    private void executeOrQueueCommand(InteractionCommand command, Vector3f playerPos) {
-        if (command.canExecuteAtCurrentPosition(playerPos)) {
-            command.execute();
-        } else {
-            movementController.getAutoMovementController().startAutoMovement(command);
-        }
-    }
-        
     private InteractionCommand createCommandForItem(HotbarItem selectedItem, Vector3i targetBlock) {
         return switch (selectedItem.id()) {
-            case "pumpkin_seeds" -> new InteractionCommands.PlantSeedCommand(
+            case "pumpkin_seeds" -> new PlantSeedCommand(
                     PlantKind.PUMPKIN, targetBlock, world, growth, plantFactory, hotbar);
-            case "tomato_seeds" -> new InteractionCommands.PlantSeedCommand(
+            case "tomato_seeds" -> new PlantSeedCommand(
                     PlantKind.TOMATO, targetBlock, world, growth, plantFactory, hotbar);
-            case "hoe" -> new InteractionCommands.HoeCommand(targetBlock, world);
-            case "watering_can" -> new InteractionCommands.WaterCommand(targetBlock, world, moisture);
+            case "hoe" -> new HoeCommand(targetBlock, world);
+            case "watering_can" -> new WaterCommand(targetBlock, world, moisture);
             default -> null;
         };
+        
     }
-
     private Spatial getClickedObject() {
         Vector2f cursorPos = inputManager.getCursorPosition();
         Vector3f origin = camera.getWorldCoordinates(cursorPos, 0f);

@@ -13,7 +13,7 @@ public class PlayerAnimationController {
         }
     }
 
-    public void update(float tpf, boolean isWalking, boolean isRunning) {
+    public void update(boolean isWalking, boolean isRunning) {
         String requestedAnimation;
 
         if (!isWalking) {

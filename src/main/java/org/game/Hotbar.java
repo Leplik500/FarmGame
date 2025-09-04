@@ -12,7 +12,6 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Quad;
 import com.jme3.ui.Picture;
-import org.game.events.InventoryChangedEvent;
 import org.game.events.SimpleEventBus;
 
 public class Hotbar {
@@ -22,7 +21,6 @@ public class Hotbar {
     private final Node slotsNode = new Node("Slots");
     private final Node iconsNode = new Node("Icons");
     private final Node highlightNode = new Node("Highlight");
-    private final Geometry[] slotBG = new Geometry[SLOT_COUNT];
     private final Picture[] slotIcon = new Picture[SLOT_COUNT];
     private final HotbarItem[] items = new HotbarItem[SLOT_COUNT];
     private final BitmapText[] slotCounts = new BitmapText[SLOT_COUNT];
@@ -66,7 +64,6 @@ public class Hotbar {
             float x = i * (slotSize + slotGap);
             g.setLocalTranslation(x, 0, 0);
             slotsNode.attachChild(g);
-            slotBG[i] = g;
         }
     }
 
@@ -88,13 +85,6 @@ public class Hotbar {
         int x = (screenW - totalW) / 2;
         int marginBottom = 12;
         root.setLocalTranslation(x, marginBottom, 0);
-    }
-
-    private void setItem(int slot, HotbarItem item) {
-        if (slot < 0 || slot >= SLOT_COUNT) return;
-        items[slot] = item;
-        updateSlotIcon(slot);
-        updateSlotCount(slot, item != null ? item.count() : 0);
     }
 
 
@@ -192,22 +182,6 @@ public class Hotbar {
         }
     }
 
-    public void reduceItemCount(int slot, int amount) {
-        removeItemFromSlot(slot, amount);
-    }
-
-//    private void clearSlot(int slot) {
-//        if (slot < 0 || slot >= SLOT_COUNT) return;
-//
-//        if (slotIcon[slot] != null) {
-//            slotIcon[slot].removeFromParent();
-//            slotIcon[slot] = null;
-//        }
-//
-//        items[slot] = null;
-//        updateSlotCount(slot, 0);
-//    }
-
     public void clearSlot(int slot) {
         SimpleEventBus.INSTANCE.publishInventoryChanged(slot, null);
     }
@@ -225,19 +199,6 @@ public class Hotbar {
         SimpleEventBus.INSTANCE.publishInventoryChanged(slot, item);
     }
 
-    public void removeItemFromSlot(int slot, int amount) {
-        HotbarItem currentItem = items[slot];
-        if (currentItem == null) return;
 
-        int newCount = currentItem.count() - amount;
-        if (newCount <= 0) {
-            SimpleEventBus.INSTANCE.publishInventoryChanged(slot, null); // Очистить слот
-        } else {
-            HotbarItem updatedItem = currentItem.withCount(newCount);
-            SimpleEventBus.INSTANCE.publishInventoryChanged(slot, updatedItem);
-        }
-    }
-    
-    
 }
 

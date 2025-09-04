@@ -12,7 +12,7 @@ public class PlantGrowthState extends BaseAppState {
     private final SimpleBlockWorld world;
     private final AssetManager assetManager;
     private final Node plantsRoot;
-    private DayNightCycle dayNightCycle;
+    private final DayNightCycle dayNightCycle;
 
     public static final class Plant {
         public final PlantKind kind;
@@ -38,7 +38,7 @@ public class PlantGrowthState extends BaseAppState {
         this.dayNightCycle = dayNightCycle;
     }
 
-    public boolean hasPlantAt(Vector3i above) { return plants.containsKey(above); } 
+    public boolean HasNotPlantAt(Vector3i above) { return !plants.containsKey(above); } 
 
     public void registerPlanted(PlantKind kind, Vector3i soil, Vector3i above, Spatial stage1Spatial) {
         float duration = GameConfig.GROWTH_STAGE_SECONDS[0];
@@ -124,10 +124,6 @@ public class PlantGrowthState extends BaseAppState {
 
     public Plant getPlantAt(Vector3i above) {
         return plants.get(above);
-    }
-
-    public void removePlant(Vector3i above) {
-        plants.remove(above);
     }
 
     public Node getPlantsRoot() {
