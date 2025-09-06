@@ -20,11 +20,11 @@ public class ShopUI {
     private final AssetManager assetManager;
     private boolean isVisible = false;
 
-    private static final String[] BUY_ITEMS = {"pumpkin_seeds", "tomato_seeds"};
+    private static final String[] BUY_ITEMS = {ItemIds.PUMPKIN_SEEDS, ItemIds.TOMATO_SEEDS};
     private static final String[] BUY_ICONS = {"Textures/pumpkin_seeds.png", "Textures/tomato_seeds.png"};
     private static final int[] BUY_PRICES = {GameConfig.PUMPKIN_SEEDS_PRICE, GameConfig.TOMATO_SEEDS_PRICE};
 
-    private static final String[] SELL_ITEMS = {"pumpkin", "tomato"};
+    private static final String[] SELL_ITEMS = {ItemIds.PUMPKIN, ItemIds.TOMATO};
     private static final String[] SELL_ICONS = {GameConfig.PUMPKIN_ITEM, GameConfig.TOMATO_ITEM};
     private static final int[] SELL_PRICES = {GameConfig.PUMPKIN_SELL_PRICE, GameConfig.TOMATO_SELL_PRICE};
 
@@ -208,13 +208,13 @@ public class ShopUI {
 
         System.out.println("No " + itemId + " to sell!");
     }
-    
+
     private String getIconPath(String itemId) {
         return switch (itemId) {
-            case "pumpkin_seeds" -> "Textures/pumpkin_seeds.png";
-            case "tomato_seeds" -> "Textures/tomato_seeds.png";
-            case "pumpkin" -> GameConfig.PUMPKIN_ITEM;
-            case "tomato" -> GameConfig.TOMATO_ITEM;
+            case ItemIds.PUMPKIN_SEEDS -> "Textures/pumpkin_seeds.png";
+            case ItemIds.TOMATO_SEEDS -> "Textures/tomato_seeds.png";
+            case ItemIds.PUMPKIN -> GameConfig.PUMPKIN_ITEM;
+            case ItemIds.TOMATO -> GameConfig.TOMATO_ITEM;
             default -> GameConfig.DEFAULT_ITEM;
         };
     }

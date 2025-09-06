@@ -25,11 +25,11 @@ public class HarvestCommand implements InteractionCommand {
         if (plant == null || plant.stageIndex != 3) return false;
 
         if (plant.kind == PlantKind.PUMPKIN) {
-            addToInventory("pumpkin", 1);
+            addToInventory(ItemIds.PUMPKIN, 1);
             System.out.println("Harvested 1 pumpkin!");
         } else if (plant.kind == PlantKind.TOMATO) {
             int count = 1 + (int)(Math.random() * 4);
-            addToInventory("tomato", count);
+            addToInventory(ItemIds.TOMATO, count);
             System.out.println("Harvested " + count + " tomatoes!");
         }
 
@@ -68,8 +68,8 @@ public class HarvestCommand implements InteractionCommand {
         for (int i = 0; i < 9; i++) {
             if (hotbar.getSlotItem(i) == null) {
                 String iconPath = switch (itemId) {
-                    case "pumpkin" -> GameConfig.PUMPKIN_ITEM;
-                    case "tomato" -> GameConfig.TOMATO_ITEM;
+                    case ItemIds.PUMPKIN -> GameConfig.PUMPKIN_ITEM;
+                    case ItemIds.TOMATO -> GameConfig.TOMATO_ITEM;
                     default -> GameConfig.DEFAULT_ITEM;
                 };
                 HotbarItem newItem = new HotbarItem(itemId, iconPath, count);

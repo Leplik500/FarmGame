@@ -142,9 +142,8 @@ public class Main extends SimpleApplication implements ActionListener {
         setupCustomCursor();
 
         hotbar = new Hotbar(guiNode, assetManager, cam.getWidth(), cam.getHeight());
-        hotbar.addItemToSlot(2, new HotbarItem("watering_can", "Textures" +
-                "/watering_can.png"));
-        hotbar.addItemToSlot(3, new HotbarItem("hoe", "Textures/hoe.png"));
+        hotbar.addItemToSlot(2, new HotbarItem(ItemIds.WATERING_CAN, "Textures/watering_can.png"));
+        hotbar.addItemToSlot(3, new HotbarItem(ItemIds.HOE, "Textures/hoe.png"));
 
         moneyDisplay = new MoneyDisplay(guiNode, assetManager, cam.getWidth());
         moneyDisplay.addMoney(10);

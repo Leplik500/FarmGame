@@ -96,16 +96,16 @@ public class WorldInteractionInput implements ActionListener {
 
     private InteractionCommand createCommandForItem(HotbarItem selectedItem, Vector3i targetBlock) {
         return switch (selectedItem.id()) {
-            case "pumpkin_seeds" -> new PlantSeedCommand(
+            case ItemIds.PUMPKIN_SEEDS -> new PlantSeedCommand(
                     PlantKind.PUMPKIN, targetBlock, world, growth, plantFactory, hotbar);
-            case "tomato_seeds" -> new PlantSeedCommand(
+            case ItemIds.TOMATO_SEEDS -> new PlantSeedCommand(
                     PlantKind.TOMATO, targetBlock, world, growth, plantFactory, hotbar);
-            case "hoe" -> new HoeCommand(targetBlock, world);
-            case "watering_can" -> new WaterCommand(targetBlock, world, moisture);
+            case ItemIds.HOE -> new HoeCommand(targetBlock, world);
+            case ItemIds.WATERING_CAN -> new WaterCommand(targetBlock, world, moisture);
             default -> null;
         };
-        
     }
+
     private Spatial getClickedObject() {
         Vector2f cursorPos = inputManager.getCursorPosition();
         Vector3f origin = camera.getWorldCoordinates(cursorPos, 0f);
