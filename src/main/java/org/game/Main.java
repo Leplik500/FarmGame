@@ -148,7 +148,8 @@ public class Main extends SimpleApplication implements ActionListener {
         moneyDisplay = new MoneyDisplay(guiNode, assetManager, cam.getWidth());
         moneyDisplay.addMoney(10);
 
-        shopUI = new ShopUI(guiNode, assetManager, hotbar, moneyDisplay);
+        InventoryManager inventoryManager = new InventoryManager(hotbar);
+        shopUI = new ShopUI(guiNode, assetManager, hotbar, moneyDisplay, inventoryManager);
     }
 
     private void initInput() {
@@ -162,11 +163,12 @@ public class Main extends SimpleApplication implements ActionListener {
         MovementInput movementInput = new MovementInput(inputHandler);
         GameSaveManager saveManager = new GameSaveManager();
         UIInput uiInput = new UIInput(shopUI);
+        InventoryManager inventoryManager = new InventoryManager(hotbar);
         
         WorldInteractionInput worldInput = new WorldInteractionInput(
                 blockWorld, hotbar, cam, inputManager, moisture, assetManager,
                 growth, shopModel, shopUI, plantFactory, houseModel, dayNightCycle,
-                player, movementController);      
+                player, movementController, inventoryManager);
         router.addActionModule(cameraInput);
         router.addAnalogModule(cameraInput);
         router.addActionModule(hotbarInput);

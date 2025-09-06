@@ -4,19 +4,19 @@ import com.jme3.asset.AssetManager;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
 import org.game.*;
-import org.game.events.SimpleEventBus;
 
 public class HarvestCommand implements InteractionCommand {
     private final Vector3i targetBlock;
     private final PlantGrowthState growth;
     private final AssetManager assetManager;
-    private final Hotbar hotbar;
-
-    public HarvestCommand(Vector3i targetBlock, PlantGrowthState growth, AssetManager assetManager, Hotbar hotbar) {
+    private final InventoryManager inventoryManager;
+    
+    public HarvestCommand(Vector3i targetBlock, PlantGrowthState growth,
+                          AssetManager assetManager, InventoryManager inventoryManager) {
         this.targetBlock = targetBlock;
         this.growth = growth;
         this.assetManager = assetManager;
-        this.hotbar = hotbar;
+        this.inventoryManager = inventoryManager;
     }
 
     @Override
@@ -25,11 +25,17 @@ public class HarvestCommand implements InteractionCommand {
         if (plant == null || plant.stageIndex != 3) return false;
 
         if (plant.kind == PlantKind.PUMPKIN) {
-            addToInventory(ItemIds.PUMPKIN, 1);
+            if (!inventoryManager.tryAddItem(ItemIds.PUMPKIN, 1)) {
+                System.out.println("Inventory full! Can't harvest pumpkin!");
+                return false;
+            }
             System.out.println("Harvested 1 pumpkin!");
         } else if (plant.kind == PlantKind.TOMATO) {
             int count = 1 + (int)(Math.random() * 4);
-            addToInventory(ItemIds.TOMATO, count);
+            if (!inventoryManager.tryAddItem(ItemIds.TOMATO, count)) {
+                System.out.println("Inventory full! Can't harvest tomatoes!");
+                return false;
+            }
             System.out.println("Harvested " + count + " tomatoes!");
         }
 
@@ -53,32 +59,6 @@ public class HarvestCommand implements InteractionCommand {
         plant.spatial = harvestedModel;
 
         return true;
-    }
-
-    private void addToInventory(String itemId, int count) {
-        for (int i = 0; i < 9; i++) {
-            HotbarItem existing = hotbar.getSlotItem(i);
-            if (existing != null && existing.id().equals(itemId)) {
-                HotbarItem updated = existing.withCount(existing.count() + count);
-                SimpleEventBus.INSTANCE.publishInventoryChanged(i, updated);
-                return;
-            }
-        }
-
-        for (int i = 0; i < 9; i++) {
-            if (hotbar.getSlotItem(i) == null) {
-                String iconPath = switch (itemId) {
-                    case ItemIds.PUMPKIN -> GameConfig.PUMPKIN_ITEM;
-                    case ItemIds.TOMATO -> GameConfig.TOMATO_ITEM;
-                    default -> GameConfig.DEFAULT_ITEM;
-                };
-                HotbarItem newItem = new HotbarItem(itemId, iconPath, count);
-                SimpleEventBus.INSTANCE.publishInventoryChanged(i, newItem);
-                return;
-            }
-        }
-
-        System.out.println("Inventory full! Couldn't pick up " + count + " " + itemId);
     }
 
     @Override

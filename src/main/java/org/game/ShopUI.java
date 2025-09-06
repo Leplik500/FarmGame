@@ -18,6 +18,7 @@ public class ShopUI {
     private final Hotbar hotbar;
     private final MoneyDisplay moneyDisplay;
     private final AssetManager assetManager;
+    private final InventoryManager inventoryManager;
     private boolean isVisible = false;
 
     private static final String[] BUY_ITEMS = {ItemIds.PUMPKIN_SEEDS, ItemIds.TOMATO_SEEDS};
@@ -28,10 +29,12 @@ public class ShopUI {
     private static final String[] SELL_ICONS = {GameConfig.PUMPKIN_ITEM, GameConfig.TOMATO_ITEM};
     private static final int[] SELL_PRICES = {GameConfig.PUMPKIN_SELL_PRICE, GameConfig.TOMATO_SELL_PRICE};
 
-    public ShopUI(Node guiNode, AssetManager assetManager, Hotbar hotbar, MoneyDisplay moneyDisplay) {
+    public ShopUI(Node guiNode, AssetManager assetManager, Hotbar hotbar,
+                  MoneyDisplay moneyDisplay, InventoryManager inventoryManager) {
         this.assetManager = assetManager;
         this.hotbar = hotbar;
         this.moneyDisplay = moneyDisplay;
+        this.inventoryManager = inventoryManager;
 
         root.setQueueBucket(RenderQueue.Bucket.Gui);
         buildUI();
@@ -174,7 +177,7 @@ public class ShopUI {
         if (moneyDisplay.getMoney() >= price) {
             SimpleEventBus.INSTANCE.publishMoneyChanged(moneyDisplay.getMoney() - price);
 
-            if (addItemToInventoryViaEvents(itemId, 1)) {
+            if (inventoryManager.tryAddItem(itemId, 1)) {
                 System.out.println("Bought " + itemId + " for $" + price);
             } else {
                 SimpleEventBus.INSTANCE.publishMoneyChanged(moneyDisplay.getMoney() + price);
@@ -189,24 +192,12 @@ public class ShopUI {
         String itemId = SELL_ITEMS[index];
         int price = SELL_PRICES[index];
 
-        for (int i = 0; i < 9; i++) {
-            HotbarItem item = hotbar.getSlotItem(i);
-            if (item != null && item.id().equals(itemId) && item.count() > 0) {
-                int newCount = item.count() - 1;
-                if (newCount <= 0) {
-                    SimpleEventBus.INSTANCE.publishInventoryChanged(i, null);
-                } else {
-                    HotbarItem updated = item.withCount(newCount);
-                    SimpleEventBus.INSTANCE.publishInventoryChanged(i, updated);
-                }
-
-                SimpleEventBus.INSTANCE.publishMoneyChanged(moneyDisplay.getMoney() + price);
-                System.out.println("Sold " + itemId + " for $" + price);
-                return;
-            }
+        if (inventoryManager.tryRemoveItem(itemId, 1)) {
+            SimpleEventBus.INSTANCE.publishMoneyChanged(moneyDisplay.getMoney() + price);
+            System.out.println("Sold " + itemId + " for $" + price);
+        } else {
+            System.out.println("No " + itemId + " to sell!");
         }
-
-        System.out.println("No " + itemId + " to sell!");
     }
 
     private String getIconPath(String itemId) {

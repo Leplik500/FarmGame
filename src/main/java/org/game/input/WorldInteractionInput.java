@@ -25,6 +25,7 @@ public class WorldInteractionInput implements ActionListener {
     private final Spatial houseModel;
     private final Spatial player;
     private final PlayerMovementController movementController;
+    private final InventoryManager inventoryManager;
     
 
     public WorldInteractionInput(SimpleBlockWorld world, Hotbar hotbar,
@@ -35,7 +36,8 @@ public class WorldInteractionInput implements ActionListener {
                                  ShopUI shopUI, PlantFactory plantFactory,
                                  Spatial houseModel,
                                  DayNightCycle dayNightCycle, Spatial player,
-                                 PlayerMovementController movementController
+                                 PlayerMovementController movementController,
+                                 InventoryManager inventoryManager
                                  ) {
         this.world = world;
         this.hotbar = hotbar;
@@ -51,6 +53,7 @@ public class WorldInteractionInput implements ActionListener {
         this.dayNightCycle = dayNightCycle;
         this.player = player;
         this.movementController = movementController;
+        this.inventoryManager = inventoryManager;
     }
 
 
@@ -201,12 +204,12 @@ public class WorldInteractionInput implements ActionListener {
 
     private void handleHarvestAttempt(Vector3f playerPos, Vector3i aboveBlock, Vector3i targetBlock) {
         if (growth.getPlantAt(aboveBlock) != null && growth.getPlantAt(aboveBlock).stageIndex == 3) {
-            InteractionCommand harvestCommand = new HarvestCommand(aboveBlock, growth, assetManager, hotbar);
+            InteractionCommand harvestCommand = new HarvestCommand(aboveBlock, growth, assetManager, inventoryManager); // ЗАМЕНИТЬ hotbar на inventoryManager
             executeOrQueueCommandWithValidation(harvestCommand, playerPos);
             return;
         }
         if (growth.getPlantAt(targetBlock) != null && growth.getPlantAt(targetBlock).stageIndex == 3) {
-            InteractionCommand harvestCommand = new HarvestCommand(targetBlock, growth, assetManager, hotbar);
+            InteractionCommand harvestCommand = new HarvestCommand(targetBlock, growth, assetManager, inventoryManager); // ЗАМЕНИТЬ hotbar на inventoryManager
             executeOrQueueCommandWithValidation(harvestCommand, playerPos);
         }
     }
