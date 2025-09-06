@@ -3,7 +3,6 @@ package org.game.commands;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
 import org.game.*;
-import org.game.events.SimpleEventBus;
 
 public class PlantSeedCommand implements InteractionCommand {
     private final PlantKind plantKind;
@@ -11,16 +10,19 @@ public class PlantSeedCommand implements InteractionCommand {
     private final SimpleBlockWorld world;
     private final PlantGrowthState growth;
     private final PlantFactory plantFactory;
-    private final Hotbar hotbar;
+    private final InventoryManager inventoryManager;
 
     public PlantSeedCommand(PlantKind plantKind, Vector3i targetBlock, SimpleBlockWorld world,
-                            PlantGrowthState growth, PlantFactory plantFactory, Hotbar hotbar) {
-        this.plantKind = plantKind;
-        this.targetBlock = targetBlock;
-        this.world = world;
-        this.growth = growth;
-        this.plantFactory = plantFactory;
-        this.hotbar = hotbar;
+                            PlantGrowthState growth, PlantFactory plantFactory,
+                            InventoryManager inventoryManager) {
+        {
+            this.plantKind = plantKind;
+            this.targetBlock = targetBlock;
+            this.world = world;
+            this.growth = growth;
+            this.plantFactory = plantFactory;
+            this.inventoryManager = inventoryManager;
+        }
     }
 
     @Override
@@ -33,18 +35,7 @@ public class PlantSeedCommand implements InteractionCommand {
                 Spatial s = plantFactory.createPlant(plantKind, targetBlock);
                 growth.registerPlanted(plantKind, targetBlock, aboveBlock, s);
 
-                int selectedSlot = hotbar.getSelectedSlot();
-                HotbarItem currentItem = hotbar.getSlotItem(selectedSlot);
-                if (currentItem != null && currentItem.count() >= 1) {
-                    int newCount = currentItem.count() - 1;
-                    if (newCount <= 0) {
-                        SimpleEventBus.INSTANCE.publishInventoryChanged(selectedSlot, null);
-                    } else {
-                        HotbarItem updatedItem = currentItem.withCount(newCount);
-                        SimpleEventBus.INSTANCE.publishInventoryChanged(selectedSlot, updatedItem);
-                    }
-                }
-                return true;
+                return inventoryManager.tryRemoveItem(getPlantSeedId(), 1);
             }
         }
         return false;
@@ -74,5 +65,12 @@ public class PlantSeedCommand implements InteractionCommand {
         Vector3i aboveBlock = new Vector3i(targetBlock.x(), targetBlock.y() + 1, targetBlock.z());
         return world.getBlock(aboveBlock.x(), aboveBlock.y(), aboveBlock.z()) == BlockType.AIR
                 && growth.HasNotPlantAt(aboveBlock);
+    }
+
+    private String getPlantSeedId() {
+        return switch (plantKind) {
+            case PUMPKIN -> ItemIds.PUMPKIN_SEEDS;
+            case TOMATO -> ItemIds.TOMATO_SEEDS;
+        };
     }
 }

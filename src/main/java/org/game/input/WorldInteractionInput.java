@@ -26,7 +26,9 @@ public class WorldInteractionInput implements ActionListener {
     private final Spatial player;
     private final PlayerMovementController movementController;
     private final InventoryManager inventoryManager;
-    
+    private final InteractionCommandFactory commandFactory;
+
+
 
     public WorldInteractionInput(SimpleBlockWorld world, Hotbar hotbar,
                                  Camera camera, InputManager inputManager,
@@ -54,6 +56,8 @@ public class WorldInteractionInput implements ActionListener {
         this.player = player;
         this.movementController = movementController;
         this.inventoryManager = inventoryManager;
+        this.commandFactory = new InteractionCommandFactory(
+                world, growth, plantFactory, moisture, inventoryManager, assetManager);
     }
 
 
@@ -98,15 +102,7 @@ public class WorldInteractionInput implements ActionListener {
     }
 
     private InteractionCommand createCommandForItem(HotbarItem selectedItem, Vector3i targetBlock) {
-        return switch (selectedItem.id()) {
-            case ItemIds.PUMPKIN_SEEDS -> new PlantSeedCommand(
-                    PlantKind.PUMPKIN, targetBlock, world, growth, plantFactory, hotbar);
-            case ItemIds.TOMATO_SEEDS -> new PlantSeedCommand(
-                    PlantKind.TOMATO, targetBlock, world, growth, plantFactory, hotbar);
-            case ItemIds.HOE -> new HoeCommand(targetBlock, world);
-            case ItemIds.WATERING_CAN -> new WaterCommand(targetBlock, world, moisture);
-            default -> null;
-        };
+        return commandFactory.createItemCommand(selectedItem.id(), targetBlock);
     }
 
     private Spatial getClickedObject() {
@@ -204,14 +200,13 @@ public class WorldInteractionInput implements ActionListener {
 
     private void handleHarvestAttempt(Vector3f playerPos, Vector3i aboveBlock, Vector3i targetBlock) {
         if (growth.getPlantAt(aboveBlock) != null && growth.getPlantAt(aboveBlock).stageIndex == 3) {
-            InteractionCommand harvestCommand = new HarvestCommand(aboveBlock, growth, assetManager, inventoryManager); // ЗАМЕНИТЬ hotbar на inventoryManager
+            InteractionCommand harvestCommand = commandFactory.createHarvestCommand(aboveBlock);
             executeOrQueueCommandWithValidation(harvestCommand, playerPos);
             return;
         }
         if (growth.getPlantAt(targetBlock) != null && growth.getPlantAt(targetBlock).stageIndex == 3) {
-            InteractionCommand harvestCommand = new HarvestCommand(targetBlock, growth, assetManager, inventoryManager); // ЗАМЕНИТЬ hotbar на inventoryManager
+            InteractionCommand harvestCommand = commandFactory.createHarvestCommand(targetBlock);
             executeOrQueueCommandWithValidation(harvestCommand, playerPos);
         }
     }
-
 }
