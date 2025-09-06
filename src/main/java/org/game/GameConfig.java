@@ -91,6 +91,8 @@ public final class GameConfig {
     public static final String TOMATO_ITEM = "Textures/tomato.png";
     public static final String PUMPKIN_SEEDS_ITEM = "Textures/pumpkin_seeds" +
             ".png";
+    public static final String WATERING_CAN_ITEM = "Textures/watering_can.png";
+    public static final String HOE_ITEM = "Textures/hoe.png";
     public static final String DEFAULT_ITEM = "Textures/default_item.png";
     public static final String MONEY_ICON = "Textures/money.png";
 

@@ -153,8 +153,9 @@ public class Main extends SimpleApplication implements ActionListener {
 
         raycastHelper = new RaycastHelper(cam, inputManager, blockWorld);
         hotbar = new Hotbar(guiNode, assetManager, cam.getWidth(), cam.getHeight());
-        hotbar.addItemToSlot(2, new HotbarItem(ItemIds.WATERING_CAN, "Textures/watering_can.png"));
-        hotbar.addItemToSlot(3, new HotbarItem(ItemIds.HOE, "Textures/hoe.png"));
+        hotbar.addItemToSlot(2, new HotbarItem(ItemIds.WATERING_CAN,
+                GameConfig.WATERING_CAN_ITEM));
+        hotbar.addItemToSlot(3, new HotbarItem(ItemIds.HOE, GameConfig.HOE_ITEM));
 
         moneyDisplay = new MoneyDisplay(guiNode, assetManager, cam.getWidth());
         moneyDisplay.addMoney(10);
