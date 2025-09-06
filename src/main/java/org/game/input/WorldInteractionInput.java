@@ -114,7 +114,7 @@ public class WorldInteractionInput implements ActionListener {
     private boolean handleObjectClick(Vector3f playerPos) {
         Spatial clickedObject = getClickedObject();
         if (clickedObject == shopModel) {
-            ShopCommand shopCommand = new ShopCommand(shopModel, shopUI);
+            ShopCommand shopCommand = new ShopCommand(shopModel, shopUI, dayNightCycle);
             executeOrQueueCommandWithValidation(shopCommand, playerPos);
             return true;
         }
