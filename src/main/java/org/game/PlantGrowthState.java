@@ -45,7 +45,6 @@ public class PlantGrowthState extends TimedStateManager {
     }
 
     @Override protected void initialize(Application app) {}
-    @Override protected void cleanup(Application app) { plants.clear(); }
     @Override protected void onEnable() {}
     @Override protected void onDisable() {}
     
