@@ -386,18 +386,16 @@ public class Main extends SimpleApplication implements ActionListener {
 
     private void addShopToScene() {
         shopModel = assetManager.loadModel(GameConfig.SHOP_MODEL);
-        shopModel.setLocalTranslation(15, 0, 15);
+        shopModel.setLocalTranslation(15, -1, 15);
         shopModel.setLocalScale(1f);
         rootNode.attachChild(shopModel);
-        System.out.println("Shop placed at (15, 0, 15)");
     }
 
     private void addHouseToScene() {
         houseModel = assetManager.loadModel(GameConfig.HOUSE_MODEL);
-        houseModel.setLocalTranslation(10, 0, 10);
+        houseModel.setLocalTranslation(10, -1, 10);
         houseModel.setLocalScale(0.3f);
         rootNode.attachChild(houseModel);
-        System.out.println("House placed at (10, 0, 10)");
     }
 
 
