@@ -15,7 +15,7 @@ public final class GameConfig {
     public static final float WALK_SPEED = 5f;
     public static final float RUN_SPEED = 10f;
     public static final float ROTATION_SPEED = 10f;
-    public static final float MAX_INTERACTION_RANGE = 2f;
+    public static final float MAX_INTERACTION_RANGE = 3f;
 
     // ========== INPUT SETTINGS ==========
     public static final long DOUBLE_TAP_WINDOW_NS = 600_000_000L; // 600ms
@@ -39,7 +39,7 @@ public final class GameConfig {
 
     // ========== LIGHTING SETTINGS ==========
     public static final Vector3f LIGHT_DIRECTION = new Vector3f(-1f, -1f, -1f);
-    public static final float DAY_DURATION_SECONDS = 30f;
+    public static final float DAY_DURATION_SECONDS = 60f;
     public static final float NIGHT_DURATION_SECONDS = 180f;
     public static final float DAY_LIGHT_INTENSITY = 2f;
     public static final float NIGHT_LIGHT_INTENSITY = 0.3f;

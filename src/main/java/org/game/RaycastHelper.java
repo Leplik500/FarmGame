@@ -43,7 +43,6 @@ public class RaycastHelper {
         return null;
     }
 
-    // Также можно добавить метод в RaycastHelper:
     public Spatial getClickedObject(Spatial shopModel, Spatial houseModel) {
         Vector2f cursorPos = inputManager.getCursorPosition();
         Vector3f origin = camera.getWorldCoordinates(cursorPos, 0f);
@@ -55,10 +54,10 @@ public class RaycastHelper {
         for (int i = 0; i < GameConfig.MAX_RAYCAST_ITERATIONS; i++) {
             currentPos.addLocal(step);
 
-            if (isPositionInObject(currentPos, shopModel)) {
+            if (isPositionInObject(currentPos, shopModel, GameConfig.SHOP_COLLISION_RADIUS)) {
                 return shopModel;
             }
-            if (isPositionInObject(currentPos, houseModel)) {
+            if (isPositionInObject(currentPos, houseModel, GameConfig.HOUSE_COLLISION_RADIUS)) {
                 return houseModel;
             }
 
@@ -72,13 +71,11 @@ public class RaycastHelper {
         return null;
     }
 
-    private boolean isPositionInObject(Vector3f pos, Spatial object) {
+    private boolean isPositionInObject(Vector3f pos, Spatial object, float radius) {
         Vector3f objectPos = object.getWorldTranslation();
-        float scale = object.getWorldScale().x;
-        float radius = 2.0f * scale;
         return pos.distance(objectPos) <= radius;
     }
-
+    
     public RaycastResult getRaycastForHighlight() {
         Vector2f cursorPos = inputManager.getCursorPosition();
         Vector3f origin = camera.getWorldCoordinates(cursorPos, 0f);
