@@ -15,8 +15,12 @@ public class PlayerMovementController {
         this.player = player;
         this.camera = camera;
     }
-    
-    public void handleMovement(Set<String> pressedKeys, boolean isRunning, float tpf) {
+
+    public void handleMovement(Set<String> pressedKeys, boolean isRunning, float tpf, boolean isUIOpen) {
+        if (isUIOpen) {
+            return;
+        }
+
         if (!pressedKeys.isEmpty()) {
             autoMovementController.cancelAutoMovement();
         }
@@ -44,7 +48,7 @@ public class PlayerMovementController {
             if (collisionChecker != null && collisionChecker.isPositionBlocked(clampedPos)) {
                 return;
             }
-            
+
             Vector3f clampedStep = clampedPos.subtract(currentPos);
 
             if (clampedStep.lengthSquared() > 0.0001f) {
@@ -53,6 +57,7 @@ public class PlayerMovementController {
             }
         }
     }
+
 
 
 

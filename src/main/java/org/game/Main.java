@@ -230,14 +230,20 @@ public class Main extends SimpleApplication implements ActionListener {
     public void simpleUpdate(float tpf) {
         boolean hasManualInput = inputHandler.isWalking();
         boolean hasAutoMovement = movementController.getAutoMovementController().isAutoMoving();
+        boolean isUIOpen = shopUI.isVisible();
 
         if (hasManualInput || hasAutoMovement) {
-            movementController.handleMovement(inputHandler.getPressedKeys(), inputHandler.isRunning(), tpf);
+            movementController.handleMovement(
+                    inputHandler.getPressedKeys(),
+                    inputHandler.isRunning(),
+                    tpf,
+                    isUIOpen 
+            );
         }
 
         boolean isMoving = hasManualInput || hasAutoMovement;
         boolean isRunning = hasManualInput ? inputHandler.isRunning() : hasAutoMovement;
-        animationController.update(isMoving, isRunning);
+        animationController.update(isMoving && !isUIOpen, isRunning); // Also stop animations
 
         Vector3f to = player.getWorldTranslation();
         Vector3f from = camTarget.getLocalTranslation();
@@ -253,8 +259,6 @@ public class Main extends SimpleApplication implements ActionListener {
             moneyDisplay.updatePosition(cam.getWidth());
         }
     }
-
-
 
     private void addSky() {
         Texture px = assetManager.loadTexture(GameConfig.SKYBOX_PX);
