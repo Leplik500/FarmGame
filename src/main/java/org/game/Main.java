@@ -48,6 +48,7 @@ public class Main extends SimpleApplication implements ActionListener {
     private DirectionalLight sunLight;
     private AmbientLight ambientLight;
     private InventoryManager inventoryManager;
+    private RaycastHelper raycastHelper;
 
     private record InputModules(CameraInput cameraInput,
                                 HotbarInput hotbarInput,
@@ -150,6 +151,7 @@ public class Main extends SimpleApplication implements ActionListener {
         createFaceHighlight();
         setupCustomCursor();
 
+        raycastHelper = new RaycastHelper(cam, inputManager, blockWorld);
         hotbar = new Hotbar(guiNode, assetManager, cam.getWidth(), cam.getHeight());
         hotbar.addItemToSlot(2, new HotbarItem(ItemIds.WATERING_CAN, "Textures/watering_can.png"));
         hotbar.addItemToSlot(3, new HotbarItem(ItemIds.HOE, "Textures/hoe.png"));
@@ -325,34 +327,20 @@ public class Main extends SimpleApplication implements ActionListener {
     }
 
     private void updateFaceHighlight() {
-        Vector2f cursorPos = inputManager.getCursorPosition();
-        Vector3f origin = cam.getWorldCoordinates(cursorPos, 0f);
-        Vector3f direction = cam.getWorldCoordinates(cursorPos, 1f).subtract(origin).normalizeLocal();
-        Vector3f currentPos = origin.clone();
-        Vector3f step = direction.mult(0.1f);
+        RaycastHelper.RaycastResult result = raycastHelper.getRaycastForHighlight();
 
-        for (int i = 0; i < 1000; i++) {
-            currentPos.addLocal(step);
-            int bx = (int) Math.floor(currentPos.x);
-            int by = (int) Math.floor(currentPos.y);
-            int bz = (int) Math.floor(currentPos.z);
-
-            if (blockWorld.getBlock(bx, by, bz) != BlockType.AIR) {
-                Vector3f prevPos = currentPos.subtract(step);
-                int placeX = (int) Math.floor(prevPos.x);
-                int placeY = (int) Math.floor(prevPos.y);
-                int placeZ = (int) Math.floor(prevPos.z);
-
-                if (blockWorld.getBlock(placeX, placeY, placeZ) == BlockType.AIR) {
-                    Vector3f attachDirection = new Vector3f(placeX - bx, placeY - by, placeZ - bz);
-                    positionFaceHighlight(bx, by, bz, attachDirection);
-                    faceHighlight.setCullHint(Spatial.CullHint.Never);
-                }
-                return;
-            }
+        if (result == null) {
+            faceHighlight.setCullHint(Spatial.CullHint.Always);
+            return;
         }
-        faceHighlight.setCullHint(Spatial.CullHint.Always);
+
+        Vector3i blockPos = result.blockPos();
+        Vector3f attachDirection = result.attachDirection();
+
+        positionFaceHighlight(blockPos.x(), blockPos.y(), blockPos.z(), attachDirection);
+        faceHighlight.setCullHint(Spatial.CullHint.Never);
     }
+
 
     private void positionFaceHighlight(int blockX, int blockY, int blockZ, Vector3f attachDir) {
         Vector3f faceCenter = new Vector3f(blockX, blockY, blockZ);

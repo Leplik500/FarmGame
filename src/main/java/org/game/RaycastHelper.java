@@ -78,4 +78,37 @@ public class RaycastHelper {
         float radius = 2.0f * scale;
         return pos.distance(objectPos) <= radius;
     }
+
+    public RaycastResult getRaycastForHighlight() {
+        Vector2f cursorPos = inputManager.getCursorPosition();
+        Vector3f origin = camera.getWorldCoordinates(cursorPos, 0f);
+        Vector3f direction = camera.getWorldCoordinates(cursorPos, 1f)
+                .subtract(origin).normalizeLocal();
+
+        Vector3f currentPos = origin.clone();
+        Vector3f step = direction.mult(GameConfig.RAYCAST_STEP_SIZE);
+
+        for (int i = 0; i < GameConfig.MAX_RAYCAST_ITERATIONS; i++) {
+            currentPos.addLocal(step);
+            int bx = (int) Math.floor(currentPos.x);
+            int by = (int) Math.floor(currentPos.y);
+            int bz = (int) Math.floor(currentPos.z);
+
+            if (world.getBlock(bx, by, bz) != BlockType.AIR) {
+                Vector3f prevPos = currentPos.subtract(step);
+                int placeX = (int) Math.floor(prevPos.x);
+                int placeY = (int) Math.floor(prevPos.y);
+                int placeZ = (int) Math.floor(prevPos.z);
+
+                if (world.getBlock(placeX, placeY, placeZ) == BlockType.AIR) {
+                    Vector3f attachDirection = new Vector3f(placeX - bx, placeY - by, placeZ - bz);
+                    return new RaycastResult(new Vector3i(bx, by, bz), attachDirection);
+                }
+                return null;
+            }
+        }
+        return null;
+    }
+
+    public record RaycastResult(Vector3i blockPos, Vector3f attachDirection) {}
 }
