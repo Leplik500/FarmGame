@@ -89,11 +89,18 @@ public class WorldInteractionInput implements ActionListener {
         }
 
         if (command.canExecuteAtCurrentPosition(playerPos)) {
-            command.execute();
+            boolean executed = command.execute();
+            if (executed) {
+                System.out.println("Command executed immediately: " + command.getDescription());
+            } else {
+                System.out.println("Command failed to execute: " + command.getDescription());
+            }
         } else {
+            System.out.println("Out of range, starting auto-movement to: " + command.getDescription());
             movementController.getAutoMovementController().startAutoMovement(command);
         }
     }
+
 
     private boolean handleUIClick() {
         if (shopUI.isVisible()) {
@@ -107,15 +114,18 @@ public class WorldInteractionInput implements ActionListener {
     private boolean handleObjectClick(Vector3f playerPos) {
         Spatial clickedObject = getClickedObject();
         if (clickedObject == shopModel) {
-            executeOrQueueCommandWithValidation(new ShopCommand(shopModel, shopUI), playerPos);
+            ShopCommand shopCommand = new ShopCommand(shopModel, shopUI);
+            executeOrQueueCommandWithValidation(shopCommand, playerPos);
             return true;
         }
         if (clickedObject == houseModel) {
-            executeOrQueueCommandWithValidation(new HouseCommand(houseModel, dayNightCycle), playerPos);
+            HouseCommand houseCommand = new HouseCommand(houseModel, dayNightCycle);
+            executeOrQueueCommandWithValidation(houseCommand, playerPos);
             return true;
         }
         return false;
     }
+
 
     private void handleBlockClick(Vector3f playerPos) {
         HotbarItem selectedItem = hotbar.getSelectedItem();

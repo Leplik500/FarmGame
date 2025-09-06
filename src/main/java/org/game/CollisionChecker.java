@@ -8,7 +8,6 @@ public class CollisionChecker {
     private final Spatial houseModel;
     private final PlantGrowthState plantGrowth;
 
-    // Конфигурируемая стадия растений для коллизии
     private static final int PLANT_COLLISION_MIN_STAGE = 2;
 
     public CollisionChecker(Spatial shopModel, Spatial houseModel, PlantGrowthState plantGrowth) {
@@ -61,4 +60,19 @@ public class CollisionChecker {
         }
         return 1.0f; // default
     }
+
+    public boolean isPositionBlockedWithRadius(Vector3f position, float checkRadius) {
+        for (float x = -checkRadius; x <= checkRadius; x += 0.25f) {
+            for (float z = -checkRadius; z <= checkRadius; z += 0.25f) {
+                Vector3f checkPos = new Vector3f(position.x + x, position.y, position.z + z);
+                if (isPositionBlocked(checkPos)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    
+
 }

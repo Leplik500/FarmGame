@@ -15,7 +15,7 @@ public final class GameConfig {
     public static final float WALK_SPEED = 5f;
     public static final float RUN_SPEED = 10f;
     public static final float ROTATION_SPEED = 10f;
-    public static final float MAX_INTERACTION_RANGE = 3f;
+    public static final float MAX_INTERACTION_RANGE = 3.4f;
 
     // ========== INPUT SETTINGS ==========
     public static final long DOUBLE_TAP_WINDOW_NS = 600_000_000L; // 600ms
@@ -117,7 +117,7 @@ public final class GameConfig {
     public static final float RAYCAST_STEP_SIZE = 0.1f;
 
     // ========== COLLISION SETTINGS ==========
-    public static final float SHOP_COLLISION_RADIUS = 1.2f;
+    public static final float SHOP_COLLISION_RADIUS = 2.0f;
     public static final float HOUSE_COLLISION_RADIUS = 2.0f;
     public static final float PLANT_COLLISION_RADIUS = 0.5f;
     

@@ -1,13 +1,23 @@
 package org.game;
 
 import com.jme3.math.Vector3f;
+import org.game.movement.MovementStrategy;
+import org.game.movement.ObstacleAvoidanceMovementStrategy;
 
 public class AutoMovementController {
-
     private InteractionCommand currentCommand;
     private boolean isAutoMoving = false;
-    private static final float MOVEMENT_THRESHOLD =
-            GameConfig.MAX_INTERACTION_RANGE;
+    private MovementStrategy movementStrategy;
+    private final CollisionChecker collisionChecker;
+
+    public AutoMovementController(CollisionChecker collisionChecker) {
+        this.collisionChecker = collisionChecker;
+        this.movementStrategy = new ObstacleAvoidanceMovementStrategy();
+    }
+
+    public void setMovementStrategy(MovementStrategy strategy) {
+        this.movementStrategy = strategy;
+    }
 
     public void startAutoMovement(InteractionCommand command) {
         this.currentCommand = command;
@@ -37,17 +47,33 @@ public class AutoMovementController {
             return null;
         }
 
-        Vector3f targetPos = currentCommand.getTargetPosition();
-        Vector3f direction = targetPos.subtract(playerPos);
+        Vector3f nextDirection = movementStrategy.computeNextDirection(
+                playerPos,
+                currentCommand.getTargetPosition(),
+                collisionChecker
+        );
 
-        if (direction.length() < MOVEMENT_THRESHOLD) {
+        if (nextDirection == null) {
+            float distanceToTarget = playerPos.distance(currentCommand.getTargetPosition());
+
+            if (distanceToTarget <= GameConfig.MAX_INTERACTION_RANGE) {
+                System.out.println("Path blocked but within interaction range, attempting execution");
+                boolean executed = currentCommand.execute();
+                if (executed) {
+                    System.out.println("Command executed despite blocked path: " + currentCommand.getDescription());
+                }
+                stopAutoMovement();
+                return null;
+            }
+
+            System.out.println("No path found to target, stopping auto-movement (distance: " + distanceToTarget + ")");
             stopAutoMovement();
             return null;
         }
 
-        direction.y = 0;
-        return direction.normalizeLocal();
+        return nextDirection;
     }
+
 
     public boolean isAutoMoving() {
         return isAutoMoving;
@@ -57,6 +83,4 @@ public class AutoMovementController {
         this.isAutoMoving = false;
         this.currentCommand = null;
     }
-    
-    
 }

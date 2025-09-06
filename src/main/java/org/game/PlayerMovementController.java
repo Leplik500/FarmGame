@@ -8,13 +8,12 @@ import java.util.Set;
 public class PlayerMovementController {
     private final Spatial player;
     private final Camera camera;
-    private final AutoMovementController autoMovementController;
+    private AutoMovementController autoMovementController;
     private CollisionChecker collisionChecker;
 
     public PlayerMovementController(Spatial player, Camera camera) {
         this.player = player;
         this.camera = camera;
-        this.autoMovementController = new AutoMovementController(); 
     }
     
     public void handleMovement(Set<String> pressedKeys, boolean isRunning, float tpf) {
@@ -87,6 +86,7 @@ public class PlayerMovementController {
 
     public void setCollisionChecker(CollisionChecker collisionChecker) {
         this.collisionChecker = collisionChecker;
+        this.autoMovementController = new AutoMovementController(collisionChecker);
     }
 
     public AutoMovementController getAutoMovementController() {
