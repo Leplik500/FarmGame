@@ -8,7 +8,7 @@ import com.jme3.scene.Spatial;
 import com.jme3.math.Vector3f;
 import java.util.*;
 
-public class PlantGrowthState extends BaseAppState {
+public class PlantGrowthState extends TimedStateManager {
     private final SimpleBlockWorld world;
     private final AssetManager assetManager;
     private final Node plantsRoot;
@@ -49,47 +49,7 @@ public class PlantGrowthState extends BaseAppState {
     @Override protected void cleanup(Application app) { plants.clear(); }
     @Override protected void onEnable() {}
     @Override protected void onDisable() {}
-
-    @Override
-    public void update(float tpf) {
-        if (plants.isEmpty()) return;
-
-        if (dayNightCycle.isNight()) return;
-
-        List<Vector3i> toRemove = new ArrayList<>();
-
-        for (Plant p : plants.values()) {
-            int soilType = world.getBlock(p.soil.x(), p.soil.y(), p.soil.z());
-            if (soilType == BlockType.AIR || soilType == BlockType.GRASS) {
-                if (p.spatial != null && p.spatial.getParent() != null) p.spatial.removeFromParent();
-                toRemove.add(p.above);
-                continue;
-            }
-
-            if (soilType != BlockType.PLOWED_WET) continue;
-
-            if (p.stageIndex == 3) continue;
-            if (p.stageIndex >= 5) continue;
-
-            p.timeLeft -= tpf;
-            if (p.timeLeft <= 0f) {
-                if (p.stageIndex < 3) {
-                    p.stageIndex++;
-                    replaceModel(p);
-                    if (p.stageIndex < GameConfig.GROWTH_STAGE_SECONDS.length) {
-                        p.timeLeft = GameConfig.GROWTH_STAGE_SECONDS[p.stageIndex];
-                    }
-                } else if (p.stageIndex == 4) {
-                    p.stageIndex = 3;
-                    replaceModel(p);
-                }
-            }
-        }
-
-        for (Vector3i a : toRemove) plants.remove(a);
-    }
-
-
+    
 
     private void replaceModel(Plant p) {
         String path = getModelPath(p);
@@ -147,4 +107,61 @@ public class PlantGrowthState extends BaseAppState {
     }
 
 
+    @Override
+    protected boolean shouldUpdate() {
+        return !plants.isEmpty() && !dayNightCycle.isNight();
+    }
+
+    @Override
+    protected void updateTimedStates(float tpf) {
+        for (Plant plant : plants.values()) {
+            updatePlantGrowth(plant, tpf);
+        }
+    }
+
+    @Override
+    protected void performCleanup() {
+        List<Vector3i> toRemove = new ArrayList<>();
+
+        for (Plant plant : plants.values()) {
+            int soilType = world.getBlock(plant.soil.x(), plant.soil.y(), plant.soil.z());
+            if (soilType == BlockType.AIR || soilType == BlockType.GRASS) {
+                if (plant.spatial != null && plant.spatial.getParent() != null) {
+                    plant.spatial.removeFromParent();
+                }
+                toRemove.add(plant.above);
+            }
+        }
+
+        for (Vector3i pos : toRemove) {
+            plants.remove(pos);
+        }
+    }
+
+    private void updatePlantGrowth(Plant plant, float tpf) {
+        int soilType = world.getBlock(plant.soil.x(), plant.soil.y(), plant.soil.z());
+        if (soilType != BlockType.PLOWED_WET) return;
+
+        if (plant.stageIndex == 3) return;
+        if (plant.stageIndex >= 5) return;
+
+        plant.timeLeft -= tpf;
+        if (plant.timeLeft <= 0f) {
+            if (plant.stageIndex < 3) {
+                plant.stageIndex++;
+                replaceModel(plant);
+                if (plant.stageIndex < GameConfig.GROWTH_STAGE_SECONDS.length) {
+                    plant.timeLeft = GameConfig.GROWTH_STAGE_SECONDS[plant.stageIndex];
+                }
+            } else if (plant.stageIndex == 4) {
+                plant.stageIndex = 3;
+                replaceModel(plant);
+            }
+        }
+    }
+
+    @Override
+    protected void onCleanup(Application app) {
+        plants.clear();
+    }
 }

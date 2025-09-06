@@ -4,7 +4,7 @@ import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
 import java.util.*;
 
-public class FarmlandMoistureState extends BaseAppState {
+public class FarmlandMoistureState extends TimedStateManager {
     private final SimpleBlockWorld world;
     private final Map<Vector3i, Float> timers = new HashMap<>();
 
@@ -25,28 +25,46 @@ public class FarmlandMoistureState extends BaseAppState {
     @Override protected void onDisable() {}
 
     @Override
-    public void update(float tpf) {
-        if (timers.isEmpty()) return;
-        List<Vector3i> toDry = new ArrayList<>();
+    protected boolean shouldUpdate() {
+        return !timers.isEmpty();
+    }
+
+    @Override
+    protected void updateTimedStates(float tpf) {
         Iterator<Map.Entry<Vector3i, Float>> it = timers.entrySet().iterator();
         while (it.hasNext()) {
-            Map.Entry<Vector3i, Float> e = it.next();
-            Vector3i pos = e.getKey();
-            int id = world.getBlock(pos.x(), pos.y(), pos.z());
-            if (id != BlockType.PLOWED_WET) {
-                it.remove();
-                continue;
-            }
-            float left = e.getValue() - tpf; // tpf — время с прошлого кадра, в секундах
-            if (left <= 0f) {
-                toDry.add(pos);
+            Map.Entry<Vector3i, Float> entry = it.next();
+            Vector3i pos = entry.getKey();
+            float timeLeft = entry.getValue() - tpf;
+
+            if (timeLeft <= 0f) {
+                world.setBlock(pos.x(), pos.y(), pos.z(), BlockType.PLOWED_DRY);
                 it.remove();
             } else {
-                e.setValue(left);
+                entry.setValue(timeLeft);
             }
         }
-        for (Vector3i p : toDry) {
-            world.setBlock(p.x(), p.y(), p.z(), BlockType.PLOWED_DRY);
+    }
+
+    @Override
+    protected void performCleanup() {
+        Iterator<Map.Entry<Vector3i, Float>> it = timers.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<Vector3i, Float> entry = it.next();
+            Vector3i pos = entry.getKey();
+            int blockType = world.getBlock(pos.x(), pos.y(), pos.z());
+
+            if (blockType != BlockType.PLOWED_WET) {
+                it.remove();
+            }
         }
     }
+
+    @Override
+    protected void onCleanup(Application app) {
+        timers.clear();
+    }
+    
+    
+
 }
