@@ -87,7 +87,10 @@ public final class GameConfig {
     public static final String HOUSE_MODEL = "Models/house1.glb";
 
     public static final String PUMPKIN_ITEM = "Textures/pumpkin.png";
+    public static final String TOMATO_SEEDS_ITEM = "Textures/tomato_seeds.png";
     public static final String TOMATO_ITEM = "Textures/tomato.png";
+    public static final String PUMPKIN_SEEDS_ITEM = "Textures/pumpkin_seeds" +
+            ".png";
     public static final String DEFAULT_ITEM = "Textures/default_item.png";
     public static final String MONEY_ICON = "Textures/money.png";
 
@@ -107,6 +110,9 @@ public final class GameConfig {
     public static final int PUMPKIN_SELL_PRICE = 20;
     public static final int TOMATO_SELL_PRICE = 15;
 
+    // ========== RAYCAST SETTINGS ==========
+    public static final int MAX_RAYCAST_ITERATIONS = 1000;
+    public static final float RAYCAST_STEP_SIZE = 0.1f;
 
     private GameConfig() {}
 }

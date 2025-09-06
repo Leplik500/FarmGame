@@ -1,7 +1,6 @@
 package org.game;
 
 import com.jme3.app.Application;
-import com.jme3.app.state.BaseAppState;
 import com.jme3.asset.AssetManager;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;

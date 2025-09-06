@@ -11,22 +11,17 @@ import org.game.*;
 import org.game.commands.*;
 
 public class WorldInteractionInput implements ActionListener {
-    private final SimpleBlockWorld world;
     private final Hotbar hotbar;
-    private final Camera camera;
     private final InputManager inputManager;
-    private final FarmlandMoistureState moisture;
-    private final AssetManager assetManager;
     private final PlantGrowthState growth;
     private final Spatial shopModel;
     private final ShopUI shopUI;
-    private final PlantFactory plantFactory;
     private final DayNightCycle dayNightCycle;
     private final Spatial houseModel;
     private final Spatial player;
     private final PlayerMovementController movementController;
-    private final InventoryManager inventoryManager;
     private final InteractionCommandFactory commandFactory;
+    private final RaycastHelper raycastHelper;
 
 
 
@@ -41,21 +36,16 @@ public class WorldInteractionInput implements ActionListener {
                                  PlayerMovementController movementController,
                                  InventoryManager inventoryManager
                                  ) {
-        this.world = world;
         this.hotbar = hotbar;
-        this.camera = camera;
         this.inputManager = inputManager;
-        this.moisture = moisture;
-        this.assetManager = assetManager;
         this.growth = growth;
         this.shopModel = shopModel;
         this.shopUI = shopUI;
-        this.plantFactory = plantFactory;
         this.houseModel = houseModel;
         this.dayNightCycle = dayNightCycle;
         this.player = player;
         this.movementController = movementController;
-        this.inventoryManager = inventoryManager;
+        this.raycastHelper = new RaycastHelper(camera, inputManager, world);
         this.commandFactory = new InteractionCommandFactory(
                 world, growth, plantFactory, moisture, inventoryManager, assetManager);
     }
@@ -78,22 +68,7 @@ public class WorldInteractionInput implements ActionListener {
     }
 
     private Vector3i getBlockUnderCursor() {
-        Vector2f cursorPos = inputManager.getCursorPosition();
-        Vector3f origin = camera.getWorldCoordinates(cursorPos, 0f);
-        Vector3f direction = camera.getWorldCoordinates(cursorPos, 1f)
-                .subtract(origin).normalizeLocal();
-        Vector3f currentPos = origin.clone();
-        Vector3f step = direction.mult(0.1f);
-        for (int i = 0; i < 1000; i++) {
-            currentPos.addLocal(step);
-            int bx = (int)Math.floor(currentPos.x);
-            int by = (int)Math.floor(currentPos.y);
-            int bz = (int)Math.floor(currentPos.z);
-            if (world.getBlock(bx, by, bz) != BlockType.AIR) {
-                return new Vector3i(bx, by, bz);
-            }
-        }
-        return null;
+        return raycastHelper.getBlockUnderCursor();
     }
 
 
@@ -106,43 +81,7 @@ public class WorldInteractionInput implements ActionListener {
     }
 
     private Spatial getClickedObject() {
-        Vector2f cursorPos = inputManager.getCursorPosition();
-        Vector3f origin = camera.getWorldCoordinates(cursorPos, 0f);
-        Vector3f direction = camera.getWorldCoordinates(cursorPos, 1f)
-                .subtract(origin).normalizeLocal();
-        Vector3f currentPos = origin.clone();
-        Vector3f step = direction.mult(0.1f);
-
-        for (int i = 0; i < 1000; i++) {
-            currentPos.addLocal(step);
-
-            // Проверяем попадание в магазин
-            if (isPositionInObject(currentPos, shopModel)) {
-                return shopModel;
-            }
-
-            // Проверяем попадание в дом
-            if (isPositionInObject(currentPos, houseModel)) {
-                return houseModel;
-            }
-
-            // Если попали в блок, прекращаем поиск
-            int bx = (int)Math.floor(currentPos.x);
-            int by = (int)Math.floor(currentPos.y);
-            int bz = (int)Math.floor(currentPos.z);
-            if (world.getBlock(bx, by, bz) != BlockType.AIR) {
-                break;
-            }
-        }
-        return null;
-    }
-
-    private boolean isPositionInObject(Vector3f pos, Spatial object) {
-        Vector3f objectPos = object.getWorldTranslation();
-        float scale = object.getWorldScale().x;
-        float radius = 2.0f * scale; 
-
-        return pos.distance(objectPos) <= radius;
+        return raycastHelper.getClickedObject(shopModel, houseModel);
     }
 
     private void executeOrQueueCommandWithValidation(InteractionCommand command, Vector3f playerPos) {

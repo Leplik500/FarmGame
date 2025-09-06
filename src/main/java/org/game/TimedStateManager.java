@@ -7,7 +7,7 @@ public abstract class TimedStateManager extends BaseAppState {
 
     @Override
     protected void initialize(Application app) {
-        onInitialize(app);
+        onInitialize();
     }
 
     @Override
@@ -37,7 +37,7 @@ public abstract class TimedStateManager extends BaseAppState {
     protected abstract void updateTimedStates(float tpf);
     protected abstract void performCleanup();
 
-    protected void onInitialize(Application app) {}
+    protected void onInitialize() {}
     protected void onCleanup(Application app) {}
     protected void onStateEnable() {}
     protected void onStateDisable() {}

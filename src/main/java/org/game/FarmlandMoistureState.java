@@ -1,7 +1,6 @@
 package org.game;
 
 import com.jme3.app.Application;
-import com.jme3.app.state.BaseAppState;
 import java.util.*;
 
 public class FarmlandMoistureState extends TimedStateManager {
@@ -12,10 +11,10 @@ public class FarmlandMoistureState extends TimedStateManager {
         this.world = world;
     }
 
-    public void markWet(int x, int y, int z, Float seconds) {
-        if (world.getBlock(x, y, z) == BlockType.PLOWED_WET) {
+    public void markWet(Vector3i position, Float seconds) {
+        if (world.getBlock(position.x(), position.y(), position.z()) == BlockType.PLOWED_WET) {
             float defaultWetSeconds = 30f;
-            timers.put(new Vector3i(x, y, z), seconds != null ? seconds : defaultWetSeconds);
+            timers.put(position, seconds != null ? seconds : defaultWetSeconds);
         }
     }
 

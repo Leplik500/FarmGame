@@ -48,6 +48,14 @@ public class Main extends SimpleApplication implements ActionListener {
     private DirectionalLight sunLight;
     private AmbientLight ambientLight;
 
+    private record InputModules(CameraInput cameraInput,
+                                HotbarInput hotbarInput,
+                                MovementInput movementInput, UIInput uiInput,
+                                WorldInteractionInput worldInput,
+                                GameSaveManager saveManager) {
+    }
+
+
     public static void main(String[] args) {
         AppSettings settings = new AppSettings(true);
 
@@ -149,34 +157,52 @@ public class Main extends SimpleApplication implements ActionListener {
         moneyDisplay.addMoney(10);
 
         InventoryManager inventoryManager = new InventoryManager(hotbar);
-        shopUI = new ShopUI(guiNode, assetManager, hotbar, moneyDisplay, inventoryManager);
+        shopUI = new ShopUI(guiNode, assetManager, moneyDisplay, inventoryManager);
     }
 
     private void initInput() {
+        initInputControllers();
+        GameInputRouter router = createInputRouter();
+        InputModules modules = createInputModules();
+        registerInputModules(router, modules);
+    }
+
+    private void initInputControllers() {
         inputHandler = new PlayerInputHandler();
         movementController = new PlayerMovementController(player, cam);
         animationController = new PlayerAnimationController(animComposer);
+    }
 
-        GameInputRouter router = new GameInputRouter(inputManager);
+    private GameInputRouter createInputRouter() {
+        return new GameInputRouter(inputManager);
+    }
+
+    private InputModules createInputModules() {
         CameraInput cameraInput = new CameraInput(chaseCam);
         HotbarInput hotbarInput = new HotbarInput(hotbar, cameraInput);
         MovementInput movementInput = new MovementInput(inputHandler);
-        GameSaveManager saveManager = new GameSaveManager();
         UIInput uiInput = new UIInput(shopUI);
         InventoryManager inventoryManager = new InventoryManager(hotbar);
-        
+        GameSaveManager saveManager = new GameSaveManager();
+
         WorldInteractionInput worldInput = new WorldInteractionInput(
                 blockWorld, hotbar, cam, inputManager, moisture, assetManager,
                 growth, shopModel, shopUI, plantFactory, houseModel, dayNightCycle,
                 player, movementController, inventoryManager);
-        router.addActionModule(cameraInput);
-        router.addAnalogModule(cameraInput);
-        router.addActionModule(hotbarInput);
-        router.addAnalogModule(hotbarInput);
-        router.addActionModule(movementInput);
-        router.addActionModule(worldInput);
-        router.addActionModule(uiInput);
-        router.addActionModule(new SaveLoadInput(this, saveManager));
+
+        return new InputModules(cameraInput, hotbarInput, movementInput,
+                uiInput, worldInput, saveManager);
+    }
+
+    private void registerInputModules(GameInputRouter router, InputModules modules) {
+        router.addActionModule(modules.cameraInput);
+        router.addAnalogModule(modules.cameraInput);
+        router.addActionModule(modules.hotbarInput);
+        router.addAnalogModule(modules.hotbarInput);
+        router.addActionModule(modules.movementInput);
+        router.addActionModule(modules.worldInput);
+        router.addActionModule(modules.uiInput);
+        router.addActionModule(new SaveLoadInput(this, modules.saveManager));
     }
 
 

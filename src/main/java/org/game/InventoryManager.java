@@ -50,8 +50,8 @@ public class InventoryManager {
 
     private String getIconPath(String itemId) {
         return switch (itemId) {
-            case ItemIds.PUMPKIN_SEEDS -> "Textures/pumpkin_seeds.png";
-            case ItemIds.TOMATO_SEEDS -> "Textures/tomato_seeds.png";
+            case ItemIds.PUMPKIN_SEEDS -> GameConfig.PUMPKIN_SEEDS_ITEM;
+            case ItemIds.TOMATO_SEEDS -> GameConfig.TOMATO_SEEDS_ITEM;
             case ItemIds.PUMPKIN -> GameConfig.PUMPKIN_ITEM;
             case ItemIds.TOMATO -> GameConfig.TOMATO_ITEM;
             default -> GameConfig.DEFAULT_ITEM;

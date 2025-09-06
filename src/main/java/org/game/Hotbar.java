@@ -92,10 +92,6 @@ public class Hotbar {
         return items[selected];
     }
 
-    public int getSelectedSlot() {
-        return selected;
-    }
-
     public HotbarItem getSlotItem(int slot) {
         if (slot < 0 || slot >= SLOT_COUNT) return null;
         return items[slot];

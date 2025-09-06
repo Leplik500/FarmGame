@@ -15,30 +15,22 @@ public class PlantSeedCommand implements InteractionCommand {
     public PlantSeedCommand(PlantKind plantKind, Vector3i targetBlock, SimpleBlockWorld world,
                             PlantGrowthState growth, PlantFactory plantFactory,
                             InventoryManager inventoryManager) {
-        {
             this.plantKind = plantKind;
             this.targetBlock = targetBlock;
             this.world = world;
             this.growth = growth;
             this.plantFactory = plantFactory;
             this.inventoryManager = inventoryManager;
-        }
     }
 
     @Override
     public boolean execute() {
-        int type = world.getBlock(targetBlock.x(), targetBlock.y(), targetBlock.z());
-        if (type == BlockType.PLOWED_DRY || type == BlockType.PLOWED_WET) {
-            Vector3i aboveBlock = new Vector3i(targetBlock.x(), targetBlock.y() + 1, targetBlock.z());
-            if (world.getBlock(aboveBlock.x(), aboveBlock.y(), aboveBlock.z()) == BlockType.AIR
-                    && growth.HasNotPlantAt(aboveBlock)) {
-                Spatial s = plantFactory.createPlant(plantKind, targetBlock);
-                growth.registerPlanted(plantKind, targetBlock, aboveBlock, s);
-
-                return inventoryManager.tryRemoveItem(getPlantSeedId(), 1);
-            }
+        if (!canPlantAtLocation()) {
+            return false;
         }
-        return false;
+
+        plantSeed();
+        return inventoryManager.tryRemoveItem(getPlantSeedId(), 1);
     }
 
     @Override
@@ -73,4 +65,23 @@ public class PlantSeedCommand implements InteractionCommand {
             case TOMATO -> ItemIds.TOMATO_SEEDS;
         };
     }
+
+    private boolean canPlantAtLocation() {
+        int soilType = world.getBlock(targetBlock.x(), targetBlock.y(), targetBlock.z());
+        if (soilType != BlockType.PLOWED_DRY && soilType != BlockType.PLOWED_WET) {
+            return false;
+        }
+
+        Vector3i aboveBlock = new Vector3i(targetBlock.x(), targetBlock.y() + 1, targetBlock.z());
+        return world.getBlock(aboveBlock.x(), aboveBlock.y(), aboveBlock.z()) == BlockType.AIR
+                && growth.HasNotPlantAt(aboveBlock);
+    }
+
+    private void plantSeed() {
+        Vector3i aboveBlock = new Vector3i(targetBlock.x(), targetBlock.y() + 1, targetBlock.z());
+        Spatial spatial = plantFactory.createPlant(plantKind, targetBlock);
+        growth.registerPlanted(plantKind, targetBlock, aboveBlock, spatial);
+    }
+
+    
 }

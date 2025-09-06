@@ -19,11 +19,11 @@ public class WaterCommand implements InteractionCommand {
         int type = world.getBlock(targetBlock.x(), targetBlock.y(), targetBlock.z());
         if (type == BlockType.PLOWED_DRY) {
             world.setBlock(targetBlock.x(), targetBlock.y(), targetBlock.z(), BlockType.PLOWED_WET);
-            moisture.markWet(targetBlock.x(), targetBlock.y(), targetBlock.z(), null);
+            moisture.markWet(targetBlock, null);
             System.out.println("Watered soil at: " + targetBlock);
             return true;
         } else if (type == BlockType.PLOWED_WET) {
-            moisture.markWet(targetBlock.x(), targetBlock.y(), targetBlock.z(), null);
+            moisture.markWet(targetBlock, null);
             System.out.println("Refreshed moisture at: " + targetBlock);
             return true;
         }
