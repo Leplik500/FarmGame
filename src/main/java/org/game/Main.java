@@ -47,6 +47,7 @@ public class Main extends SimpleApplication implements ActionListener {
     private DayNightCycle dayNightCycle;
     private DirectionalLight sunLight;
     private AmbientLight ambientLight;
+    private InventoryManager inventoryManager;
 
     private record InputModules(CameraInput cameraInput,
                                 HotbarInput hotbarInput,
@@ -156,7 +157,7 @@ public class Main extends SimpleApplication implements ActionListener {
         moneyDisplay = new MoneyDisplay(guiNode, assetManager, cam.getWidth());
         moneyDisplay.addMoney(10);
 
-        InventoryManager inventoryManager = new InventoryManager(hotbar);
+        inventoryManager = new InventoryManager(hotbar);
         shopUI = new ShopUI(guiNode, assetManager, moneyDisplay, inventoryManager);
     }
 
@@ -182,7 +183,6 @@ public class Main extends SimpleApplication implements ActionListener {
         HotbarInput hotbarInput = new HotbarInput(hotbar, cameraInput);
         MovementInput movementInput = new MovementInput(inputHandler);
         UIInput uiInput = new UIInput(shopUI);
-        InventoryManager inventoryManager = new InventoryManager(hotbar);
         GameSaveManager saveManager = new GameSaveManager();
 
         WorldInteractionInput worldInput = new WorldInteractionInput(
@@ -397,8 +397,7 @@ public class Main extends SimpleApplication implements ActionListener {
         houseModel.setLocalScale(0.3f);
         rootNode.attachChild(houseModel);
     }
-
-
+    
     private void updateLighting() {
         float intensity = dayNightCycle.getLightIntensity();
         sunLight.setColor(ColorRGBA.White.mult(intensity));
