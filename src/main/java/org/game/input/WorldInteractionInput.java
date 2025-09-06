@@ -65,55 +65,10 @@ public class WorldInteractionInput implements ActionListener {
     private void handleWorldClick() {
         Vector3f playerPos = getPlayerPosition();
 
-        if (shopUI.isVisible()) {
-            Vector2f cursorPos = inputManager.getCursorPosition();
-            shopUI.handleClick(cursorPos.x, cursorPos.y);
-            return;
-        }
-
-        Spatial clickedObject = getClickedObject();
-
-        if (clickedObject == shopModel) {
-            InteractionCommand shopCommand = new ShopCommand(shopModel, shopUI);
-            executeOrQueueCommandWithValidation(shopCommand, playerPos);
-            return;
-        }
-        
-        if (clickedObject == houseModel) {
-            InteractionCommand houseCommand = new HouseCommand(houseModel,
-                    dayNightCycle);
-            executeOrQueueCommandWithValidation(houseCommand, playerPos);
-            return;
-        }
-
-        HotbarItem selectedItem = hotbar.getSelectedItem();
-        Vector3i targetBlock = getBlockUnderCursor();
-        if (targetBlock == null) return;
-
-        Vector3i aboveBlock = new Vector3i(targetBlock.x(), targetBlock.y() + 1, targetBlock.z());
-
-        if (selectedItem == null) {
-            if (growth.getPlantAt(aboveBlock) != null && growth.getPlantAt(aboveBlock).stageIndex == 3) {
-                InteractionCommand harvestCommand = new HarvestCommand(
-                        aboveBlock, growth, assetManager, hotbar);
-                executeOrQueueCommandWithValidation(harvestCommand, playerPos);
-                return;
-            }
-            if (growth.getPlantAt(targetBlock) != null && growth.getPlantAt(targetBlock).stageIndex == 3) {
-                InteractionCommand harvestCommand = new HarvestCommand(
-                        aboveBlock, growth, assetManager, hotbar);
-                executeOrQueueCommandWithValidation(harvestCommand, playerPos);
-                return;
-            }
-            return;
-        }
-
-        InteractionCommand command = createCommandForItem(selectedItem, targetBlock);
-        if (command != null) {
-            executeOrQueueCommandWithValidation(command, playerPos);
-        }
+        if (handleUIClick()) return;
+        if (handleObjectClick(playerPos)) return;
+        handleBlockClick(playerPos);
     }
-
 
     private Vector3i getBlockUnderCursor() {
         Vector2f cursorPos = inputManager.getCursorPosition();
@@ -201,6 +156,58 @@ public class WorldInteractionInput implements ActionListener {
             command.execute();
         } else {
             movementController.getAutoMovementController().startAutoMovement(command);
+        }
+    }
+
+    private boolean handleUIClick() {
+        if (shopUI.isVisible()) {
+            Vector2f cursorPos = inputManager.getCursorPosition();
+            shopUI.handleClick(cursorPos.x, cursorPos.y);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean handleObjectClick(Vector3f playerPos) {
+        Spatial clickedObject = getClickedObject();
+        if (clickedObject == shopModel) {
+            executeOrQueueCommandWithValidation(new ShopCommand(shopModel, shopUI), playerPos);
+            return true;
+        }
+        if (clickedObject == houseModel) {
+            executeOrQueueCommandWithValidation(new HouseCommand(houseModel, dayNightCycle), playerPos);
+            return true;
+        }
+        return false;
+    }
+
+    private void handleBlockClick(Vector3f playerPos) {
+        HotbarItem selectedItem = hotbar.getSelectedItem();
+        Vector3i targetBlock = getBlockUnderCursor();
+        if (targetBlock == null) return;
+
+        Vector3i aboveBlock = new Vector3i(targetBlock.x(), targetBlock.y() + 1, targetBlock.z());
+
+        if (selectedItem == null) {
+            handleHarvestAttempt(playerPos, aboveBlock, targetBlock);
+            return;
+        }
+
+        InteractionCommand command = createCommandForItem(selectedItem, targetBlock);
+        if (command != null) {
+            executeOrQueueCommandWithValidation(command, playerPos);
+        }
+    }
+
+    private void handleHarvestAttempt(Vector3f playerPos, Vector3i aboveBlock, Vector3i targetBlock) {
+        if (growth.getPlantAt(aboveBlock) != null && growth.getPlantAt(aboveBlock).stageIndex == 3) {
+            InteractionCommand harvestCommand = new HarvestCommand(aboveBlock, growth, assetManager, hotbar);
+            executeOrQueueCommandWithValidation(harvestCommand, playerPos);
+            return;
+        }
+        if (growth.getPlantAt(targetBlock) != null && growth.getPlantAt(targetBlock).stageIndex == 3) {
+            InteractionCommand harvestCommand = new HarvestCommand(targetBlock, growth, assetManager, hotbar);
+            executeOrQueueCommandWithValidation(harvestCommand, playerPos);
         }
     }
 
