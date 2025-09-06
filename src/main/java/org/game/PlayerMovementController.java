@@ -9,6 +9,7 @@ public class PlayerMovementController {
     private final Spatial player;
     private final Camera camera;
     private final AutoMovementController autoMovementController;
+    private CollisionChecker collisionChecker;
 
     public PlayerMovementController(Spatial player, Camera camera) {
         this.player = player;
@@ -40,6 +41,11 @@ public class PlayerMovementController {
             Vector3f currentPos = player.getWorldTranslation();
             Vector3f newPos = currentPos.add(step);
             Vector3f clampedPos = WorldBounds.clampToWorldBounds(newPos);
+
+            if (collisionChecker != null && collisionChecker.isPositionBlocked(clampedPos)) {
+                return;
+            }
+            
             Vector3f clampedStep = clampedPos.subtract(currentPos);
 
             if (clampedStep.lengthSquared() > 0.0001f) {
@@ -77,6 +83,10 @@ public class PlayerMovementController {
         float lerp = Math.min(1f, GameConfig.ROTATION_SPEED * tpf);
         float newYaw = currentYaw + diff * lerp;
         player.setLocalRotation(new Quaternion().fromAngles(0f, newYaw, 0f));
+    }
+
+    public void setCollisionChecker(CollisionChecker collisionChecker) {
+        this.collisionChecker = collisionChecker;
     }
 
     public AutoMovementController getAutoMovementController() {

@@ -116,6 +116,11 @@ public final class GameConfig {
     public static final int MAX_RAYCAST_ITERATIONS = 1000;
     public static final float RAYCAST_STEP_SIZE = 0.1f;
 
+    // ========== COLLISION SETTINGS ==========
+    public static final float SHOP_COLLISION_RADIUS = 1.2f;
+    public static final float HOUSE_COLLISION_RADIUS = 2.0f;
+    public static final float PLANT_COLLISION_RADIUS = 0.5f;
+    
     private GameConfig() {}
 }
 

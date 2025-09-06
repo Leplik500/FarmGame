@@ -174,8 +174,13 @@ public class Main extends SimpleApplication implements ActionListener {
     private void initInputControllers() {
         inputHandler = new PlayerInputHandler();
         movementController = new PlayerMovementController(player, cam);
+
+        CollisionChecker collisionChecker = new CollisionChecker(shopModel, houseModel, growth);
+        movementController.setCollisionChecker(collisionChecker);
+
         animationController = new PlayerAnimationController(animComposer);
     }
+
 
     private GameInputRouter createInputRouter() {
         return new GameInputRouter(inputManager);
