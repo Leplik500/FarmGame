@@ -4,7 +4,7 @@ import org.game.*;
 
 public class HoeCommand extends AbstractBlockCommand {
 
-    public HoeCommand(Vector3i targetBlock, SimpleBlockWorld world) {
+    public HoeCommand(Vector3i targetBlock, BlockWorld world) {
         super(targetBlock, world);
     }
 

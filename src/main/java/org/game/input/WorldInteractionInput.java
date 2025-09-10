@@ -23,7 +23,7 @@ public class WorldInteractionInput implements ActionListener {
     private final InteractionCommandFactory commandFactory;
     private final RaycastHelper raycastHelper;
 
-    public WorldInteractionInput(SimpleBlockWorld world, Hotbar hotbar,
+    public WorldInteractionInput(BlockWorld world, Hotbar hotbar,
                                  Camera camera, InputManager inputManager,
                                  FarmlandMoistureState moisture,
                                  AssetManager assetManager,

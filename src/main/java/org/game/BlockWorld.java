@@ -8,14 +8,14 @@ import com.jme3.scene.shape.Box;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SimpleBlockWorld {
+public class BlockWorld {
     private final Map<Vector3i, Integer> blocks = new HashMap<>();
     private final Map<Vector3i, Geometry> blockGeometries = new HashMap<>();
     private final Node worldRoot;
     private final AssetManager assetManager;
     private final Box blockMesh = new Box(0.5f, 0.5f, 0.5f);
 
-    public SimpleBlockWorld(Node worldRoot, AssetManager assetManager) {
+    public BlockWorld(Node worldRoot, AssetManager assetManager) {
         this.worldRoot = worldRoot;
         this.assetManager = assetManager;
     }
@@ -23,7 +23,6 @@ public class SimpleBlockWorld {
     public void setBlock(int x, int y, int z, int blockType) {
         Vector3i pos = new Vector3i(x, y, z);
 
-        // Удаляем старый блок если есть
         removeBlockGeometry(pos);
 
         if (blockType != BlockType.AIR) {

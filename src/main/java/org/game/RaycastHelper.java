@@ -9,9 +9,9 @@ import com.jme3.scene.Spatial;
 public class RaycastHelper {
     private final Camera camera;
     private final InputManager inputManager;
-    private final SimpleBlockWorld world;
+    private final BlockWorld world;
 
-    public RaycastHelper(Camera camera, InputManager inputManager, SimpleBlockWorld world) {
+    public RaycastHelper(Camera camera, InputManager inputManager, BlockWorld world) {
         this.camera = camera;
         this.inputManager = inputManager;
         this.world = world;

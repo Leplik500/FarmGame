@@ -5,9 +5,9 @@ import org.game.*;
 
 public abstract class AbstractBlockCommand implements InteractionCommand {
     protected final Vector3i targetBlock;
-    protected final SimpleBlockWorld world;
-
-    protected AbstractBlockCommand(Vector3i targetBlock, SimpleBlockWorld world) {
+    protected final BlockWorld world;
+    
+    protected AbstractBlockCommand(Vector3i targetBlock, BlockWorld world) {
         this.targetBlock = targetBlock;
         this.world = world;
     }

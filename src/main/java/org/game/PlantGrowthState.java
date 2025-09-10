@@ -8,7 +8,7 @@ import com.jme3.math.Vector3f;
 import java.util.*;
 
 public class PlantGrowthState extends TimedStateManager {
-    private final SimpleBlockWorld world;
+    private final BlockWorld world;
     private final AssetManager assetManager;
     private final Node plantsRoot;
     private final DayNightCycle dayNightCycle;
@@ -30,7 +30,7 @@ public class PlantGrowthState extends TimedStateManager {
 
     private final Map<Vector3i, Plant> plants = new HashMap<>();
 
-    public PlantGrowthState(SimpleBlockWorld world, AssetManager assetManager, Node plantsRoot, DayNightCycle dayNightCycle) {
+    public PlantGrowthState(BlockWorld world, AssetManager assetManager, Node plantsRoot, DayNightCycle dayNightCycle) {
         this.world = world;
         this.assetManager = assetManager;
         this.plantsRoot = plantsRoot;

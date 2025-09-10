@@ -4,10 +4,10 @@ import com.jme3.app.Application;
 import java.util.*;
 
 public class FarmlandMoistureState extends TimedStateManager {
-    private final SimpleBlockWorld world;
+    private final BlockWorld world;
     private final Map<Vector3i, Float> timers = new HashMap<>();
 
-    public FarmlandMoistureState(SimpleBlockWorld world) {
+    public FarmlandMoistureState(BlockWorld world) {
         this.world = world;
     }
 

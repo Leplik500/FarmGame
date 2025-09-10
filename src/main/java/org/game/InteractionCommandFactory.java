@@ -4,14 +4,14 @@ import com.jme3.asset.AssetManager;
 import org.game.commands.*;
 
 public class InteractionCommandFactory {
-    private final SimpleBlockWorld world;
+    private final BlockWorld world;
     private final PlantGrowthState growth;
     private final PlantFactory plantFactory;
     private final FarmlandMoistureState moisture;
     private final InventoryManager inventoryManager;
     private final AssetManager assetManager;
 
-    public InteractionCommandFactory(SimpleBlockWorld world, PlantGrowthState growth,
+    public InteractionCommandFactory(BlockWorld world, PlantGrowthState growth,
                                      PlantFactory plantFactory, FarmlandMoistureState moisture,
                                      InventoryManager inventoryManager, AssetManager assetManager) {
         this.world = world;

@@ -9,7 +9,7 @@ public class PlantSeedCommand extends AbstractBlockCommand {
     private final PlantFactory plantFactory;
     private final InventoryManager inventoryManager;
 
-    public PlantSeedCommand(PlantKind plantKind, Vector3i targetBlock, SimpleBlockWorld world,
+    public PlantSeedCommand(PlantKind plantKind, Vector3i targetBlock, BlockWorld world,
                             PlantGrowthState growth, PlantFactory plantFactory,
                             InventoryManager inventoryManager) {
         super(targetBlock, world);

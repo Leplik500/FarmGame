@@ -102,7 +102,7 @@ public class GameSaveManager {
             hotbar.addItemToSlot(itemData.slot, item);
         }
 
-        SimpleBlockWorld world = gameInstance.getBlockWorld();
+        BlockWorld world = gameInstance.getBlockWorld();
         world.clearAll();
 
         System.out.println("Loading " + data.blocks.size() + " blocks");

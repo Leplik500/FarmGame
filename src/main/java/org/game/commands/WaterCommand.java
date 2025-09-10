@@ -5,7 +5,7 @@ import org.game.*;
 public class WaterCommand extends AbstractBlockCommand {
     private final FarmlandMoistureState moisture;
 
-    public WaterCommand(Vector3i targetBlock, SimpleBlockWorld world, FarmlandMoistureState moisture) {
+    public WaterCommand(Vector3i targetBlock, BlockWorld world, FarmlandMoistureState moisture) {
         super(targetBlock, world);
         this.moisture = moisture;
     }

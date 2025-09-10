@@ -29,7 +29,7 @@ public class Main extends SimpleApplication implements ActionListener {
     private final Node camTarget = new Node("CamTarget");
     private final Node plantsRoot = new Node("PlantsRoot");
     private Spatial player;
-    private SimpleBlockWorld blockWorld;
+    private BlockWorld blockWorld;
     private Spatial faceHighlight;
     private AnimComposer animComposer;
     private PlayerInputHandler inputHandler;
@@ -122,7 +122,7 @@ public class Main extends SimpleApplication implements ActionListener {
         ambientLight.setColor(ColorRGBA.White.mult(0.15f));
         rootNode.addLight(ambientLight);
 
-        blockWorld = new SimpleBlockWorld(rootNode, assetManager);
+        blockWorld = new BlockWorld(rootNode, assetManager);
         blockWorld.generateFlatWorld(GameConfig.WORLD_SIZE_X, GameConfig.WORLD_SIZE_Z);
 
         moisture = new FarmlandMoistureState(blockWorld);
@@ -453,7 +453,7 @@ public class Main extends SimpleApplication implements ActionListener {
     public Spatial getPlayer() { return player; }
     public MoneyDisplay getMoneyDisplay() { return moneyDisplay; }
     public Hotbar getHotbar() { return hotbar; }
-    public SimpleBlockWorld getBlockWorld() { return blockWorld; }
+    public BlockWorld getBlockWorld() { return blockWorld; }
     public PlantGrowthState getPlantGrowthState() { return growth; }
     public PlantFactory getPlantFactory() { return plantFactory; }
     public DayNightCycle getDayNightCycle() { return dayNightCycle; }
