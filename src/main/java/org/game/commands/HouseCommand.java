@@ -1,18 +1,11 @@
 package org.game.commands;
 
-import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
-import org.game.ActionRange;
 import org.game.DayNightCycle;
-import org.game.InteractionCommand;
 
-public class HouseCommand implements InteractionCommand {
-    private final Spatial houseModel;
-    private final DayNightCycle dayNightCycle;
-
+public class HouseCommand extends AbstractLocationCommand {
     public HouseCommand(Spatial houseModel, DayNightCycle dayNightCycle) {
-        this.houseModel = houseModel;
-        this.dayNightCycle = dayNightCycle;
+        super(houseModel, dayNightCycle);
     }
 
     @Override
@@ -28,16 +21,6 @@ public class HouseCommand implements InteractionCommand {
     }
 
     @Override
-    public Vector3f getTargetPosition() {
-        return houseModel.getWorldTranslation();
-    }
-
-    @Override
-    public boolean canExecuteAtCurrentPosition(Vector3f playerPos) {
-        return ActionRange.isWithinRange(playerPos, houseModel.getWorldTranslation());
-    }
-
-    @Override
     public boolean isValidTarget() {
         return dayNightCycle.isNight();
     }
@@ -47,3 +30,4 @@ public class HouseCommand implements InteractionCommand {
         return "Sleep in house";
     }
 }
+
