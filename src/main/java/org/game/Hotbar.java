@@ -12,7 +12,7 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Quad;
 import com.jme3.ui.Picture;
-import org.game.events.SimpleEventBus;
+import org.game.events.EventBus;
 
 public class Hotbar {
     public static final int SLOT_COUNT = 9;
@@ -33,7 +33,7 @@ public class Hotbar {
     private int selected = 0;
 
     public Hotbar(Node guiNode, AssetManager assetManager, int screenW, int screenH) {
-        SimpleEventBus.INSTANCE.subscribeToInventory("hotbar", this::updateInventorySlot);
+        EventBus.INSTANCE.subscribeToInventory("hotbar", this::updateInventorySlot);
         
         this.assetManager = assetManager;
         this.screenW = screenW;
@@ -179,7 +179,7 @@ public class Hotbar {
     }
 
     public void clearSlot(int slot) {
-        SimpleEventBus.INSTANCE.publishInventoryChanged(slot, null);
+        EventBus.INSTANCE.publishInventoryChanged(slot, null);
     }
 
 
@@ -192,7 +192,7 @@ public class Hotbar {
     }
 
     public void addItemToSlot(int slot, HotbarItem item) {
-        SimpleEventBus.INSTANCE.publishInventoryChanged(slot, item);
+        EventBus.INSTANCE.publishInventoryChanged(slot, item);
     }
 
 

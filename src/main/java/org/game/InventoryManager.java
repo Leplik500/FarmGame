@@ -1,6 +1,6 @@
 package org.game;
 
-import org.game.events.SimpleEventBus;
+import org.game.events.EventBus;
 
 public class InventoryManager {
     private final Hotbar hotbar;
@@ -14,7 +14,7 @@ public class InventoryManager {
             HotbarItem existing = hotbar.getSlotItem(i);
             if (existing != null && existing.id().equals(itemId)) {
                 HotbarItem updated = existing.withCount(existing.count() + count);
-                SimpleEventBus.INSTANCE.publishInventoryChanged(i, updated);
+                EventBus.INSTANCE.publishInventoryChanged(i, updated);
                 return true;
             }
         }
@@ -23,7 +23,7 @@ public class InventoryManager {
             if (hotbar.getSlotItem(i) == null) {
                 String iconPath = getIconPath(itemId);
                 HotbarItem newItem = new HotbarItem(itemId, iconPath, count);
-                SimpleEventBus.INSTANCE.publishInventoryChanged(i, newItem);
+                EventBus.INSTANCE.publishInventoryChanged(i, newItem);
                 return true;
             }
         }
@@ -37,10 +37,10 @@ public class InventoryManager {
             if (item != null && item.id().equals(itemId) && item.count() >= count) {
                 int newCount = item.count() - count;
                 if (newCount <= 0) {
-                    SimpleEventBus.INSTANCE.publishInventoryChanged(i, null);
+                    EventBus.INSTANCE.publishInventoryChanged(i, null);
                 } else {
                     HotbarItem updated = item.withCount(newCount);
-                    SimpleEventBus.INSTANCE.publishInventoryChanged(i, updated);
+                    EventBus.INSTANCE.publishInventoryChanged(i, updated);
                 }
                 return true;
             }

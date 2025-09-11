@@ -108,4 +108,9 @@ public class RaycastHelper {
     }
 
     public record RaycastResult(Vector3i blockPos, Vector3f attachDirection) {}
+
+    public Vector2f getCursorPosition() {
+        return inputManager.getCursorPosition();
+    }
+
 }

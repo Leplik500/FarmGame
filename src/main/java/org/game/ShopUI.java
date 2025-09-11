@@ -11,7 +11,7 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Quad;
 import com.jme3.ui.Picture;
-import org.game.events.SimpleEventBus;
+import org.game.events.EventBus;
 
 public class ShopUI {
     private final Node root = new Node("ShopUI");
@@ -174,12 +174,12 @@ public class ShopUI {
         int price = BUY_PRICES[index];
 
         if (moneyDisplay.getMoney() >= price) {
-            SimpleEventBus.INSTANCE.publishMoneyChanged(moneyDisplay.getMoney() - price);
+            EventBus.INSTANCE.publishMoneyChanged(moneyDisplay.getMoney() - price);
 
             if (inventoryManager.tryAddItem(itemId, 1)) {
                 System.out.println("Bought " + itemId + " for $" + price);
             } else {
-                SimpleEventBus.INSTANCE.publishMoneyChanged(moneyDisplay.getMoney() + price);
+                EventBus.INSTANCE.publishMoneyChanged(moneyDisplay.getMoney() + price);
                 System.out.println("Inventory full! Purchase refunded.");
             }
         } else {
@@ -192,7 +192,7 @@ public class ShopUI {
         int price = SELL_PRICES[index];
 
         if (inventoryManager.tryRemoveItem(itemId, 1)) {
-            SimpleEventBus.INSTANCE.publishMoneyChanged(moneyDisplay.getMoney() + price);
+            EventBus.INSTANCE.publishMoneyChanged(moneyDisplay.getMoney() + price);
             System.out.println("Sold " + itemId + " for $" + price);
         } else {
             System.out.println("No " + itemId + " to sell!");
