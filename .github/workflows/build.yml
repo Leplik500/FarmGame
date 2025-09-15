@@ -6,21 +6,21 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-java@v3
+    - uses: actions/checkout@v4  
+    - uses: actions/setup-java@v4
       with:
         java-version: '17'
-        distribution: 'adopt'
+        distribution: 'temurin'  
     
     - name: Build JAR
       run: ./gradlew shadowJar
     
-    - name: Create Windows Executable
+    - name: Create Windows Executable  
       run: |
-        jpackage --input build/libs/ --name "FarmGame" --main-jar FarmGame-1.0-SNAPSHOT-all.jar --main-class org.game.Main --type exe --dest dist/
+        jpackage --input build/libs/ --name "FarmGame" --main-jar FarmGame-1.0-SNAPSHOT.jar --main-class org.game.Main --type exe --dest dist/
     
     - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: FarmGame-Windows
         path: dist/FarmGame*.exe
