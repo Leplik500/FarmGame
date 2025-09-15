@@ -61,18 +61,29 @@ public class Main extends SimpleApplication implements ActionListener {
 
 
     public static void main(String[] args) {
-        AppSettings settings = new AppSettings(true);
+        try {
+            AppSettings settings = new AppSettings(true);
 
-        if (GameConfig.FULLSCREEN) {
-            settings = createFullscreenSettings();
-        } else {
-            settings.setResolution(GameConfig.SCREEN_WIDTH, GameConfig.SCREEN_HEIGHT);
-            settings.setFullscreen(false);
+            if (GameConfig.FULLSCREEN) {
+                settings = createFullscreenSettings();
+            } else {
+                settings.setResolution(GameConfig.SCREEN_WIDTH, GameConfig.SCREEN_HEIGHT);
+                settings.setFullscreen(false);
+            }
+
+            Main app = new Main();
+            app.setSettings(settings);
+            app.start();
         }
+        catch (Exception e) {
+            System.err.println("Application crashed: " + e.getMessage());
+            e.printStackTrace();
 
-        Main app = new Main();
-        app.setSettings(settings);
-        app.start();
+            System.out.println("Press Enter to exit...");
+            try {
+                System.in.read();
+            } catch (Exception ignored) {}
+        }
     }
 
     private static AppSettings createFullscreenSettings() {
