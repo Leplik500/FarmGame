@@ -56,12 +56,10 @@ public class InteractionCommandFactory {
         HotbarItem selectedItem = hotbar.getSelectedItem();
         Vector3i aboveBlock = new Vector3i(targetBlock.x(), targetBlock.y() + 1, targetBlock.z());
 
-        // Handle harvest attempts (no selected item)
         if (selectedItem == null) {
             return createHarvestCommandIfPossible(aboveBlock, targetBlock, playerPos);
         }
 
-        // Handle item-based commands
         InteractionCommand command = createItemCommand(selectedItem.id(), targetBlock);
         if (command != null && shouldAutoMove(command, playerPos)) {
             return new AutoMoveCommand(command, playerContext.movementController());
@@ -71,7 +69,6 @@ public class InteractionCommandFactory {
     }
 
     private InteractionCommand createHarvestCommandIfPossible(Vector3i aboveBlock, Vector3i targetBlock, Vector3f playerPos) {
-        // Check above block first
         if (worldContext.growth().getPlantAt(aboveBlock) != null &&
                 worldContext.growth().getPlantAt(aboveBlock).stageIndex == 3) {
 
@@ -83,7 +80,6 @@ public class InteractionCommandFactory {
                     harvestCommand;
         }
 
-        // Check target block
         if (worldContext.growth().getPlantAt(targetBlock) != null &&
                 worldContext.growth().getPlantAt(targetBlock).stageIndex == 3) {
 
