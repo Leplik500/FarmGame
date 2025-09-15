@@ -17,10 +17,10 @@ jobs:
     
     - name: Create Windows Executable  
       run: |
-        jpackage --input build/libs/ --name "FarmGame" --main-jar FarmGame-1.0-SNAPSHOT.jar --main-class org.game.Main --type exe --dest dist/
+        jpackage --input build/libs/ --name "FarmGame" --main-jar FarmGame-1.0-SNAPSHOT-all.jar --main-class org.game.Main --type app-image --dest dist/ --win-console
     
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: FarmGame-Windows
-        path: dist/FarmGame*.exe
+        path: dist/FarmGame/**
