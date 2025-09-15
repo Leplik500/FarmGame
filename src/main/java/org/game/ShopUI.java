@@ -13,190 +13,117 @@ import com.jme3.scene.shape.Quad;
 import com.jme3.ui.Picture;
 import org.game.events.EventBus;
 
-public class ShopUI {
+public final class ShopUI {
     private final Node root = new Node("ShopUI");
     private final MoneyDisplay moneyDisplay;
     private final AssetManager assetManager;
     private final InventoryManager inventoryManager;
-    private boolean isVisible = false;
+    private boolean visible;
 
-    private static final String[] BUY_ITEMS = {ItemIds.PUMPKIN_SEEDS, ItemIds.TOMATO_SEEDS};
-    private static final String[] BUY_ICONS = {GameConfig.PUMPKIN_SEEDS_ITEM,
-            GameConfig.TOMATO_SEEDS_ITEM};
-    private static final int[] BUY_PRICES = {GameConfig.PUMPKIN_SEEDS_PRICE, GameConfig.TOMATO_SEEDS_PRICE};
-
-    private static final String[] SELL_ITEMS = {ItemIds.PUMPKIN, ItemIds.TOMATO};
-    private static final String[] SELL_ICONS = {GameConfig.PUMPKIN_ITEM, GameConfig.TOMATO_ITEM};
-    private static final int[] SELL_PRICES = {GameConfig.PUMPKIN_SELL_PRICE, GameConfig.TOMATO_SELL_PRICE};
-
-    public ShopUI(Node guiNode, AssetManager assetManager,
-                  MoneyDisplay moneyDisplay, InventoryManager inventoryManager) {
-        this.assetManager = assetManager;
-        this.moneyDisplay = moneyDisplay;
-        this.inventoryManager = inventoryManager;
+    public ShopUI(Node guiRoot, AssetManager assets,
+                  MoneyDisplay money, InventoryManager inv) {
+        this.assetManager = assets;
+        this.moneyDisplay = money;
+        this.inventoryManager = inv;
 
         root.setQueueBucket(RenderQueue.Bucket.Gui);
         buildUI();
-        guiNode.attachChild(root);
+        guiRoot.attachChild(root);
         setVisible(false);
     }
 
     private void buildUI() {
-        Quad background = new Quad(400, 300);
-        Geometry bg = new Geometry("ShopBackground", background);
-        Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-        mat.setColor("Color", new ColorRGBA(0.2f, 0.2f, 0.2f, 0.8f));
-        bg.setMaterial(mat);
+        Geometry bg = new Geometry("bg", new Quad(400, 300));
+        Material m  = new Material(assetManager, "Common/MatDefs/Gui/Gui.j3md");
+        m.setColor("Color", new ColorRGBA(.18f,.23f,.30f,.75f));
+        bg.setMaterial(m);
         bg.setLocalTranslation(200, 200, -1);
         root.attachChild(bg);
 
         BitmapFont font = assetManager.loadFont("Interface/Fonts/Default.fnt");
-        BitmapText title = new BitmapText(font);
-        title.setSize(24);
-        title.setColor(ColorRGBA.White);
-        title.setText("Shop");
-        title.setLocalTranslation(350, 470, 0);
-        root.attachChild(title);
 
-        createBuySection(font);
+        addLabel(font, "Shop", ColorRGBA.White, 24, 350, 470);
 
-        createSellSection(font);
+        buildSection(font, "Buy:",  ColorRGBA.Green, 430,
+                ShopArticle.BUY_PUMPKIN_SEEDS, ShopArticle.BUY_TOMATO_SEEDS);
+        buildSection(font, "Sell:", ColorRGBA.Yellow, 320,
+                ShopArticle.SELL_PUMPKIN,     ShopArticle.SELL_TOMATO);
 
-        createCloseButton(font);
+        addLabel(font, "[X] Close", ColorRGBA.Red, 16, 500, 220);
     }
 
-    private void createBuySection(BitmapFont font) {
-        BitmapText buyLabel = new BitmapText(font);
-        buyLabel.setSize(18);
-        buyLabel.setColor(ColorRGBA.Green);
-        buyLabel.setText("Buy:");
-        buyLabel.setLocalTranslation(220, 430, 0);
-        root.attachChild(buyLabel);
-
-        for (int i = 0; i < BUY_ITEMS.length; i++) {
-            createBuyItem(i, 220 + i * 80, 380);
-        }
+    private void buildSection(BitmapFont f, String title, ColorRGBA color,
+                              float y, ShopArticle... articles) {
+        addLabel(f, title, color, 18, 220, y);
+        for (int i = 0; i < articles.length; i++)
+            addItem(articles[i], 220 + i * 80, y - 50);
     }
 
-    private void createSellSection(BitmapFont font) {
-        BitmapText sellLabel = new BitmapText(font);
-        sellLabel.setSize(18);
-        sellLabel.setColor(ColorRGBA.Yellow);
-        sellLabel.setText("Sell:");
-        sellLabel.setLocalTranslation(220, 320, 0);
-        root.attachChild(sellLabel);
-
-        for (int i = 0; i < SELL_ITEMS.length; i++) {
-            createSellItem(i, 220 + i * 80, 270);
-        }
+    private void addLabel(BitmapFont font, String txt, ColorRGBA col,
+                          int size, float x, float y) {
+        BitmapText t = new BitmapText(font);
+        t.setText(txt); t.setColor(col); t.setSize(size);
+        t.setLocalTranslation(x, y, 0);
+        root.attachChild(t);
     }
 
-    private void createBuyItem(int index, float x, float y) {
-        Picture icon = new Picture("buy_icon_" + index);
-        icon.setImage(assetManager, BUY_ICONS[index], true);
-        icon.setWidth(32);
-        icon.setHeight(32);
-        icon.setPosition(x, y);
-        root.attachChild(icon);
+    private void addItem(ShopArticle art, float x, float y) {
+        Picture pic = new Picture(art.id());
+        pic.setImage(assetManager, art.icon(), true);
+        pic.setWidth(32); pic.setHeight(32); pic.setPosition(x, y);
+        root.attachChild(pic);
 
-        BitmapFont font = assetManager.loadFont("Interface/Fonts/Default.fnt");
-        BitmapText price = new BitmapText(font);
-        price.setSize(12);
+        BitmapText price = new BitmapText(assetManager
+                .loadFont("Interface/Fonts/Default.fnt"));
+        price.setText("$" + art.price());
         price.setColor(ColorRGBA.White);
-        price.setText("$" + BUY_PRICES[index]);
+        price.setSize(12);
         price.setLocalTranslation(x, y - 10, 0);
         root.attachChild(price);
     }
 
-    private void createSellItem(int index, float x, float y) {
-        Picture icon = new Picture("sell_icon_" + index);
-        icon.setImage(assetManager, SELL_ICONS[index], true);
-        icon.setWidth(32);
-        icon.setHeight(32);
-        icon.setPosition(x, y);
-        root.attachChild(icon);
-
-        BitmapFont font = assetManager.loadFont("Interface/Fonts/Default.fnt");
-        BitmapText price = new BitmapText(font);
-        price.setSize(12);
-        price.setColor(ColorRGBA.White);
-        price.setText("$" + SELL_PRICES[index]);
-        price.setLocalTranslation(x, y - 10, 0);
-        root.attachChild(price);
+    public void setVisible(boolean v) {
+        visible = v;
+        root.setCullHint(v ? Spatial.CullHint.Inherit : Spatial.CullHint.Always);
     }
-
-    private void createCloseButton(BitmapFont font) {
-        BitmapText closeBtn = new BitmapText(font);
-        closeBtn.setSize(16);
-        closeBtn.setColor(ColorRGBA.Red);
-        closeBtn.setText("[X] Close");
-        closeBtn.setLocalTranslation(500, 220, 0);
-        root.attachChild(closeBtn);
-    }
-
-    public void setVisible(boolean visible) {
-        this.isVisible = visible;
-        root.setCullHint(visible ? Spatial.CullHint.Never : Spatial.CullHint.Always);
-    }
-
-    public boolean isVisible() {
-        return isVisible;
-    }
+    public boolean isVisible() { return visible; }
 
     public void handleClick(float x, float y) {
-        if (!isVisible) return;
+        if (!visible) return;
 
-        if (x >= 500 && x <= 580 && y >= 200 && y <= 230) {
-            setVisible(false);
+        if (x>=500 && x<=580 && y>=200 && y<=230) { setVisible(false); return; }
+
+        for (ShopArticle art : ShopArticle.values()) {
+            float baseX = 220 + (art.ordinal()%2)*80;
+            float baseY = (art.isBuy()?430:320) - 50;
+            if (x>=baseX && x<=baseX+32 && y>=baseY && y<=baseY+32) {
+                if (art.isBuy()) buy(art); else sell(art);
+                return;
+            }
+        }
+    }
+
+    private void buy(ShopArticle a) {
+        int price = a.price();
+        if (moneyDisplay.getMoney() < price) {                  // not enough $
+            System.out.println("Not enough money to buy "+a.id());
             return;
         }
-
-        for (int i = 0; i < BUY_ITEMS.length; i++) {
-            float itemX = 220 + i * 80;
-            if (x >= itemX && x <= itemX + 32 && y >= 380 && y <= 412) {
-                buyItem(i);
-                return;
-            }
-        }
-
-        for (int i = 0; i < SELL_ITEMS.length; i++) {
-            float itemX = 220 + i * 80;
-            if (x >= itemX && x <= itemX + 32 && y >= 270 && y <= 302) {
-                sellItem(i);
-                return;
-            }
-        }
-
-    }
-
-    private void buyItem(int index) {
-        String itemId = BUY_ITEMS[index];
-        int price = BUY_PRICES[index];
-
-        if (moneyDisplay.getMoney() >= price) {
-            EventBus.INSTANCE.publishMoneyChanged(moneyDisplay.getMoney() - price);
-
-            if (inventoryManager.tryAddItem(itemId, 1)) {
-                System.out.println("Bought " + itemId + " for $" + price);
-            } else {
-                EventBus.INSTANCE.publishMoneyChanged(moneyDisplay.getMoney() + price);
-                System.out.println("Inventory full! Purchase refunded.");
-            }
-        } else {
-            System.out.println("Not enough money to buy " + itemId);
+        EventBus.INSTANCE.publishMoneyChanged(moneyDisplay.getMoney() - price);
+        if (inventoryManager.tryAddItem(a.id(), 1)) {
+            System.out.println("Bought "+a.id()+" for $"+price);
+        } else {                                               // inventory full
+            EventBus.INSTANCE.publishMoneyChanged(moneyDisplay.getMoney()+price);
+            System.out.println("Inventory full. Purchase refunded.");
         }
     }
 
-    private void sellItem(int index) {
-        String itemId = SELL_ITEMS[index];
-        int price = SELL_PRICES[index];
-
-        if (inventoryManager.tryRemoveItem(itemId, 1)) {
-            EventBus.INSTANCE.publishMoneyChanged(moneyDisplay.getMoney() + price);
-            System.out.println("Sold " + itemId + " for $" + price);
-        } else {
-            System.out.println("No " + itemId + " to sell!");
+    private void sell(ShopArticle a) {
+        if (!inventoryManager.tryRemoveItem(a.id(),1)) {
+            System.out.println("No "+a.id()+" to sell");
+            return;
         }
+        EventBus.INSTANCE.publishMoneyChanged(moneyDisplay.getMoney()+a.price());
+        System.out.println("Sold "+a.id()+" for $"+a.price());
     }
-
 }

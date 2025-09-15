@@ -1,0 +1,230 @@
+@startuml Farm Game - Main Interaction Flow
+
+title Farm Game - Complete System Interaction Flow
+
+actor Player
+participant InputManager
+participant WorldInteractionInput
+participant PlayerMovementController
+participant AutoMovementController
+participant ShopCommand
+participant HouseCommand
+participant PlantSeedCommand
+participant HarvestCommand
+participant ShopUI
+participant InventoryManager
+participant DayNightCycle
+participant PlantGrowthState
+participant SimpleBlockWorld
+participant Hotbar
+participant MoneyDisplay
+
+== Game Initialization ==
+Player -> InputManager: Start Game
+InputManager -> WorldInteractionInput: Initialize Input Handlers
+WorldInteractionInput -> PlayerMovementController: Setup Movement Controller
+PlayerMovementController -> AutoMovementController: Create Auto Movement
+note right: Game systems initialized with dependencies
+
+== Shop Interaction (Day Time) ==
+Player -> InputManager: Left Click on Shop
+InputManager -> WorldInteractionInput: onAction(WORLD_INTERACT)
+WorldInteractionInput -> WorldInteractionInput: handleWorldClick()
+WorldInteractionInput -> WorldInteractionInput: handleObjectClick(playerPos)
+WorldInteractionInput -> ShopCommand: new ShopCommand(shopModel, shopUI, dayNightCycle)
+WorldInteractionInput -> ShopCommand: isValidTarget()
+ShopCommand -> DayNightCycle: isDay()
+DayNightCycle --> ShopCommand: true
+ShopCommand --> WorldInteractionInput: true
+
+alt Player in Range
+    WorldInteractionInput -> ShopCommand: execute()
+    ShopCommand -> DayNightCycle: isNight()
+    DayNightCycle --> ShopCommand: false
+    ShopCommand -> ShopUI: setVisible(true)
+    ShopUI --> ShopCommand: success
+    ShopCommand --> WorldInteractionInput: true
+else Player Out of Range
+    WorldInteractionInput -> AutoMovementController: startAutoMovement(shopCommand)
+    AutoMovementController -> AutoMovementController: Auto-navigate to shop
+    note right: Player automatically moves to shop
+    AutoMovementController -> ShopCommand: execute() when in range
+end
+
+== Shop Interaction (Night Time) ==
+Player -> InputManager: Left Click on Shop (Night)
+InputManager -> WorldInteractionInput: onAction(WORLD_INTERACT)
+WorldInteractionInput -> ShopCommand: new ShopCommand(shopModel, shopUI, dayNightCycle)
+WorldInteractionInput -> ShopCommand: isValidTarget()
+ShopCommand -> DayNightCycle: isDay()
+DayNightCycle --> ShopCommand: false
+ShopCommand --> WorldInteractionInput: false
+WorldInteractionInput -> WorldInteractionInput: Print "Cannot perform action - invalid target"
+
+== House Interaction (Sleep) ==
+Player -> InputManager: Left Click on House (Night)
+InputManager -> WorldInteractionInput: onAction(WORLD_INTERACT)
+WorldInteractionInput -> HouseCommand: new HouseCommand(houseModel, dayNightCycle)
+WorldInteractionInput -> HouseCommand: isValidTarget()
+HouseCommand -> DayNightCycle: isNight()
+DayNightCycle --> HouseCommand: true
+HouseCommand --> WorldInteractionInput: true
+WorldInteractionInput -> HouseCommand: execute()
+HouseCommand -> DayNightCycle: skipToDay()
+DayNightCycle -> DayNightCycle: currentTime = 30f, isDay = true
+DayNightCycle --> HouseCommand: success
+HouseCommand --> WorldInteractionInput: true
+
+== Plant Seeds Workflow ==
+Player -> InputManager: Select Seeds from Hotbar
+InputManager -> Hotbar: select(seedSlot)
+Player -> InputManager: Left Click on Plowed Soil
+InputManager -> WorldInteractionInput: onAction(WORLD_INTERACT)
+WorldInteractionInput -> WorldInteractionInput: handleBlockClick(playerPos)
+WorldInteractionInput -> Hotbar: getSelectedItem()
+Hotbar --> WorldInteractionInput: seedItem
+WorldInteractionInput -> PlantSeedCommand: new PlantSeedCommand(plantKind, targetBlock, ...)
+WorldInteractionInput -> PlantSeedCommand: isValidTarget()
+PlantSeedCommand -> SimpleBlockWorld: getBlock(x, y, z)
+SimpleBlockWorld --> PlantSeedCommand: PLOWED_DRY/WET
+PlantSeedCommand -> PlantGrowthState: HasNotPlantAt(aboveBlock)
+PlantGrowthState --> PlantSeedCommand: true
+PlantSeedCommand --> WorldInteractionInput: true
+
+alt Player in Range
+    WorldInteractionInput -> PlantSeedCommand: execute()
+    PlantSeedCommand -> PlantFactory: createPlant(plantKind, soilPos)
+    PlantFactory --> PlantSeedCommand: plantSpatial
+    PlantSeedCommand -> PlantGrowthState: registerPlanted(kind, soil, above, spatial)
+    PlantSeedCommand -> InventoryManager: tryRemoveItem(seedId, 1)
+    InventoryManager -> Hotbar: Update seed count
+    InventoryManager -> SimpleEventBus: publishInventoryChanged()
+    PlantSeedCommand --> WorldInteractionInput: true
+else Player Out of Range
+    WorldInteractionInput -> AutoMovementController: startAutoMovement(plantCommand)
+end
+
+== Harvest Plants Workflow ==
+Player -> InputManager: Left Click on Mature Plant
+InputManager -> WorldInteractionInput: onAction(WORLD_INTERACT)
+WorldInteractionInput -> WorldInteractionInput: handleHarvestAttempt()
+WorldInteractionInput -> PlantGrowthState: getPlantAt(targetBlock)
+PlantGrowthState --> WorldInteractionInput: plant (stageIndex == 3)
+WorldInteractionInput -> HarvestCommand: new HarvestCommand(targetBlock, ...)
+WorldInteractionInput -> HarvestCommand: isValidTarget()
+HarvestCommand -> PlantGrowthState: getPlantAt(targetBlock)
+PlantGrowthState --> HarvestCommand: plant
+HarvestCommand --> WorldInteractionInput: plant.stageIndex == 3
+
+alt Player in Range
+    WorldInteractionInput -> HarvestCommand: execute()
+    HarvestCommand -> InventoryManager: tryAddItem(harvestedItem, count)
+    InventoryManager -> Hotbar: Add harvested items
+    InventoryManager -> SimpleEventBus: publishInventoryChanged()
+    HarvestCommand -> PlantGrowthState: Update plant stage to 4 (harvested)
+    HarvestCommand -> AssetManager: Load harvested model
+    HarvestCommand -> PlantGrowthState: Replace plant spatial with harvested model
+    HarvestCommand --> WorldInteractionInput: true
+end
+
+== Auto Movement System ==
+PlayerMovementController -> AutoMovementController: updateAutoMovement(playerPos)
+AutoMovementController -> AutoMovementController: canContinueAutoMovement()
+AutoMovementController -> AutoMovementController: hasReachedTarget(playerPos)
+
+alt Target Reached
+    AutoMovementController -> InteractionCommand: execute()
+    InteractionCommand --> AutoMovementController: success
+    AutoMovementController -> AutoMovementController: stopAutoMovement()
+else Path Finding
+    AutoMovementController -> AutoMovementController: findMovementDirection(currentPos)
+    AutoMovementController -> CollisionChecker: isPathClear(startPos, direction)
+    CollisionChecker -> CollisionChecker: Check shop/house/plant collisions
+    CollisionChecker --> AutoMovementController: pathClear
+    
+    alt Path Clear
+        AutoMovementController --> PlayerMovementController: movement direction
+    else Path Blocked
+        AutoMovementController -> AutoMovementController: findAvoidanceDirection()
+        AutoMovementController --> PlayerMovementController: avoidance direction
+    end
+end
+
+== Shop Purchase Workflow ==
+Player -> ShopUI: Click Buy Item
+ShopUI -> MoneyDisplay: getMoney()
+MoneyDisplay --> ShopUI: currentMoney
+
+alt Sufficient Money
+    ShopUI -> SimpleEventBus: publishMoneyChanged(money - price)
+    SimpleEventBus -> MoneyDisplay: updateMoneyDisplay(newAmount)
+    ShopUI -> InventoryManager: tryAddItem(itemId, 1)
+    InventoryManager -> Hotbar: Add item to slot
+    InventoryManager -> SimpleEventBus: publishInventoryChanged()
+    SimpleEventBus -> Hotbar: updateInventorySlot()
+else Insufficient Money
+    ShopUI -> ShopUI: Print "Not enough money"
+end
+
+== Day/Night Cycle & Plant Growth ==
+loop Game Running
+    DayNightCycle -> DayNightCycle: update(tpf)
+    DayNightCycle -> DayNightCycle: Update currentTime
+    DayNightCycle -> DayNightCycle: Calculate isDay/isNight
+    
+    alt Day Time
+        PlantGrowthState -> PlantGrowthState: shouldUpdate()
+        PlantGrowthState --> PlantGrowthState: !plants.isEmpty() && !dayNightCycle.isNight()
+        PlantGrowthState -> PlantGrowthState: updateTimedStates(tpf)
+        
+        loop For Each Plant
+            PlantGrowthState -> SimpleBlockWorld: getBlock(soil.x, soil.y, soil.z)
+            SimpleBlockWorld --> PlantGrowthState: blockType
+            
+            alt Soil is Watered
+                PlantGrowthState -> PlantGrowthState: plant.timeLeft -= tpf
+                
+                alt Growth Timer Expired
+                    PlantGrowthState -> PlantGrowthState: plant.stageIndex++
+                    PlantGrowthState -> AssetManager: Load next stage model
+                    PlantGrowthState -> PlantGrowthState: Replace plant spatial
+                end
+            end
+        end
+    end
+end
+
+== Save/Load Game ==
+Player -> InputManager: Press Save Key
+InputManager -> SaveLoadInput: onAction(SAVE_GAME)
+SaveLoadInput -> GameSaveManager: saveGame(gameInstance)
+GameSaveManager -> Main: collectGameData()
+GameSaveManager -> Hotbar: getSlotItem() for each slot
+GameSaveManager -> SimpleBlockWorld: getAllBlocks()
+GameSaveManager -> PlantGrowthState: getAllPlants()
+GameSaveManager -> DayNightCycle: getCurrentTime(), isDay()
+GameSaveManager -> GameSaveManager: Convert to JSON and write file
+
+Player -> InputManager: Press Load Key
+InputManager -> SaveLoadInput: onAction(LOAD_GAME)
+SaveLoadInput -> GameSaveManager: loadGame(gameInstance)
+GameSaveManager -> GameSaveManager: Read and parse JSON file
+GameSaveManager -> Main: applyGameData(saveData)
+GameSaveManager -> SimpleBlockWorld: clearAll(), setBlock() for each block
+GameSaveManager -> PlantGrowthState: clearAll(), registerPlantWithState() for each plant
+GameSaveManager -> Hotbar: clearSlot(), addItemToSlot() for each item
+GameSaveManager -> DayNightCycle: setCurrentTime()
+
+== UI State Management ==
+PlayerMovementController -> PlayerMovementController: handleMovement(..., isUIOpen)
+
+alt UI Open (Shop)
+    PlayerMovementController -> PlayerMovementController: return (block movement)
+else UI Closed
+    PlayerMovementController -> PlayerMovementController: Process normal movement
+    PlayerMovementController -> AutoMovementController: cancelAutoMovement() if manual input
+    PlayerMovementController -> CollisionChecker: isPositionBlocked(newPos)
+    PlayerMovementController -> WorldBounds: clampToWorldBounds(newPos)
+end
+
+@enduml

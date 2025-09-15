@@ -1,5 +1,7 @@
 plugins {
     id("java")
+    id("application")
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "org.game"
@@ -17,10 +19,8 @@ dependencies {
     implementation("org.jmonkeyengine:jme3-effects:3.8.1-stable")
     implementation("org.jmonkeyengine:jme3-plugins:3.8.1-stable")
     implementation("org.jmonkeyengine:jme3-jogg:3.8.1-stable")
-//    implementation("org.jmonkeyengine:jme3-bullet:3.8.1-stable")
-//    implementation("org.jmonkeyengine:jme3-bullet-native:3.8.1-stable")
 }
 
-tasks.test {
-    useJUnitPlatform()
+application {
+    mainClass.set("org.game.Main")
 }

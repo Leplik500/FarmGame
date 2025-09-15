@@ -21,8 +21,8 @@ import com.jme3.system.AppSettings;
 import com.jme3.texture.Texture;
 import com.jme3.util.SkyFactory;
 import org.game.input.*;
-import org.game.services.PlayerService;
-import org.game.services.WorldService;
+import org.game.contexts.PlayerContext;
+import org.game.contexts.WorldContext;
 
 import java.awt.*;
 
@@ -195,19 +195,19 @@ public class Main extends SimpleApplication implements ActionListener {
         UIInput uiInput = new UIInput(shopUI);
         GameSaveManager saveManager = new GameSaveManager();
 
-        WorldService worldService = new WorldService(
+        WorldContext worldContext = new WorldContext(
                 blockWorld, growth, moisture, plantFactory, inventoryManager,
                 shopModel, houseModel, dayNightCycle, assetManager
         );
 
-        PlayerService playerService = new PlayerService(player, movementController);
+        PlayerContext playerContext = new PlayerContext(player, movementController);
 
         InteractionCommandFactory commandFactory = new InteractionCommandFactory(
-                worldService, playerService, hotbar, shopUI
+                worldContext, playerContext, hotbar, shopUI
         );
 
         WorldInteractionInput worldInput = new WorldInteractionInput(
-                worldService, playerService, commandFactory, cam, inputManager, shopUI
+                worldContext, commandFactory, cam, inputManager, shopUI
         );
 
         return new InputModules(cameraInput, hotbarInput, movementInput,

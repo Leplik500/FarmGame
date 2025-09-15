@@ -2,30 +2,25 @@ package org.game.input;
 
 import com.jme3.input.controls.ActionListener;
 import com.jme3.math.Vector2f;
-import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
 import com.jme3.input.InputManager;
 import com.jme3.scene.Spatial;
 import org.game.*;
-import org.game.commands.*;
-import org.game.services.WorldService;
-import org.game.services.PlayerService;
+import org.game.contexts.WorldContext;
 
 public class WorldInteractionInput implements ActionListener {
-    private final WorldService worldService;
-    private final PlayerService playerService;
+    private final WorldContext worldContext;
     private final InteractionCommandFactory commandFactory;
     private final RaycastHelper raycastHelper;
     private final ShopUI shopUI;
 
-    public WorldInteractionInput(WorldService worldService, PlayerService playerService,
+    public WorldInteractionInput(WorldContext worldContext,
                                  InteractionCommandFactory commandFactory, Camera camera,
                                  InputManager inputManager, ShopUI shopUI) {
-        this.worldService = worldService;
-        this.playerService = playerService;
+        this.worldContext = worldContext;
         this.commandFactory = commandFactory;
         this.shopUI = shopUI;
-        this.raycastHelper = new RaycastHelper(camera, inputManager, worldService.getWorld());
+        this.raycastHelper = new RaycastHelper(camera, inputManager, worldContext.world());
     }
 
     @Override
@@ -63,7 +58,7 @@ public class WorldInteractionInput implements ActionListener {
     }
 
     private Spatial getClickedObject() {
-        return raycastHelper.getClickedObject(worldService.getShopModel(),
-                worldService.getHouseModel());
+        return raycastHelper.getClickedObject(worldContext.shopModel(),
+                worldContext.houseModel());
     }
 }

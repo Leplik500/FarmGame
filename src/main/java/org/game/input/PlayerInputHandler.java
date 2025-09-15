@@ -14,7 +14,7 @@ public class PlayerInputHandler {
     public void handleKeyPress(String keyName) {
         pressedKeys.add(keyName);
         if (InputNames.MOVE_FWD.equals(keyName)) {
-            checkForDoubleTab();
+            checkForDoubleWPress();
         }
     }
 
@@ -29,7 +29,7 @@ public class PlayerInputHandler {
         isWalking = !pressedKeys.isEmpty();
     }
 
-    private void checkForDoubleTab() {
+    private void checkForDoubleWPress() {
         long now = System.nanoTime();
         if (now - lastWPressTime <= GameConfig.DOUBLE_TAP_WINDOW_NS) {
             isRunning = true;

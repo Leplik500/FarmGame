@@ -1,28 +1,27 @@
 package org.game;
 
-import com.jme3.asset.AssetManager;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
 import org.game.commands.*;
-import org.game.services.WorldService;
-import org.game.services.PlayerService;
+import org.game.contexts.WorldContext;
+import org.game.contexts.PlayerContext;
 
 public class InteractionCommandFactory {
-    private final WorldService worldService;
-    private final PlayerService playerService;
+    private final WorldContext worldContext;
+    private final PlayerContext playerContext;
     private final Hotbar hotbar;
     private final ShopUI shopUI;
 
-    public InteractionCommandFactory(WorldService worldService, PlayerService playerService,
+    public InteractionCommandFactory(WorldContext worldContext, PlayerContext playerContext,
                                      Hotbar hotbar, ShopUI shopUI) {
-        this.worldService = worldService;
-        this.playerService = playerService;
+        this.worldContext = worldContext;
+        this.playerContext = playerContext;
         this.hotbar = hotbar;
         this.shopUI = shopUI;
     }
 
     public InteractionCommand createCommand(Vector3i targetBlock, Spatial clickedObject) {
-        Vector3f playerPos = playerService.getPlayer().getWorldTranslation();
+        Vector3f playerPos = playerContext.player().getWorldTranslation();
 
         // Handle object interactions first
         if (clickedObject != null) {
@@ -34,19 +33,19 @@ public class InteractionCommandFactory {
     }
 
     private InteractionCommand createObjectCommand(Spatial clickedObject, Vector3f playerPos) {
-        if (clickedObject == worldService.getShopModel()) {
-            ShopCommand shopCommand = new ShopCommand(worldService.getShopModel(),
-                    shopUI, worldService.getDayNightCycle());
+        if (clickedObject == worldContext.shopModel()) {
+            ShopCommand shopCommand = new ShopCommand(worldContext.shopModel(),
+                    shopUI, worldContext.dayNightCycle());
             return shouldAutoMove(shopCommand, playerPos) ?
-                    new AutoMoveCommand(shopCommand, playerService.getMovementController()) :
+                    new AutoMoveCommand(shopCommand, playerContext.movementController()) :
                     shopCommand;
         }
 
-        if (clickedObject == worldService.getHouseModel()) {
-            HouseCommand houseCommand = new HouseCommand(worldService.getHouseModel(),
-                    worldService.getDayNightCycle());
+        if (clickedObject == worldContext.houseModel()) {
+            HouseCommand houseCommand = new HouseCommand(worldContext.houseModel(),
+                    worldContext.dayNightCycle());
             return shouldAutoMove(houseCommand, playerPos) ?
-                    new AutoMoveCommand(houseCommand, playerService.getMovementController()) :
+                    new AutoMoveCommand(houseCommand, playerContext.movementController()) :
                     houseCommand;
         }
 
@@ -65,7 +64,7 @@ public class InteractionCommandFactory {
         // Handle item-based commands
         InteractionCommand command = createItemCommand(selectedItem.id(), targetBlock);
         if (command != null && shouldAutoMove(command, playerPos)) {
-            return new AutoMoveCommand(command, playerService.getMovementController());
+            return new AutoMoveCommand(command, playerContext.movementController());
         }
 
         return command;
@@ -73,26 +72,26 @@ public class InteractionCommandFactory {
 
     private InteractionCommand createHarvestCommandIfPossible(Vector3i aboveBlock, Vector3i targetBlock, Vector3f playerPos) {
         // Check above block first
-        if (worldService.getGrowth().getPlantAt(aboveBlock) != null &&
-                worldService.getGrowth().getPlantAt(aboveBlock).stageIndex == 3) {
+        if (worldContext.growth().getPlantAt(aboveBlock) != null &&
+                worldContext.growth().getPlantAt(aboveBlock).stageIndex == 3) {
 
-            HarvestCommand harvestCommand = new HarvestCommand(aboveBlock, worldService.getGrowth(),
-                    worldService.getAssetManager(),
-                    worldService.getInventoryManager());
+            HarvestCommand harvestCommand = new HarvestCommand(aboveBlock, worldContext.growth(),
+                    worldContext.assetManager(),
+                    worldContext.inventoryManager());
             return shouldAutoMove(harvestCommand, playerPos) ?
-                    new AutoMoveCommand(harvestCommand, playerService.getMovementController()) :
+                    new AutoMoveCommand(harvestCommand, playerContext.movementController()) :
                     harvestCommand;
         }
 
         // Check target block
-        if (worldService.getGrowth().getPlantAt(targetBlock) != null &&
-                worldService.getGrowth().getPlantAt(targetBlock).stageIndex == 3) {
+        if (worldContext.growth().getPlantAt(targetBlock) != null &&
+                worldContext.growth().getPlantAt(targetBlock).stageIndex == 3) {
 
-            HarvestCommand harvestCommand = new HarvestCommand(targetBlock, worldService.getGrowth(),
-                    worldService.getAssetManager(),
-                    worldService.getInventoryManager());
+            HarvestCommand harvestCommand = new HarvestCommand(targetBlock, worldContext.growth(),
+                    worldContext.assetManager(),
+                    worldContext.inventoryManager());
             return shouldAutoMove(harvestCommand, playerPos) ?
-                    new AutoMoveCommand(harvestCommand, playerService.getMovementController()) :
+                    new AutoMoveCommand(harvestCommand, playerContext.movementController()) :
                     harvestCommand;
         }
 
@@ -102,23 +101,23 @@ public class InteractionCommandFactory {
     public InteractionCommand createItemCommand(String itemId, Vector3i targetBlock) {
         return switch (itemId) {
             case ItemIds.PUMPKIN_SEEDS -> new PlantSeedCommand(
-                    PlantKind.PUMPKIN, targetBlock, worldService.getWorld(),
-                    worldService.getGrowth(), worldService.getPlantFactory(),
-                    worldService.getInventoryManager());
+                    PlantKind.PUMPKIN, targetBlock, worldContext.world(),
+                    worldContext.growth(), worldContext.plantFactory(),
+                    worldContext.inventoryManager());
             case ItemIds.TOMATO_SEEDS -> new PlantSeedCommand(
-                    PlantKind.TOMATO, targetBlock, worldService.getWorld(),
-                    worldService.getGrowth(), worldService.getPlantFactory(),
-                    worldService.getInventoryManager());
-            case ItemIds.HOE -> new HoeCommand(targetBlock, worldService.getWorld());
-            case ItemIds.WATERING_CAN -> new WaterCommand(targetBlock, worldService.getWorld(),
-                    worldService.getMoisture());
+                    PlantKind.TOMATO, targetBlock, worldContext.world(),
+                    worldContext.growth(), worldContext.plantFactory(),
+                    worldContext.inventoryManager());
+            case ItemIds.HOE -> new HoeCommand(targetBlock, worldContext.world());
+            case ItemIds.WATERING_CAN -> new WaterCommand(targetBlock, worldContext.world(),
+                    worldContext.moisture());
             default -> null;
         };
     }
 
     public InteractionCommand createHarvestCommand(Vector3i targetBlock) {
-        return new HarvestCommand(targetBlock, worldService.getGrowth(),
-                worldService.getAssetManager(), worldService.getInventoryManager());
+        return new HarvestCommand(targetBlock, worldContext.growth(),
+                worldContext.assetManager(), worldContext.inventoryManager());
     }
 
     private boolean shouldAutoMove(InteractionCommand command, Vector3f playerPos) {

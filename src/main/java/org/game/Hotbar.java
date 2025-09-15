@@ -75,7 +75,7 @@ public class Hotbar {
         m.setColor("Color", new ColorRGBA(1f, 1f, 0.2f, 0.6f));
         sel.setMaterial(m);
 
-        sel.setQueueBucket(RenderQueue.Bucket.Gui); // ВАЖНО [5]
+        sel.setQueueBucket(RenderQueue.Bucket.Gui);
 
         highlightNode.attachChild(sel);
     }
@@ -86,8 +86,7 @@ public class Hotbar {
         int marginBottom = 12;
         root.setLocalTranslation(x, marginBottom, 0);
     }
-
-
+    
     public HotbarItem getSelectedItem() {
         return items[selected];
     }

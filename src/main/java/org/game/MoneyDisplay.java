@@ -49,7 +49,7 @@ public class MoneyDisplay {
         int hotbarX = (screenW - totalHotbarW) / 2;
         int marginBottom = 12;
 
-        int x = hotbarX + totalHotbarW + 20; // 20px отступ от хотбара
+        int x = hotbarX + totalHotbarW + 20;
         root.setLocalTranslation(x, marginBottom, 0);
     }
 
