@@ -1,284 +1,681 @@
 @startuml
 !theme plain
-skinparam classFontSize 12
-skinparam packageFontSize 14
+skinparam packageStyle rectangle
+skinparam classFontSize 10
+skinparam packageFontSize 12
 skinparam classAttributeIconSize 0
 
-package "Commands" {
-  interface InteractionCommand {
-    +execute(): boolean
-    +getTargetPosition(): Vector3f
-    +canExecuteAtCurrentPosition(playerPos: Vector3f): boolean
-    +isValidTarget(): boolean
-    +getDescription(): String
-  }
-
-  abstract class AbstractBlockCommand {
-    #targetBlock: Vector3i
-    #world: SimpleBlockWorld
-    +execute(): boolean
-    +getTargetPosition(): Vector3f
-    +canExecuteAtCurrentPosition(playerPos: Vector3f): boolean
-    +isValidTarget(): boolean
-    #{abstract} performAction(): boolean
-    #{abstract} logSuccess(): void
-    #{abstract} isTargetBlockTypeValid(blockType: int): boolean
-  }
-
-  class HoeCommand {
-    +getDescription(): String
-  }
-
-  class PlantSeedCommand {
-    -plantKind: PlantKind
-    -growth: PlantGrowthState
-    -plantFactory: PlantFactory
-    -inventoryManager: InventoryManager
-  }
-
-  class HarvestCommand {
-    -growth: PlantGrowthState
-    -assetManager: AssetManager
-    -inventoryManager: InventoryManager
-  }
-
-  class WaterCommand {
-    -moisture: FarmlandMoistureState
-  }
-
-  class ShopCommand {
-    -shopModel: Spatial
-    -shopUI: ShopUI
-    -dayNightCycle: DayNightCycle
-  }
-
-  class HouseCommand {
-    -houseModel: Spatial
-    -dayNightCycle: DayNightCycle
-  }
-
-  InteractionCommand <|.. AbstractBlockCommand
-  AbstractBlockCommand <|-- HoeCommand
-  AbstractBlockCommand <|-- WaterCommand
-  InteractionCommand <|.. PlantSeedCommand
-  InteractionCommand <|.. HarvestCommand
-  InteractionCommand <|.. ShopCommand
-  InteractionCommand <|.. HouseCommand
+package "org.game" {
+    class Main {
+        -playerFacade: PlayerFacade
+        -worldFacade: GameWorldFacade
+        -uiFacade: GameUIFacade
+        -inputHandler: PlayerInputHandler
+        -updateManager: GameUpdateManager
+        +simpleInitApp()
+        +simpleUpdate(float)
+        +onAction(String, boolean, float)
+        +getPlayer(): Spatial
+        +getMoneyDisplay(): MoneyDisplay
+        +getHotbar(): Hotbar
+        +getBlockWorld(): BlockWorld
+        +getPlantGrowthState(): PlantGrowthState
+        +getPlantFactory(): PlantFactory
+        +getDayNightCycle(): DayNightCycle
+    }
 }
 
-package "Core" {
-  class Main {
-    -player: Spatial
-    -blockWorld: SimpleBlockWorld
-    -movementController: PlayerMovementController
-    -animationController: PlayerAnimationController
-    -hotbar: Hotbar
-    -shopUI: ShopUI
-    -dayNightCycle: DayNightCycle
-    -growth: PlantGrowthState
-    -inventoryManager: InventoryManager
-    +simpleInitApp(): void
-    +simpleUpdate(tpf: float): void
-  }
+package "org.game.core" {
+    class GameSystemBuilder {
+        -app: SimpleApplication
+        -playerFacade: PlayerFacade
+        -worldFacade: GameWorldFacade
+        -uiFacade: GameUIFacade
+        -inputHandler: PlayerInputHandler
+        -camTarget: Node
+        +buildPlayer(): GameSystemBuilder
+        +buildWorld(): GameSystemBuilder
+        +buildUI(): GameSystemBuilder
+        +buildInput(): GameSystemBuilder
+        +build(): GameSystemBuilder
+        +createUpdateManager(): GameUpdateManager
+    }
 
-  class PlayerMovementController {
-    -player: Spatial
-    -camera: Camera
-    -autoMovementController: AutoMovementController
-    -collisionChecker: CollisionChecker
-    +handleMovement(pressedKeys: Set<String>, isRunning: boolean, tpf: float, isUIOpen: boolean): void
-    +setCollisionChecker(collisionChecker: CollisionChecker): void
-    +getAutoMovementController(): AutoMovementController
-  }
+    class GameUpdateManager {
+        -playerFacade: PlayerFacade
+        -worldFacade: GameWorldFacade
+        -uiFacade: GameUIFacade
+        -inputHandler: PlayerInputHandler
+        -camTarget: Node
+        +update(float)
+    }
 
-  class PlayerAnimationController {
-    -animComposer: AnimComposer
-    -currentAnimation: String
-    +update(isWalking: boolean, isRunning: boolean): void
-  }
+    interface InteractionCommand {
+        +execute(): boolean
+        +getTargetPosition(): Vector3f
+        +canExecuteAtCurrentPosition(Vector3f): boolean
+        +isValidTarget(): boolean
+        +getDescription(): String
+    }
 
-  class AutoMovementController {
-    -currentCommand: InteractionCommand
-    -isAutoMoving: boolean
-    -collisionChecker: CollisionChecker
-    +startAutoMovement(command: InteractionCommand): void
-    +cancelAutoMovement(): void
-    +updateAutoMovement(playerPos: Vector3f): Vector3f
-    +isAutoMoving(): boolean
-  }
-
-  class CollisionChecker {
-    -shopModel: Spatial
-    -houseModel: Spatial
-    -plantGrowth: PlantGrowthState
-    +isPositionBlocked(position: Vector3f): boolean
-    +isPositionBlockedWithRadius(position: Vector3f, checkRadius: float): boolean
-  }
-
-  class DayNightCycle {
-    -currentTime: float
-    -cycleDuration: float
-    -isDay: boolean
-    +isDay(): boolean
-    +isNight(): boolean
-    +getLightIntensity(): float
-    +skipToDay(): void
-  }
-
-  class PlantGrowthState {
-    -plants: Map<Vector3i, Plant>
-    -world: SimpleBlockWorld
-    -dayNightCycle: DayNightCycle
-    +registerPlanted(kind: PlantKind, soil: Vector3i, above: Vector3i, spatial: Spatial): void
-    +getPlantAt(above: Vector3i): Plant
-    +getAllPlants(): Map<Vector3i, Plant>
-  }
-
-  class Plant {
-    +kind: PlantKind
-    +soil: Vector3i
-    +above: Vector3i
-    +stageIndex: int
-    +timeLeft: float
-    +spatial: Spatial
-  }
-
-  class InventoryManager {
-    -hotbar: Hotbar
-    +tryAddItem(itemId: String, count: int): boolean
-    +tryRemoveItem(itemId: String, count: int): boolean
-  }
-
-  class Hotbar {
-    -items: HotbarItem[]
-    -selected: int
-    +getSelectedItem(): HotbarItem
-    +getSlotItem(slot: int): HotbarItem
-    +select(idx: int): void
-  }
-
-  class HotbarItem {
-    +id: String
-    +iconPath: String
-    +count: int
-    +withCount(newCount: int): HotbarItem
-  }
-
-  class ShopUI {
-    -moneyDisplay: MoneyDisplay
-    -inventoryManager: InventoryManager
-    -isVisible: boolean
-    +setVisible(visible: boolean): void
-    +isVisible(): boolean
-    +handleClick(x: float, y: float): void
-  }
-
-  Main *-- PlayerMovementController
-  Main *-- PlayerAnimationController
-  Main *-- InventoryManager
-  Main *-- DayNightCycle
-  Main *-- PlantGrowthState
-  Main *-- ShopUI
-  Main *-- Hotbar
-
-  PlayerMovementController *-- AutoMovementController
-  PlayerMovementController *-- CollisionChecker
-  
-  AutoMovementController --> InteractionCommand : uses
-  CollisionChecker --> PlantGrowthState : checks
-  
-  PlantGrowthState *-- Plant
-  PlantGrowthState --> DayNightCycle : observes
-  
-  InventoryManager --> Hotbar : manages
-  Hotbar *-- HotbarItem
-  
-  ShopUI --> InventoryManager : uses
+    class InteractionCommandFactory {
+        -worldContext: WorldContext
+        -playerContext: PlayerContext
+        -hotbar: Hotbar
+        -shopUI: ShopUI
+        +createCommand(Vector3i, Spatial): InteractionCommand
+        +createItemCommand(String, Vector3i): InteractionCommand
+    }
 }
 
-package "World" {
-  class SimpleBlockWorld {
-    -blocks: Map<Vector3i, Integer>
-    -blockGeometries: Map<Vector3i, Geometry>
-    +setBlock(x: int, y: int, z: int, blockType: int): void
-    +getBlock(x: int, y: int, z: int): int
-    +generateFlatWorld(sizeX: int, sizeZ: int): void
-  }
+package "org.game.contexts" {
+    class WorldContext <<record>> {
+        +world: BlockWorld
+        +growth: PlantGrowthState
+        +moisture: FarmlandMoistureState
+        +plantFactory: PlantFactory
+        +inventoryManager: InventoryManager
+        +shopModel: Spatial
+        +houseModel: Spatial
+        +dayNightCycle: DayNightCycle
+        +assetManager: AssetManager
+    }
 
-  class BlockType {
-    +{static} AIR: int
-    +{static} GRASS: int
-    +{static} PLOWED_DRY: int
-    +{static} PLOWED_WET: int
-    +{static} getMaterial(blockId: int, assetManager: AssetManager): Material
-  }
-
-  class PlantFactory {
-    -assetManager: AssetManager
-    -plantsRoot: Node
-    +createPlant(kind: PlantKind, soilPos: Vector3i): Spatial
-    +createPlantAtStage(kind: PlantKind, soilPos: Vector3i, stageIndex: int): Spatial
-  }
-
-  enum PlantKind {
-    PUMPKIN
-    TOMATO
-  }
+    class PlayerContext <<record>> {
+        +player: Spatial
+        +movementController: PlayerMovementController
+    }
 }
 
-package "Input" {
-  class PlayerInputHandler {
-    -pressedKeys: Set<String>
-    -isWalking: boolean
-    -isRunning: boolean
-    +handleKeyPress(keyName: String): void
-    +handleKeyRelease(keyName: String): void
-    +getPressedKeys(): Set<String>
-  }
+package "org.game.facades" {
+    class PlayerFacade {
+        -player: Spatial
+        -movementController: PlayerMovementController
+        -animationController: PlayerAnimationController
+        -animComposer: AnimComposer
+        +getPlayer(): Spatial
+        +getMovementController(): PlayerMovementController
+        +getAnimationController(): PlayerAnimationController
+    }
 
-  class WorldInteractionInput {
-    -hotbar: Hotbar
-    -movementController: PlayerMovementController
-    -commandFactory: InteractionCommandFactory
-    +onAction(name: String, isPressed: boolean, tpf: float): void
-  }
+    class GameWorldFacade {
+        -blockWorld: BlockWorld
+        -plantGrowthState: PlantGrowthState
+        -moistureState: FarmlandMoistureState
+        -plantFactory: PlantFactory
+        -dayNightCycle: DayNightCycle
+        -sunLight: DirectionalLight
+        -ambientLight: AmbientLight
+        -shopModel: Spatial
+        -houseModel: Spatial
+        +updateLighting()
+        +getBlockWorld(): BlockWorld
+        +getPlantGrowthState(): PlantGrowthState
+        +getMoistureState(): FarmlandMoistureState
+        +getPlantFactory(): PlantFactory
+        +getDayNightCycle(): DayNightCycle
+        +getShopModel(): Spatial
+        +getHouseModel(): Spatial
+    }
 
-  class InteractionCommandFactory {
-    -world: SimpleBlockWorld
-    -growth: PlantGrowthState
-    -inventoryManager: InventoryManager
-    +createItemCommand(itemId: String, targetBlock: Vector3i): InteractionCommand
-    +createHarvestCommand(targetBlock: Vector3i): InteractionCommand
-  }
+    class GameUIFacade {
+        -hotbar: Hotbar
+        -moneyDisplay: MoneyDisplay
+        -shopUI: ShopUI
+        -inventoryManager: InventoryManager
+        -raycastHelper: RaycastHelper
+        -chaseCamera: ChaseCamera
+        -faceHighlight: Spatial
+        +updateFaceHighlight()
+        +updateViewport(int, int)
+        +getHotbar(): Hotbar
+        +getMoneyDisplay(): MoneyDisplay
+        +getShopUI(): ShopUI
+        +getInventoryManager(): InventoryManager
+        +getChaseCamera(): ChaseCamera
+    }
 }
 
-package "Utilities" {
-  class Vector3i {
-    +x: int
-    +y: int
-    +z: int
-  }
+package "org.game.ui" {
+    class Hotbar {
+        -root: Node
+        -items: HotbarItem[]
+        -selected: int
+        -assetManager: AssetManager
+        +getSelectedItem(): HotbarItem
+        +getSlotItem(int): HotbarItem
+        +select(int)
+        +step(int)
+        +addItemToSlot(int, HotbarItem)
+        +clearSlot(int)
+        +updateViewportSizeIfChanged(int, int)
+    }
 
-  class ActionRange {
-    -{static} PRECISION_TOLERANCE: float
-    +{static} isWithinRange(playerPos: Vector3f, targetPos: Vector3f): boolean
-    +{static} isWithinRange(playerPos: Vector3f, blockPos: Vector3i): boolean
-  }
+    class HotbarItem <<record>> {
+        +id: String
+        +iconPath: String
+        +count: int
+        +withCount(int): HotbarItem
+    }
 
-  class GameConfig {
-    +{static} MAX_INTERACTION_RANGE: float
-    +{static} WALK_SPEED: float
-    +{static} RUN_SPEED: float
-    +{static} DAY_DURATION_SECONDS: float
-    +{static} NIGHT_DURATION_SECONDS: float
-  }
+    class ShopUI {
+        -root: Node
+        -moneyDisplay: MoneyDisplay
+        -assetManager: AssetManager
+        -inventoryManager: InventoryManager
+        -visible: boolean
+        +setVisible(boolean)
+        +isVisible(): boolean
+        +handleClick(float, float)
+    }
+
+    enum ShopArticle {
+        BUY_PUMPKIN_SEEDS
+        BUY_TOMATO_SEEDS
+        SELL_PUMPKIN
+        SELL_TOMATO
+        -itemId: String
+        -icon: String
+        -price: int
+        +id(): String
+        +icon(): String
+        +price(): int
+        +isBuy(): boolean
+    }
+
+    class MoneyDisplay {
+        -root: Node
+        -moneyText: BitmapText
+        -money: int
+        +setMoney(int)
+        +getMoney(): int
+        +addMoney(int)
+        +updatePosition(int)
+    }
 }
 
-' Cross-package relationships
-Commands ..> World : uses
-Core ..> Commands : creates
-Core ..> World : manages
-Input ..> Commands : creates
-Input ..> Core : controls
+package "org.game.world" {
+    class Vector3i <<record>> {
+        +x: int
+        +y: int
+        +z: int
+    }
+
+    class BlockType {
+        +{static} AIR: int
+        +{static} GRASS: int
+        +{static} PLOWED_DRY: int
+        +{static} PLOWED_WET: int
+        +{static} getMaterial(int, AssetManager): Material
+    }
+
+    class BlockWorld {
+        -blocks: Map<Vector3i, Integer>
+        -blockGeometries: Map<Vector3i, Geometry>
+        -worldRoot: Node
+        -assetManager: AssetManager
+        +setBlock(int, int, int, int)
+        +getBlock(int, int, int): int
+        +generateFlatWorld(int, int)
+        +getAllBlocks(): Map<String, Integer>
+        +clearAll()
+    }
+
+    class WorldBounds {
+        +{static} clampToWorldBounds(Vector3f): Vector3f
+    }
+
+    class PlantFactory {
+        -assetManager: AssetManager
+        -plantsRoot: Node
+        +createPlant(PlantKind, Vector3i): Spatial
+        +createPlantAtStage(PlantKind, Vector3i, int): Spatial
+    }
+
+    enum PlantKind {
+        PUMPKIN
+        TOMATO
+    }
+}
+
+package "org.game.states" {
+    abstract class TimedStateManager {
+        +update(float)
+        #{abstract} shouldUpdate(): boolean
+        #{abstract} updateTimedStates(float)
+        #{abstract} performCleanup()
+    }
+
+    class DayNightCycle {
+        -currentTime: float
+        -cycleDuration: float
+        -isDay: boolean
+        +isDay(): boolean
+        +isNight(): boolean
+        +getLightIntensity(): float
+        +skipToDay()
+        +getCurrentTime(): float
+        +setCurrentTime(float)
+    }
+
+    class PlantGrowthState {
+        -world: BlockWorld
+        -assetManager: AssetManager
+        -plantsRoot: Node
+        -dayNightCycle: DayNightCycle
+        -plants: Map<Vector3i, Plant>
+        +hasNotPlantAt(Vector3i): boolean
+        +registerPlanted(PlantKind, Vector3i, Vector3i, Spatial)
+        +getPlantAt(Vector3i): Plant
+        +getAllPlants(): Map<Vector3i, Plant>
+        +clearAll()
+        +registerPlantWithState(PlantKind, Vector3i, Vector3i, Spatial, int, float)
+    }
+
+    class Plant {
+        +kind: PlantKind
+        +soil: Vector3i
+        +above: Vector3i
+        +stageIndex: int
+        +timeLeft: float
+        +spatial: Spatial
+    }
+
+    class FarmlandMoistureState {
+        -world: BlockWorld
+        -timers: Map<Vector3i, Float>
+        +markWet(Vector3i, Float)
+    }
+}
+
+package "org.game.commands" {
+    abstract class AbstractBlockCommand {
+        #targetBlock: Vector3i
+        #world: BlockWorld
+        +execute(): boolean
+        +getTargetPosition(): Vector3f
+        +canExecuteAtCurrentPosition(Vector3f): boolean
+        +isValidTarget(): boolean
+        #{abstract} performAction(): boolean
+        #{abstract} logSuccess()
+        #{abstract} isTargetBlockTypeValid(int): boolean
+        +{abstract} getDescription(): String
+    }
+
+    abstract class AbstractLocationCommand {
+        #model: Spatial
+        #dayNightCycle: DayNightCycle
+        +getTargetPosition(): Vector3f
+        +canExecuteAtCurrentPosition(Vector3f): boolean
+        +{abstract} execute(): boolean
+        +{abstract} isValidTarget(): boolean
+        +{abstract} getDescription(): String
+    }
+
+    class HoeCommand {
+        +getDescription(): String
+    }
+
+    class WaterCommand {
+        -moisture: FarmlandMoistureState
+        +getDescription(): String
+    }
+
+    class PlantSeedCommand {
+        -plantKind: PlantKind
+        -growth: PlantGrowthState
+        -plantFactory: PlantFactory
+        -inventoryManager: InventoryManager
+        +isValidTarget(): boolean
+        +getDescription(): String
+    }
+
+    class HarvestCommand {
+        -targetBlock: Vector3i
+        -growth: PlantGrowthState
+        -assetManager: AssetManager
+        -inventoryManager: InventoryManager
+        +execute(): boolean
+        +getTargetPosition(): Vector3f
+        +canExecuteAtCurrentPosition(Vector3f): boolean
+        +getDescription(): String
+        +isValidTarget(): boolean
+    }
+
+    class ShopCommand {
+        -shopUI: ShopUI
+        +execute(): boolean
+        +isValidTarget(): boolean
+        +getDescription(): String
+    }
+
+    class HouseCommand {
+        +execute(): boolean
+        +isValidTarget(): boolean
+        +getDescription(): String
+    }
+
+    class AutoMoveCommand {
+        -targetCommand: InteractionCommand
+        -movementController: PlayerMovementController
+        +execute(): boolean
+        +getTargetPosition(): Vector3f
+        +canExecuteAtCurrentPosition(Vector3f): boolean
+        +isValidTarget(): boolean
+        +getDescription(): String
+    }
+}
+
+package "org.game.player" {
+    class PlayerMovementController {
+        -player: Spatial
+        -camera: Camera
+        -autoMovementController: AutoMovementController
+        -collisionChecker: CollisionChecker
+        +handleMovement(Set<String>, boolean, float, boolean)
+        +setCollisionChecker(CollisionChecker)
+        +getAutoMovementController(): AutoMovementController
+    }
+
+    class PlayerAnimationController {
+        -animComposer: AnimComposer
+        -currentAnimation: String
+        +update(boolean, boolean)
+    }
+
+    class AutoMovementController {
+        -currentCommand: InteractionCommand
+        -isAutoMoving: boolean
+        -collisionChecker: CollisionChecker
+        +startAutoMovement(InteractionCommand)
+        +cancelAutoMovement()
+        +updateAutoMovement(Vector3f): Vector3f
+        +isAutoMoving(): boolean
+    }
+
+    class CollisionChecker {
+        -shopModel: Spatial
+        -houseModel: Spatial
+        -plantGrowth: PlantGrowthState
+        +isPositionBlocked(Vector3f): boolean
+        +isPositionBlockedWithRadius(Vector3f, float): boolean
+    }
+}
+
+package "org.game.systems" {
+    class InventoryManager {
+        -hotbar: Hotbar
+        +tryAddItem(String, int): boolean
+        +tryRemoveItem(String, int): boolean
+    }
+
+    class RaycastHelper {
+        -camera: Camera
+        -inputManager: InputManager
+        -world: BlockWorld
+        +getBlockUnderCursor(): Vector3i
+        +getClickedObject(Spatial, Spatial): Spatial
+        +getRaycastForHighlight(): RaycastResult
+        +getCursorPosition(): Vector2f
+    }
+
+    class RaycastResult <<record>> {
+        +blockPos: Vector3i
+        +attachDirection: Vector3f
+    }
+
+    class GameSaveManager {
+        -gson: Gson
+        +saveGame(Main)
+        +loadGame(Main)
+    }
+
+    class GameSaveData {
+        +playerX: float
+        +playerY: float
+        +playerZ: float
+        +money: int
+        +inventory: List<HotbarItemData>
+        +blocks: Map<String, Integer>
+        +plants: List<PlantData>
+        +currentTime: float
+        +isDay: boolean
+    }
+
+    class HotbarItemData {
+        +id: String
+        +iconPath: String
+        +count: int
+        +slot: int
+    }
+
+    class PlantData {
+        +kind: String
+        +soilX: int
+        +soilY: int
+        +soilZ: int
+        +aboveX: int
+        +aboveY: int
+        +aboveZ: int
+        +stageIndex: int
+        +timeLeft: float
+    }
+}
+
+package "org.game.input" {
+    class PlayerInputHandler {
+        -pressedKeys: Set<String>
+        -isWalking: boolean
+        -isRunning: boolean
+        -lastWPressTime: long
+        +handleKeyPress(String)
+        +handleKeyRelease(String)
+        +updateWalkingState()
+        +getPressedKeys(): Set<String>
+        +isWalking(): boolean
+        +isRunning(): boolean
+    }
+
+    class GameInputRouter {
+        -input: InputManager
+        -analogModules: List<AnalogListener>
+        -actionModules: List<ActionListener>
+        +addAnalogModule(AnalogListener)
+        +addActionModule(ActionListener)
+        +onAction(String, boolean, float)
+        +onAnalog(String, float, float)
+    }
+
+    class WorldInteractionInput {
+        -worldContext: WorldContext
+        -commandFactory: InteractionCommandFactory
+        -raycastHelper: RaycastHelper
+        -shopUI: ShopUI
+        +onAction(String, boolean, float)
+    }
+
+    class CameraInput {
+        -chaseCam: ChaseCamera
+        -ctrlDown: boolean
+        +onAction(String, boolean, float)
+        +onAnalog(String, float, float)
+        +isCtrlDown(): boolean
+    }
+
+    class HotbarInput {
+        -hotbar: Hotbar
+        -cameraInput: CameraInput
+        +onAction(String, boolean, float)
+        +onAnalog(String, float, float)
+    }
+
+    class MovementInput {
+        -handler: PlayerInputHandler
+        +onAction(String, boolean, float)
+    }
+
+    class UIInput {
+        -shopUI: ShopUI
+        +onAction(String, boolean, float)
+    }
+
+    class SaveLoadInput {
+        -gameInstance: Main
+        -saveManager: GameSaveManager
+        +onAction(String, boolean, float)
+    }
+
+    class InputNames {
+        +{static} MOVE_FWD: String
+        +{static} MOVE_BACK: String
+        +{static} MOVE_LEFT: String
+        +{static} MOVE_RIGHT: String
+        +{static} CTRL: String
+        +{static} WORLD_INTERACT: String
+        +{static} CLOSE_UI: String
+        +{static} hotbarSlot(int): String
+    }
+}
+
+package "org.game.events" {
+    enum EventBus {
+        INSTANCE
+        -moneyHandlers: Map<String, MoneyEventHandler>
+        -inventoryHandlers: Map<String, InventoryEventHandler>
+        +subscribeToMoney(String, MoneyEventHandler)
+        +subscribeToInventory(String, InventoryEventHandler)
+        +publishMoneyChanged(int)
+        +publishInventoryChanged(int, HotbarItem)
+    }
+
+    interface MoneyEventHandler {
+        +handleMoneyChanged(int)
+    }
+
+    interface InventoryEventHandler {
+        +handleInventoryChanged(int, HotbarItem)
+    }
+}
+
+package "org.game.utils" {
+    class ItemIds {
+        +{static} PUMPKIN_SEEDS: String
+        +{static} TOMATO_SEEDS: String
+        +{static} HOE: String
+        +{static} WATERING_CAN: String
+        +{static} PUMPKIN: String
+        +{static} TOMATO: String
+    }
+
+    class GameConfig {
+        +{static} SCREEN_WIDTH: int
+        +{static} SCREEN_HEIGHT: int
+        +{static} WALK_SPEED: float
+        +{static} RUN_SPEED: float
+        +{static} MAX_INTERACTION_RANGE: float
+        +{static} DAY_DURATION_SECONDS: float
+        +{static} NIGHT_DURATION_SECONDS: float
+    }
+
+    class ActionRange {
+        +{static} isWithinRange(Vector3f, Vector3f): boolean
+        +{static} isWithinRange(Vector3f, Vector3i): boolean
+    }
+}
+
+' Relationships
+Main *-- GameSystemBuilder
+Main *-- PlayerFacade
+Main *-- GameWorldFacade  
+Main *-- GameUIFacade
+Main *-- PlayerInputHandler
+Main *-- GameUpdateManager
+
+GameSystemBuilder --> PlayerFacade
+GameSystemBuilder --> GameWorldFacade
+GameSystemBuilder --> GameUIFacade
+GameSystemBuilder --> GameUpdateManager
+
+GameUpdateManager --> PlayerFacade
+GameUpdateManager --> GameWorldFacade
+GameUpdateManager --> GameUIFacade
+
+InteractionCommandFactory --> InteractionCommand
+InteractionCommandFactory --> WorldContext
+InteractionCommandFactory --> PlayerContext
+
+PlayerFacade *-- PlayerMovementController
+PlayerFacade *-- PlayerAnimationController
+
+GameWorldFacade *-- BlockWorld
+GameWorldFacade *-- PlantGrowthState
+GameWorldFacade *-- FarmlandMoistureState
+GameWorldFacade *-- PlantFactory
+GameWorldFacade *-- DayNightCycle
+
+GameUIFacade *-- Hotbar
+GameUIFacade *-- MoneyDisplay
+GameUIFacade *-- ShopUI
+GameUIFacade *-- InventoryManager
+GameUIFacade *-- RaycastHelper
+
+Hotbar o-- HotbarItem
+ShopUI --> MoneyDisplay
+ShopUI --> InventoryManager
+
+PlantGrowthState --|> TimedStateManager
+FarmlandMoistureState --|> TimedStateManager
+PlantGrowthState o-- Plant
+PlantGrowthState --> DayNightCycle
+PlantGrowthState --> BlockWorld
+
+BlockWorld --> BlockType
+BlockWorld --> Vector3i
+PlantFactory --> PlantKind
+
+InteractionCommand <|.. AbstractBlockCommand
+InteractionCommand <|.. AbstractLocationCommand
+InteractionCommand <|.. HarvestCommand
+InteractionCommand <|.. AutoMoveCommand
+
+AbstractBlockCommand <|-- HoeCommand
+AbstractBlockCommand <|-- WaterCommand
+AbstractBlockCommand <|-- PlantSeedCommand
+AbstractLocationCommand <|-- ShopCommand
+AbstractLocationCommand <|-- HouseCommand
+
+PlayerMovementController *-- AutoMovementController
+PlayerMovementController --> CollisionChecker
+AutoMovementController --> InteractionCommand
+AutoMovementController --> CollisionChecker
+CollisionChecker --> PlantGrowthState
+
+InventoryManager --> Hotbar
+RaycastHelper --> BlockWorld
+RaycastHelper o-- RaycastResult
+
+GameSaveManager --> Main
+GameSaveManager o-- GameSaveData
+GameSaveData +-- HotbarItemData
+GameSaveData +-- PlantData
+
+GameInputRouter o-- WorldInteractionInput
+GameInputRouter o-- CameraInput
+GameInputRouter o-- HotbarInput
+GameInputRouter o-- MovementInput
+GameInputRouter o-- UIInput
+GameInputRouter o-- SaveLoadInput
+
+WorldInteractionInput --> WorldContext
+WorldInteractionInput --> InteractionCommandFactory
+WorldInteractionInput --> RaycastHelper
+
+HotbarInput --> Hotbar
+HotbarInput --> CameraInput
+MovementInput --> PlayerInputHandler
+SaveLoadInput --> GameSaveManager
+
+EventBus --> MoneyEventHandler
+EventBus --> InventoryEventHandler
 
 @enduml
