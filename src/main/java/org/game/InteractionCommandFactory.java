@@ -23,12 +23,10 @@ public class InteractionCommandFactory {
     public InteractionCommand createCommand(Vector3i targetBlock, Spatial clickedObject) {
         Vector3f playerPos = playerContext.player().getWorldTranslation();
 
-        // Handle object interactions first
         if (clickedObject != null) {
             return createObjectCommand(clickedObject, playerPos);
         }
 
-        // Handle block interactions
         return createBlockCommand(targetBlock, playerPos);
     }
 
@@ -109,11 +107,6 @@ public class InteractionCommandFactory {
                     worldContext.moisture());
             default -> null;
         };
-    }
-
-    public InteractionCommand createHarvestCommand(Vector3i targetBlock) {
-        return new HarvestCommand(targetBlock, worldContext.growth(),
-                worldContext.assetManager(), worldContext.inventoryManager());
     }
 
     private boolean shouldAutoMove(InteractionCommand command, Vector3f playerPos) {
