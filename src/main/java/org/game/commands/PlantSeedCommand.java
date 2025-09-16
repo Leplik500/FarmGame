@@ -1,7 +1,10 @@
 package org.game.commands;
 
 import com.jme3.scene.Spatial;
-import org.game.*;
+import org.game.states.PlantGrowthState;
+import org.game.systems.InventoryManager;
+import org.game.utils.ItemIds;
+import org.game.world.*;
 
 public class PlantSeedCommand extends AbstractBlockCommand {
     private final PlantKind plantKind;
@@ -27,7 +30,7 @@ public class PlantSeedCommand extends AbstractBlockCommand {
 
         Vector3i aboveBlock = new Vector3i(targetBlock.x(), targetBlock.y() + 1, targetBlock.z());
         return world.getBlock(aboveBlock.x(), aboveBlock.y(), aboveBlock.z()) == BlockType.AIR
-                && growth.HasNotPlantAt(aboveBlock);
+                && growth.hasNotPlantAt(aboveBlock);
     }
 
     @Override

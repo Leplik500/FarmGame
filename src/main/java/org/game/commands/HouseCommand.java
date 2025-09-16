@@ -1,7 +1,7 @@
 package org.game.commands;
 
 import com.jme3.scene.Spatial;
-import org.game.DayNightCycle;
+import org.game.states.DayNightCycle;
 
 public class HouseCommand extends AbstractLocationCommand {
     public HouseCommand(Spatial houseModel, DayNightCycle dayNightCycle) {

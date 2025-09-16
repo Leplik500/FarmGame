@@ -1,7 +1,7 @@
 package org.game.input;
 
 import com.jme3.input.controls.ActionListener;
-import org.game.GameSaveManager;
+import org.game.systems.GameSaveManager;
 import org.game.Main;
 
 public class SaveLoadInput implements ActionListener {

@@ -3,7 +3,7 @@ package org.game.input;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.*;
 import com.jme3.input.ChaseCamera;
-import org.game.GameConfig;
+import org.game.utils.GameConfig;
 
 public class CameraInput implements ActionListener, AnalogListener {
     private final ChaseCamera chaseCam;

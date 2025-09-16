@@ -1,6 +1,9 @@
 package org.game.commands;
 
-import org.game.*;
+import org.game.states.FarmlandMoistureState;
+import org.game.world.BlockType;
+import org.game.world.BlockWorld;
+import org.game.world.Vector3i;
 
 public class WaterCommand extends AbstractBlockCommand {
     private final FarmlandMoistureState moisture;

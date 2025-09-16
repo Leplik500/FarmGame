@@ -1,7 +1,7 @@
 package org.game.input;
 
 import com.jme3.input.controls.ActionListener;
-import org.game.ShopUI;
+import org.game.ui.ShopUI;
 
 public class UIInput implements ActionListener {
     private final ShopUI shopUI;

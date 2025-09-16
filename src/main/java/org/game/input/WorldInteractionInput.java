@@ -5,8 +5,12 @@ import com.jme3.math.Vector2f;
 import com.jme3.renderer.Camera;
 import com.jme3.input.InputManager;
 import com.jme3.scene.Spatial;
-import org.game.*;
 import org.game.contexts.WorldContext;
+import org.game.core.InteractionCommand;
+import org.game.core.InteractionCommandFactory;
+import org.game.systems.RaycastHelper;
+import org.game.ui.ShopUI;
+import org.game.world.Vector3i;
 
 public class WorldInteractionInput implements ActionListener {
     private final WorldContext worldContext;

@@ -3,7 +3,14 @@ package org.game.commands;
 import com.jme3.asset.AssetManager;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
-import org.game.*;
+import org.game.core.InteractionCommand;
+import org.game.states.PlantGrowthState;
+import org.game.systems.InventoryManager;
+import org.game.utils.ActionRange;
+import org.game.utils.GameConfig;
+import org.game.utils.ItemIds;
+import org.game.world.PlantKind;
+import org.game.world.Vector3i;
 
 public class HarvestCommand implements InteractionCommand {
     private final Vector3i targetBlock;

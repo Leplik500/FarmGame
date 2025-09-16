@@ -1,9 +1,13 @@
 package org.game.commands;
 
 import com.jme3.math.Vector3f;
-import org.game.*;
+import org.game.core.InteractionCommand;
+import org.game.utils.ActionRange;
+import org.game.world.BlockWorld;
+import org.game.world.Vector3i;
 
-public abstract class AbstractBlockCommand implements InteractionCommand {
+public abstract class AbstractBlockCommand implements
+        InteractionCommand {
     protected final Vector3i targetBlock;
     protected final BlockWorld world;
     

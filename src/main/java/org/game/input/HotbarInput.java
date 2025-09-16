@@ -1,7 +1,7 @@
 package org.game.input;
 
 import com.jme3.input.controls.*;
-import org.game.Hotbar;
+import org.game.ui.Hotbar;
 
 public class HotbarInput implements ActionListener, AnalogListener {
     private final Hotbar hotbar;

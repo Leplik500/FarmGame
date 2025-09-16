@@ -1,6 +1,6 @@
 package org.game.events;
 
-import org.game.HotbarItem;
+import org.game.ui.HotbarItem;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

@@ -1,6 +1,8 @@
 package org.game.commands;
 
-import org.game.*;
+import org.game.world.BlockType;
+import org.game.world.BlockWorld;
+import org.game.world.Vector3i;
 
 public class HoeCommand extends AbstractBlockCommand {
 

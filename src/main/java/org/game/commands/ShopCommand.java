@@ -1,8 +1,8 @@
 package org.game.commands;
 
 import com.jme3.scene.Spatial;
-import org.game.DayNightCycle;
-import org.game.ShopUI;
+import org.game.states.DayNightCycle;
+import org.game.ui.ShopUI;
 
 public class ShopCommand extends AbstractLocationCommand {
     private final ShopUI shopUI;

@@ -1,8 +1,8 @@
 package org.game.commands;
 
 import com.jme3.math.Vector3f;
-import org.game.InteractionCommand;
-import org.game.PlayerMovementController;
+import org.game.core.InteractionCommand;
+import org.game.player.PlayerMovementController;
 
 public class AutoMoveCommand implements InteractionCommand {
     private final InteractionCommand targetCommand;

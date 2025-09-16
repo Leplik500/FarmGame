@@ -2,9 +2,9 @@ package org.game.commands;
 
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
-import org.game.ActionRange;
-import org.game.DayNightCycle;
-import org.game.InteractionCommand;
+import org.game.utils.ActionRange;
+import org.game.states.DayNightCycle;
+import org.game.core.InteractionCommand;
 
 public abstract class AbstractLocationCommand implements InteractionCommand {
     protected final Spatial model;
